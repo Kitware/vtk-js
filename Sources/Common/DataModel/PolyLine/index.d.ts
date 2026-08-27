@@ -3,7 +3,10 @@ import { Nullable, Vector2, Vector3 } from '../../../types';
 import vtkCell, { ICellInitialValues } from '../Cell';
 import { IIntersectWithLine } from '../Line';
 
-export interface IPolyLineInitialValues extends ICellInitialValues {}
+export interface IPolyLineInitialValues extends ICellInitialValues {
+  orientations?: quat[];
+  distanceFunction?: (a: vec3, b: vec3) => number;
+}
 
 export interface vtkPolyLine extends vtkCell {
   /**

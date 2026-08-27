@@ -27,11 +27,6 @@ export interface vtkCylinder extends vtkImplicitFunction {
   evaluateGradient(xyz: Vector3): number[];
 
   /**
-   * Get the angle of the cone.
-   */
-  getAngle(): number;
-
-  /**
    * Get the axis of the cylinder.
    */
   getAxis(): number[];
@@ -57,12 +52,6 @@ export interface vtkCylinder extends vtkImplicitFunction {
   getRadius(): number;
 
   /**
-   * Set the value representing the angle of the cone.
-   * @param {Number} angle The angle of the cone.
-   */
-  setAngle(angle: number): boolean;
-
-  /**
    * Set the axis of the cylinder.
    * @param {Number[]} axis The axis coordinate.
    */
@@ -80,7 +69,7 @@ export interface vtkCylinder extends vtkImplicitFunction {
    * Set the axis of the cylinder.
    * @param {Number[]} axis The axis coordinate.
    */
-  setAxisFrom(axis: number[]): boolean;
+  setAxisFrom(axis: number[]): void;
 
   /**
    * Set the center of the cylinder.
@@ -100,7 +89,7 @@ export interface vtkCylinder extends vtkImplicitFunction {
    * Set the center of the cylinder.
    * @param {Number[]} center The center coordinate.
    */
-  setCenterFrom(center: number[]): boolean;
+  setCenterFrom(center: number[]): void;
 
   /**
    * Set the radius of the cylinder.
@@ -138,7 +127,7 @@ export function newInstance(
  * @param {Number[]} axis
  * @param {Number[]} x
  */
-export function evaluate(
+declare function evaluate(
   radius: number,
   center: number[],
   axis: number[],
@@ -154,4 +143,7 @@ export declare const vtkCylinder: {
   extend: typeof extend;
   evaluate: typeof evaluate;
 };
+export declare const STATIC: Readonly<{
+  evaluate: typeof evaluate;
+}>;
 export default vtkCylinder;

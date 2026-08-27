@@ -1,21 +1,5 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
-
-export enum DesiredOutputPrecision {
-  /**
-   * Output precision should match the input precision
-   */
-  DEFAULT,
-
-  /**
-   * Output single-precision floating-point (i.e. float32)
-   */
-  SINGLE,
-
-  /**
-   * Output double-precision floating point (i.e. float64)
-   */
-  DOUBLE,
-}
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 
 /**
  *

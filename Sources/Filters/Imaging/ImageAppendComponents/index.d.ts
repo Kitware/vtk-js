@@ -23,7 +23,7 @@ export interface vtkImageAppendComponents extends vtkImageAppendComponentsBase {
  * @param model object on which data structure will be bounds (protected)
  * @param {IImageAppendComponentsInitialValues} [initialValues] (default: {})
  */
-export function extend(
+declare function extend(
   publicAPI: object,
   model: object,
   initialValues?: IImageAppendComponentsInitialValues

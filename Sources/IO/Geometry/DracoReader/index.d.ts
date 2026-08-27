@@ -30,7 +30,7 @@ export interface vtkDracoReader extends vtkDracoReaderBase {
   /**
    *
    */
-  getBaseURL(): string;
+  getBaseURL(): string | undefined;
 
   /**
    *
@@ -44,7 +44,7 @@ export interface vtkDracoReader extends vtkDracoReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    * Load the object data.
@@ -54,9 +54,9 @@ export interface vtkDracoReader extends vtkDracoReaderBase {
 
   /**
    * Parse data.
-   * @param {String | ArrayBuffer} content The content to parse.
+   * @param {ArrayBuffer} content The content to parse.
    */
-  parse(content: string | ArrayBuffer): void;
+  parse(content: ArrayBuffer): void;
 
   /**
    * Parse data as ArrayBuffer.
@@ -65,16 +65,10 @@ export interface vtkDracoReader extends vtkDracoReaderBase {
   parseAsArrayBuffer(content: ArrayBuffer): void;
 
   /**
-   * Parse data as text.
-   * @param {String} content The content to parse.
+   * Parse the data set through `setUrl` or `parseAsArrayBuffer` and publish it
+   * on the output port.
    */
-  parseAsText(content: string): void;
-  /**
-   *
-   * @param inData
-   * @param outData
-   */
-  requestData(inData: any, outData: any): void;
+  requestData(): void;
 
   /**
    *
@@ -120,20 +114,20 @@ export function newInstance(
 /**
  * Get the draco decoder
  */
-export function getDracoDecoder(): any;
+declare function getDracoDecoder(): any;
 
 /**
  * Set the draco decoder
  * @param dracoDecoder
  */
-export function setDracoDecoder(dracoDecoder: any): Promise<any>;
+declare function setDracoDecoder(dracoDecoder: any): Promise<any>;
 
 /**
  * Load the WASM decoder from url and set the decoderModule
  * @param url
  * @param binaryName
  */
-export function setWasmBinary(
+declare function setWasmBinary(
   url: string,
   binaryName: string
 ): Promise<boolean>;

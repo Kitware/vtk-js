@@ -32,5 +32,18 @@ export interface vtkGeometryRepresentationProxy extends vtkAbstractRepresentatio
   setLineWidth(width: number): boolean;
 }
 
-declare const _default: vtkGeometryRepresentationProxy;
-export default _default;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: object
+): void;
+
+export function newInstance(
+  initialValues?: object
+): vtkGeometryRepresentationProxy;
+
+declare const vtkGeometryRepresentationProxy: {
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+};
+export default vtkGeometryRepresentationProxy;

@@ -1,10 +1,12 @@
-import { vtkObject } from '../../../interfaces';
+import { EventHandler, vtkObject, vtkSubscription } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkRenderPass from '../RenderPass';
+import vtkViewNodeFactory from '../ViewNodeFactory';
 
-export enum PASS_TYPES {
-  'Build',
-  'Render',
-}
+/**
+ * The traversal passes a view node supports, in traversal order.
+ */
+declare const PASS_TYPES: readonly string[];
 
 /**
  *
@@ -44,6 +46,13 @@ export interface vtkViewNode extends vtkObject {
   addMissingNodes(dataObjs: any, enforceOrder?: boolean): void;
 
   /**
+   * Adopt child nodes that have no renderable of their own, so that a node can
+   * delegate passes to a helper.
+   * @param children
+   */
+  addMissingChildren(children: vtkViewNode[]): void;
+
+  /**
    *
    * @param {vtkRenderPass} renderPass
    * @param prepass
@@ -60,44 +69,44 @@ export interface vtkViewNode extends vtkObject {
    *
    * @param dataObj
    */
-  createViewNode(dataObj: any): void;
+  createViewNode(dataObj: any): vtkViewNode | null;
 
   /**
    *
    */
-  getChildren(): any;
+  getChildren(): vtkViewNode[];
 
   /**
    *
    */
-  getChildrenByReference(): any;
+  getChildrenByReference(): vtkViewNode[];
 
   /**
    * Find the first parent/grandparent of the desired type
    * @param type
    */
-  getFirstAncestorOfType(type: any): void;
+  getFirstAncestorOfType(type: any): vtkViewNode | null;
 
   /**
    * Find the last parent/grandparent of the desired type
    * @param type
    */
-  getLastAncestorOfType(type: any): void;
+  getLastAncestorOfType(type: any): vtkViewNode | null;
 
   /**
    *
    */
-  getMyFactory(): any;
+  getMyFactory(): Nullable<vtkViewNodeFactory>;
 
   /**
    *
    */
-  getParent(): any;
+  getParent(): Nullable<vtkViewNode>;
 
   /**
    * Get The data object (thing to be rendered).
    */
-  getRenderable(): any;
+  getRenderable(): Nullable<vtkObject>;
 
   /**
    * Returns the view node that corresponding to the provided object
@@ -105,15 +114,15 @@ export interface vtkViewNode extends vtkObject {
    * @param dataObject
    * @param [hint] the previously found node (for optimization)
    */
-  getViewNodeFor(dataObject: any, hint?: any): any;
+  getViewNodeFor(dataObject: any, hint?: any): vtkViewNode | undefined;
 
   /**
    *
    */
   getVisited(): boolean;
 
-  //invokeEvent
-  //onEvent(callback: (instance: vtkObject) => any): vtkSubscription;
+  invokeEvent(...args: unknown[]): void;
+  onEvent(cb: EventHandler, priority?: number): vtkSubscription;
 
   /**
    *
@@ -135,19 +144,19 @@ export interface vtkViewNode extends vtkObject {
    *
    * @param myFactory
    */
-  setMyFactory(myFactory: any): boolean;
+  setMyFactory(myFactory: Nullable<vtkViewNodeFactory>): boolean;
 
   /**
    *
    * @param parent
    */
-  setParent(parent: any): boolean;
+  setParent(parent: Nullable<vtkViewNode>): boolean;
 
   /**
    *
    * @param renderable
    */
-  setRenderable(renderable: any): boolean;
+  setRenderable(renderable: Nullable<vtkObject>): boolean;
 
   /**
    *
@@ -170,7 +179,7 @@ export interface vtkViewNode extends vtkObject {
  * @param model object on which data structure will be bounds (protected)
  * @param {IViewNodeInitialValues} [initialValues] (default: {})
  */
-export function extend(
+declare function extend(
   publicAPI: object,
   model: object,
   initialValues?: IViewNodeInitialValues
@@ -180,7 +189,7 @@ export function extend(
  * Method used to create a new instance of vtkViewNode.
  * @param {IViewNodeInitialValues} [initialValues] for pre-setting some of its content
  */
-export function newInstance(
+declare function newInstance(
   initialValues?: IViewNodeInitialValues
 ): vtkViewNode;
 
@@ -196,5 +205,7 @@ export function newInstance(
 export declare const vtkViewNode: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  // constants
+  PASS_TYPES: typeof PASS_TYPES;
 };
 export default vtkViewNode;
