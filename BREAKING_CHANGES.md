@@ -1,3 +1,9 @@
+## From 37.x to 38
+
+- **TypeScript declaration coverage and accuracy have been improved.** Runtime behavior is unchanged, but builds that compiled against the old declarations may fail. Modules that shipped no types resolved to `any`, and local `declare module '@kitware/vtk.js/...'` shims now collide with the real ones: delete the shims and fix what the types reject.
+- **TypeScript library definitions**: the typed-array factories now declare their BigInt array support. If your project uses a TypeScript `lib` list older than `ES2020`, add `ES2020.BigInt` to that list. Your `target` can stay unchanged.
+- **Accessors**: `setXFrom` and hand-written setters that only `return;` are `void`, not `boolean`. Accessors that can read back `null` or `undefined` now say so, and fields absent from `DEFAULT_VALUES` are `T | undefined` rather than `Nullable<T>`.
+
 ## From 36.x to 37
 
 - **vtkCamera**: `setModelTransformMatrix` now expects matrices in gl-matrix column-major order, consistent with `vtkTransform`, `vtkMatrixBuilder`, and `userMatrix` on `vtkProp3D`. Remove any transpose previously applied to column-major rotation or translation matrices to compensate for the old behavior. Transpose row-major matrices before passing them. ([#3586](https://github.com/Kitware/vtk-js/pull/3586))

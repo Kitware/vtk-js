@@ -3,7 +3,7 @@
  * @param {Boolean} [castToNativeType]
  * @param {String} [query]
  */
-export function extractURLParameters(
+declare function extractURLParameters(
   castToNativeType?: boolean,
   query?: string
 ): object;
@@ -12,7 +12,9 @@ export function extractURLParameters(
  *
  * @param {String} str The type value as string.
  */
-export function toNativeType(str: string): void;
+declare function toNativeType(
+  str: string
+): string | number | boolean | null | undefined | unknown[];
 
 declare const _default: {
   toNativeType: typeof toNativeType;

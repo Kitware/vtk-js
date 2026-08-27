@@ -1,11 +1,13 @@
 import { vtkObject, vtkSubscription } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkRenderer from '../Renderer';
 import vtkRenderWindowInteractor from '../RenderWindowInteractor';
-// import vtkOpenGLRenderWindow from "../../../OpenGL/RenderWindow";
+import vtkRenderWindowViewNode from '../../SceneGraph/RenderWindowViewNode';
 
 export interface IRenderWindowInitialValues {
+  defaultViewAPI?: string;
   renderers?: vtkRenderer[];
-  views?: vtkRenderWindow[];
+  views?: vtkRenderWindowViewNode[];
   interactor?: any;
   neverRendered?: boolean;
   numberOfLayers?: number;
@@ -42,7 +44,7 @@ export interface vtkRenderWindow extends vtkObject {
    * Add a child render window
    * @param {vtkRenderWindow} renderWindow The vtkRenderWindow instance.
    */
-  addRenderWindow(renderWindow: vtkRenderWindow): void;
+  addRenderWindow(renderWindow: vtkRenderWindow): boolean;
 
   /**
    * Add renderer
@@ -62,12 +64,12 @@ export interface vtkRenderWindow extends vtkObject {
    * By default, the WebGL backend is used. To switch, to WebGPU call
    * `renderWindow.setDefaultViewAPI('WebGPU')` before calling `render`.
    */
-  getDefaultViewAPI(): string;
+  getDefaultViewAPI(): DEFAULT_VIEW_API;
 
   /**
    *
    */
-  getInteractor(): vtkRenderWindowInteractor;
+  getInteractor(): Nullable<vtkRenderWindowInteractor>;
 
   /**
    *
@@ -107,9 +109,7 @@ export interface vtkRenderWindow extends vtkObject {
   /**
    *
    */
-  getViews(): any[];
-
-  // getViews(): vtkOpenGLRenderWindow[];
+  getViews(): vtkRenderWindowViewNode[];
 
   /**
    *
@@ -125,6 +125,11 @@ export interface vtkRenderWindow extends vtkObject {
   hasView(view: any): boolean;
 
   //hasView(view: vtkOpenGLRenderWindow): boolean;
+
+  /**
+   * Invoke a Completion event.
+   */
+  invokeCompletion(...args: unknown[]): void;
 
   /**
    *
@@ -158,6 +163,13 @@ export interface vtkRenderWindow extends vtkObject {
   removeView(view: any): void;
 
   /**
+   * Handle any pre-render initializations, such as creating a camera for any
+   * renderer that does not have an active one yet.
+   * Called by `render()`.
+   */
+  preRender(): void;
+
+  /**
    *
    */
   render(): void;
@@ -187,9 +199,7 @@ export interface vtkRenderWindow extends vtkObject {
    *
    * @param views
    */
-  setViews(views: any[]): boolean;
-
-  // setViews(views: vtkOpenGLRenderWindow[]): boolean;
+  setViews(views: vtkRenderWindowViewNode[]): boolean;
 }
 
 /**

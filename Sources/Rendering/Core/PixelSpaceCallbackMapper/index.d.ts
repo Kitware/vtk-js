@@ -1,12 +1,19 @@
-import { Vector3 } from '../../../types';
 import vtkCamera from '../Camera';
 import vtkMapper, { IMapperInitialValues } from '../Mapper';
 
 /**
  *
  */
+export type PixelSpaceCallbackCoord = [number, number, number, number];
+
 export interface IPixelSpaceCallbackMapperInitialValues extends IMapperInitialValues {
-  callback?: any;
+  callback?: (
+    coords: PixelSpaceCallbackCoord[],
+    camera: vtkCamera,
+    aspect: number,
+    depthBuffer: Uint8Array,
+    size: [number, number]
+  ) => any;
   useZValues?: boolean;
 }
 
@@ -19,7 +26,13 @@ export interface vtkPixelSpaceCallbackMapper extends vtkMapper {
   /**
    *
    */
-  getCallback(): any;
+  getCallback(): (
+    coords: PixelSpaceCallbackCoord[],
+    camera: vtkCamera,
+    aspect: number,
+    depthBuffer: Uint8Array,
+    size: [number, number]
+  ) => any;
 
   /**
    *
@@ -96,10 +109,11 @@ export interface vtkPixelSpaceCallbackMapper extends vtkMapper {
 	 */
   setCallback(
     callback: (
-      coords: Vector3[],
+      coords: PixelSpaceCallbackCoord[],
       camera: vtkCamera,
       aspect: number,
-      depthBuffer: Uint8Array
+      depthBuffer: Uint8Array,
+      size: [number, number]
     ) => any
   ): boolean;
 

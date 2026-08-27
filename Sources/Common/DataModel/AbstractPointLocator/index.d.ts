@@ -1,5 +1,5 @@
 import { vtkObject } from '../../../interfaces';
-import { Bounds } from '../../../types';
+import { Bounds, Nullable } from '../../../types';
 import vtkLocator, { ILocatorInitialValues } from '../Locator';
 
 /**
@@ -7,7 +7,7 @@ import vtkLocator, { ILocatorInitialValues } from '../Locator';
  */
 export interface IAbstractPointLocatorInitialValues extends ILocatorInitialValues {
   bounds?: Bounds;
-  numberOfBuckets: number;
+  numberOfBuckets?: number;
 }
 
 export interface vtkAbstractPointLocator extends vtkLocator {
@@ -15,13 +15,33 @@ export interface vtkAbstractPointLocator extends vtkLocator {
    * Set the bounds of this object.
    * @param {Bounds} input
    */
-  setBounds(input: Bounds): void;
+  setBounds(input: Bounds): boolean;
+
+  /**
+   * Set the bounds of this object by reference.
+   * @param {Bounds} bounds
+   */
+  setBoundsFrom(bounds: Bounds): void;
 
   /**
    * Get the bounds of this object.
    * @returns {Bounds}
    */
-  getBounds(): Bounds;
+  getBounds(): Nullable<Bounds>;
+
+  /**
+   * Get the bounds of this object by reference.
+   * @returns {Bounds}
+   */
+  getBoundsByReference(): Nullable<Bounds>;
+
+  /**
+   * Get the number of buckets (divisions) currently used by the search
+   * structure.
+   *
+   * @returns {Number} The number of buckets.
+   */
+  getNumberOfBuckets(): number;
 }
 
 // ----------------------------------------------------------------------------

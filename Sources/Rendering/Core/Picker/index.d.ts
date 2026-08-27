@@ -100,7 +100,7 @@ export interface vtkPicker extends vtkAbstractPicker {
    * Set position in mapper coordinates of pick point.
    * @param {Vector3} mapperPosition The mapper coordinates of pick point.
    */
-  setMapperPositionFrom(mapperPosition: Vector3): boolean;
+  setMapperPositionFrom(mapperPosition: Vector3): void;
 
   /**
    * Specify tolerance for performing pick operation. Tolerance is specified

@@ -1,5 +1,9 @@
 import { Vector2, Vector3 } from '../../../types';
+import vtkCellArray from '../../Core/CellArray';
+import vtkDataArray from '../../Core/DataArray';
 import vtkCell, { ICellInitialValues } from '../Cell';
+import vtkDataSetAttributes from '../DataSetAttributes';
+import vtkPointLocator from '../PointLocator';
 
 export interface ITriangleInitialValues extends ICellInitialValues {}
 
@@ -16,10 +20,44 @@ export interface IIntersectWithTriangle {
   coplanar: boolean;
   pt1: Vector3;
   pt2: Vector3;
-  surfaceId: number;
+  surfaceId: number[];
+}
+
+export interface IEvaluatePositionResult {
+  subId: number;
+  dist2: number;
+  evaluation: number;
 }
 
 export interface vtkTriangle extends vtkCell {
+  /**
+   * Clip the triangle against the given scalar value, appending the resulting
+   * triangles to tris and their interpolated attributes to outPd/outCd.
+   *
+   * @param {Number} value The clipping value
+   * @param {vtkDataArray} cellScalars The scalar value at each triangle corner
+   * @param {vtkPointLocator} locator Merges the generated points
+   * @param {vtkCellArray} tris Receives the generated triangles
+   * @param {vtkDataSetAttributes} inPd Input point data
+   * @param {vtkDataSetAttributes} outPd Output point data
+   * @param {vtkDataSetAttributes} inCd Input cell data
+   * @param {Number} cellId The id of this cell in the input
+   * @param {vtkDataSetAttributes} outCd Output cell data
+   * @param {Boolean} insideOut Keep the region below the value instead of above
+   */
+  clip(
+    value: number,
+    cellScalars: vtkDataArray,
+    locator: vtkPointLocator,
+    tris: vtkCellArray,
+    inPd: vtkDataSetAttributes,
+    outPd: vtkDataSetAttributes,
+    inCd: vtkDataSetAttributes,
+    cellId: number,
+    outCd: vtkDataSetAttributes,
+    insideOut: boolean
+  ): void;
+
   /**
    * Get the topological dimensional of the cell (0, 1, 2 or 3).
    */
@@ -97,7 +135,7 @@ export interface vtkTriangle extends vtkCell {
     closestPoint: Vector3,
     pcoords: Vector3,
     weights: number[]
-  ): IIntersectWithLine;
+  ): IEvaluatePositionResult;
 
   /**
    * Determine global coordinates (x) from the given subId and parametric
@@ -144,7 +182,7 @@ export function newInstance(
  * @param {Vector3} v3 The third point coordinate.
  * @param {Vector3} n The normal coordinate.
  */
-export function computeNormalDirection(
+declare function computeNormalDirection(
   v1: Vector3,
   v2: Vector3,
   v3: Vector3,
@@ -159,7 +197,7 @@ export function computeNormalDirection(
  * @param {Vector3} v3 The third point coordinate.
  * @param {Vector3} n The normal coordinate.
  */
-export function computeNormal(
+declare function computeNormal(
   v1: Vector3,
   v2: Vector3,
   v3: Vector3,
@@ -170,7 +208,7 @@ export function computeNormal(
  * Compute the interpolation functions/derivatives
  * @param {Number[]} derivs - The derivatives.
  */
-export function interpolationDerivs(derivs: number[]): void;
+declare function interpolationDerivs(derivs: number[]): void;
 
 /**
  * Compute the intersection between two triangles.
@@ -181,7 +219,7 @@ export function interpolationDerivs(derivs: number[]): void;
  * @param {Vector3} q2 The second point coordinate of the second triangle.
  * @param {Vector3} r2 The third point coordinate of the second triangle.
  */
-export function intersectWithTriangle(
+declare function intersectWithTriangle(
   p1: Vector3,
   q1: Vector3,
   r1: Vector3,
@@ -205,4 +243,10 @@ export declare const vtkTriangle: {
   interpolationDerivs: typeof interpolationDerivs;
   intersectWithTriangle: typeof intersectWithTriangle;
 };
+export declare const STATIC: Readonly<{
+  computeNormalDirection: typeof computeNormalDirection;
+  computeNormal: typeof computeNormal;
+  interpolationDerivs: typeof interpolationDerivs;
+  intersectWithTriangle: typeof intersectWithTriangle;
+}>;
 export default vtkTriangle;

@@ -4,34 +4,26 @@ import vtkAbstractMapper, {
 import { IPrimitiveCount } from '../Mapper';
 import {
   IScalarColoringInitialValues,
-  TScalarColoringWithout,
+  IScalarColoring,
 } from '../Mapper/ScalarColoringHelper';
-
-export { ColorMode, GetArray, ScalarMode } from '../Mapper/Constants';
+import { Nullable } from '../../../types';
+import { vtkCoordinate } from '../Coordinate';
 
 export interface IMapper2DInitialValues
   extends IAbstractMapperInitialValues, IScalarColoringInitialValues {
-  customShaderAttributes?: any;
+  customShaderAttributes?: string[];
   renderTime?: number;
   static?: boolean;
+  transformCoordinate?: Nullable<vtkCoordinate>;
+  viewSpecificProperties?: object;
 }
 
-export interface vtkMapper2D
-  extends
-    vtkAbstractMapper,
-    TScalarColoringWithout<
-      | 'clearColorArrays'
-      | 'getFieldDataTupleId'
-      | 'getInterpolateScalarsBeforeMapping'
-      | 'getNumberOfColorsInRange'
-      | 'setFieldDataTupleId'
-      | 'setInterpolateScalarsBeforeMapping'
-    > {
+export interface vtkMapper2D extends vtkAbstractMapper, IScalarColoring {
   /**
    *
    * @default []
    */
-  getCustomShaderAttributes(): any;
+  getCustomShaderAttributes(): string[];
 
   /**
    *
@@ -46,7 +38,7 @@ export interface vtkMapper2D
   /**
    * Get the transformCoordinate.
    */
-  getTransformCoordinate(): any;
+  getTransformCoordinate(): Nullable<vtkCoordinate>;
 
   /**
    * Check whether the mapper’s data is static.
@@ -74,7 +66,7 @@ export interface vtkMapper2D
   /**
    * Set the transformCoordinate.
    */
-  setTransformCoordinate(coordinate: any): boolean;
+  setTransformCoordinate(coordinate: Nullable<vtkCoordinate>): boolean;
 
   /**
    * Turn on/off flag to control whether the mapper’s data is static. Static data
