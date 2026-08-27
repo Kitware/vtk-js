@@ -50,5 +50,7 @@ export function newInstance(
 export declare const vtkOutlineFilter: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  BOUNDS_MAP: typeof BOUNDS_MAP;
+  LINE_ARRAY: typeof LINE_ARRAY;
 };
 export default vtkOutlineFilter;

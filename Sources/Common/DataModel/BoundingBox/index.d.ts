@@ -3,6 +3,8 @@ import { Bounds, TypedArray, Vector2, Vector3 } from '../../../types';
 import vtkPoints from '../../Core/Points';
 import { Nullable } from '../../../types';
 
+declare const INIT_BOUNDS: Bounds;
+
 /**
  * Tests whether two bounds equal.
  * @param {Bounds} a
@@ -103,7 +105,7 @@ export function setMaxPoint(
  * @param {Bounds} bounds
  * @param {number} delta
  */
-export function inflate(bounds: Bounds, delta: number): Bounds;
+declare function inflate(bounds: Bounds, delta: number): Bounds;
 
 /**
  * Scales a bounding box.
@@ -267,8 +269,8 @@ export function intersectBox(
   origin: Vector3,
   dir: Vector3,
   coord: Vector3,
-  tolerance: number
-): boolean;
+  tolerance: number[]
+): number;
 
 /**
  * Plane intersection with box
@@ -283,7 +285,7 @@ export function intersectPlane(
   bounds: Bounds,
   origin: Vector3,
   normal: Vector3
-): boolean;
+): number;
 
 /**
  * Do two bounding boxes intersect.
@@ -363,58 +365,58 @@ export function computeDivisions(
  */
 export function distance2ToBounds(x: Vector3, bounds: Bounds): number;
 
+/**
+ * A bounding box instance owns its `bounds` array; every method operates on it
+ * rather than taking the bounds as an argument. Use the module's free
+ * functions for the same operations on a plain bounds array.
+ */
 declare class BoundingBox {
+  bounds: Bounds;
+
   getBounds(): Bounds;
-  /**
-   * Tests whether two bounds equal.
-   * @param {Bounds} a
-   * @param {Bounds} b
-   */
-  equals(a: Bounds, b: Bounds): boolean;
 
   /**
-   * Tests whether a given bounds is valid.
-   * @param {Bounds} bounds
+   * Tests whether the given bounds equal this one.
+   * @param {Bounds} otherBounds
    */
-  isValid(bounds: Bounds): boolean;
+  equals(otherBounds: Bounds): boolean;
 
   /**
-   * Sets a bounding box from another bounding box.
-   * @param {Bounds} bounds
-   * @param {Bounds} other
+   * Tests whether this bounding box is valid.
    */
-  setBounds(bounds: Bounds, other: Bounds): Bounds;
+  isValid(): boolean;
 
   /**
-   * Resets a bounds to infinity.
-   * @param {Bounds} bounds
+   * Sets this bounding box from another bounding box.
+   * @param {Bounds} otherBounds
    */
-  reset(bounds: Bounds): Bounds;
+  setBounds(otherBounds: Bounds): Bounds;
 
   /**
-   * Adds points to a bounding box.
-   * @param {Bounds} bounds
+   * Resets this bounds to infinity.
+   */
+  reset(): Bounds;
+
+  /**
+   * Adds a point to this bounding box.
    * @param {number|Number[]|TypedArray} xOrPoint
    * @param {number} y
    * @param {number} z
    */
   addPoint(
-    bounds: Bounds,
     xOrPoint: number | number[] | TypedArray,
     y?: number,
     z?: number
   ): Bounds;
 
   /**
-   * Adds points to a bounding box.
-   * @param {Bounds} bounds
+   * Adds points to this bounding box.
    * @param {number[]} points A flattened array of 3D coordinates.
    */
-  addPoints(bounds: Bounds, points: number[]): Bounds;
+  addPoints(points: number[]): Bounds;
 
   /**
-   * Adds two bounding boxes together.
-   * @param {Bounds} bounds
+   * Adds another bounding box to this one.
    * @param {number} xMin
    * @param {number} xMax
    * @param {number} yMin
@@ -423,7 +425,6 @@ declare class BoundingBox {
    * @param {number} zMax
    */
   addBounds(
-    bounds: Bounds,
     xMin: number,
     xMax: number,
     yMin: number,
@@ -433,163 +434,124 @@ declare class BoundingBox {
   ): Bounds;
 
   /**
-   * Sets the min point of a bounding box.
-   * @param {Bounds} bounds
+   * Sets the min point of this bounding box.
    * @param {number} x
    * @param {number} y
    * @param {number} z
    */
-  setMinPoint(bounds: Bounds, x: number, y: number, z: number): boolean;
+  setMinPoint(x: number, y: number, z: number): boolean;
 
   /**
-   * Sets the max point of a bounding box.
-   * @param {Bounds} bounds
+   * Sets the max point of this bounding box.
    * @param {number} x
    * @param {number} y
    * @param {number} z
    */
-  setMaxPoint(bounds: Bounds, x: number, y: number, z: number): boolean;
+  setMaxPoint(x: number, y: number, z: number): boolean;
 
   /**
-   * Inflates a bounding box.
+   * Inflates this bounding box.
    * @param {number} [delta] The amount to inflate the bounding box by.
    */
   inflate(delta?: number): Bounds;
 
   /**
-   * Scales a bounding box.
-   * @param {Bounds} bounds
+   * Scales this bounding box.
    * @param {number} sx
    * @param {number} sy
    * @param {number} sz
    */
-  scale(bounds: Bounds, sx: number, sy: number, sz: number): boolean;
+  scale(sx: number, sy: number, sz: number): boolean;
 
   /**
-   * Gets the center of a bounding box.
-   * @param {Bounds} bounds
+   * Gets the center of this bounding box.
    */
-  getCenter(bounds: Bounds): Vector3;
+  getCenter(): Vector3;
 
   /**
-   * Scales a bounding box around its center.
-   * @param {Bounds} bounds
-   * @param {number} sx
-   * @param {number} sy
-   * @param {number} sz
-   */
-  scaleAboutCenter(bounds: Bounds, sx: number, sy: number, sz: number): boolean;
-
-  /**
-   * Gets the bounding box side length.
-   * @param {Bounds} bounds
+   * Gets a side length of this bounding box.
    * @param {number} index
    */
-  getLength(bounds: Bounds, index: number): number;
+  getLength(index: number): number;
 
   /**
    * Gets the lengths of all sides.
-   * @param {Bounds} bounds
    */
-  getLengths(bounds: Bounds): Vector3;
+  getLengths(): Vector3;
 
   /**
-   * Gets the x range of a bounding box.
-   * @param {Bounds} bounds
+   * Gets the x range of this bounding box.
    */
-  getXRange(bounds: Bounds): Vector2;
+  getXRange(): Vector2;
 
   /**
-   * Gets the y range of a bounding box.
-   * @param {Bounds} bounds
+   * Gets the y range of this bounding box.
    */
-  getYRange(bounds: Bounds): Vector2;
+  getYRange(): Vector2;
 
   /**
-   * Gets the z range of a bounding box.
-   * @param {Bounds} bounds
+   * Gets the z range of this bounding box.
    */
-  getZRange(bounds: Bounds): Vector2;
+  getZRange(): Vector2;
 
   /**
-   * Gets the maximum side length of the bounding box.
-   * @param {Bounds} bounds
+   * Gets the maximum side length of this bounding box.
    */
-  getMaxLength(bounds: Bounds): number;
+  getMaxLength(): number;
 
   /**
-   * Gets the diagonal length of the bounding box.
-   * @param {Bounds} bounds
+   * Gets the diagonal length of this bounding box.
    */
-  getDiagonalLength(bounds: Bounds): Nullable<number>;
+  getDiagonalLength(): Nullable<number>;
 
   /**
-   * Gets the squared diagonal length of the bounding box.
-   * @param {Bounds} bounds
+   * Gets the squared diagonal length of this bounding box.
    */
-  getDiagonalLength2(bounds: Bounds): Nullable<number>;
+  getDiagonalLength2(): Nullable<number>;
 
   /**
    * Gets the min point.
-   * @param {Bounds} bounds
    */
-
-  getMinPoint(bounds: Bounds): Vector3;
+  getMinPoint(): Vector3;
 
   /**
    * Gets the max point.
-   * @param {Bounds} bounds
    */
-  getMaxPoint(bounds: Bounds): Vector3;
+  getMaxPoint(): Vector3;
 
   /**
-   * Gets the corners of a bounding box.
-   * @param {Bounds} bounds
+   * Gets the corners of this bounding box.
    * @param {Vector3[]} corners
    */
-  getCorners(bounds: Bounds, corners: Vector3[]): Vector3[];
+  getCorners(corners: Vector3[]): Vector3[];
 
   /**
    * Computes the two corner points with min and max coords.
-   * @param {Bounds} bounds
    * @param {Vector3} point1
    * @param {Vector3} point2
    */
-  computeCornerPoints(
-    bounds: Bounds,
-    point1: Vector3,
-    point2: Vector3
-  ): Vector3;
+  computeCornerPoints(point1: Vector3, point2: Vector3): Vector3;
 
   /**
-   * Transforms a bounding box.
-   * @param {Bounds} bounds
+   * Transforms this bounding box.
    * @param {mat4} transform
-   * @param {Bounds} out
+   * @param {Bounds} [out]
    */
-  transformBounds(
-    bounds: Bounds,
-    transform: mat4,
-    out: Bounds
-  ): ReturnType<typeof addPoints>;
-
-  computeScale3(bounds: Bounds, scale3: Vector3): Vector3;
+  transformBounds(transform: mat4, out?: Bounds): ReturnType<typeof addPoints>;
 
   /**
-   * Compute local bounds.
-   * Not as fast as vtkPoints.getBounds() if u, v, w form a natural basis.
-   * @param {vtkPoints} points
+   * Computes the half lengths of this bounding box.
+   * @param {Vector3} [scale3]
+   */
+  computeScale3(scale3?: Vector3): Vector3;
+
+  /**
+   * Compute local bounds along the given basis.
    * @param {array} u first vector
    * @param {array} v second vector
    * @param {array} w third vector
    */
-
-  computeLocalBounds(
-    points: vtkPoints,
-    u: Vector3,
-    v: Vector3,
-    w: Vector3
-  ): Bounds;
+  computeLocalBounds(u: Vector3, v: Vector3, w: Vector3): Bounds;
 
   /**
    * The method returns a non-zero value if the bounding box is hit.
@@ -597,76 +559,82 @@ declare class BoundingBox {
    * directions, coord[3] is the location of hit, and t is the parametric
    * coordinate along line. (Notes: the intersection ray dir[3] is NOT
    * normalized.  Valid intersections will only occur between 0<=t<=1.)
-   * @param {Bounds} bounds
    * @param {Vector3} origin
    * @param {Vector3} dir
    * @param {Vector3} coord
-   * @param {number} tolerance
+   * @param {number[]} tolerance
    */
   intersectBox(
-    bounds: Bounds,
     origin: Vector3,
     dir: Vector3,
     coord: Vector3,
-    tolerance: number
-  ): boolean;
+    tolerance: number[]
+  ): number;
 
   /**
    * Plane intersection with box
    * The plane is infinite in extent and defined by an origin and normal.The function indicates
    * whether the plane intersects, not the particulars of intersection points and such
    * The function returns non-zero if the plane and box intersect; zero otherwise.
-   * @param {Bounds} bounds
    * @param {Vector3} origin
    * @param {Vector3} normal
    */
-  intersectPlane(bounds: Bounds, origin: Vector3, normal: Vector3): boolean;
+  intersectPlane(origin: Vector3, normal: Vector3): number;
 
   /**
-   * Do two bounding boxes intersect.
-   * @param {Bounds} bounds
-   * @param bBounds
+   * Intersect this bounding box with another one, storing the result in this
+   * one.
+   * @param {Bounds} otherBounds
    */
-  intersect(bounds: Bounds, bBounds: Bounds): boolean;
+  intersect(otherBounds: Bounds): boolean;
 
   /**
-   * Do two bounding boxes intersect.
-   * @param {Bounds} bounds
-   * @param {Bounds} bBounds
+   * Does another bounding box intersect this one.
+   * @param {Bounds} otherBounds
    */
-  intersects(bounds: Bounds, bBounds: Bounds): boolean;
+  intersects(otherBounds: Bounds): boolean;
 
   /**
-   * Does the bbox contain a given point.
-   * @param {Bounds} bounds
+   * Does this bounding box contain a given point.
    * @param {number} x
    * @param {number} y
    * @param {number} z
    */
-  containsPoint(bounds: Bounds, x: number, y: number, z: number): boolean;
+  containsPoint(x: number, y: number, z: number): boolean;
 
   /**
-   * Is a bbox contained in another bbox.
-   * @param {Bounds} bounds
-   * @param {Bounds} other
+   * Is another bounding box contained in this one.
+   * @param {Bounds} otherBounds
    */
-  contains(bounds: Bounds, other: Bounds): boolean;
+  contains(otherBounds: Bounds): boolean;
 
   /**
-   * Does a plane intersect a boox.
-   * @param {Bounds} bounds
+   * Does a plane cut this bounding box.
    * @param {Vector3} origin
    * @param {Vector3} normal
    */
-  cutWithPlane(bounds: Bounds, origin: Vector3, normal: Vector3): boolean;
+  cutWithPlane(origin: Vector3, normal: Vector3): boolean;
 
   /**
-   * Calculate the squared distance from point x to the specified bounds.
+   * Compute the number of divisions given this bounding box and a target
+   * number of buckets/bins. Handles degenerate bounding boxes properly.
+   * @param {Number} totalBins - Target number of bins
+   * @param {Number[]} divs - Output array to store divisions [divX, divY, divZ]
+   * @param {Bounds} [adjustedBounds] - Output array to store adjusted bounds if needed
+   * @returns {Number} The actual total number of bins
+   */
+  computeDivisions(
+    totalBins: number,
+    divs: number[],
+    adjustedBounds?: Bounds
+  ): number;
+
+  /**
+   * Calculate the squared distance from point x to this bounding box.
    * @param {Vector3} x  The point coordinates
-   * @param {Bounds} bounds  The bounding box coordinates
    * @returns {Number} The squared distance to the bounds
    */
-  distance2ToBounds(x: Vector3, bounds: Bounds): number;
+  distance2ToBounds(x: Vector3): number;
 }
 
 export interface IBoundingBoxInitialValues {
@@ -710,8 +678,52 @@ declare const vtkBoundingBox: {
   intersects: typeof intersects;
   containsPoint: typeof containsPoint;
   contains: typeof contains;
+  computeDivisions: typeof computeDivisions;
+  clampDivisions: typeof clampDivisions;
   distance2ToBounds: typeof distance2ToBounds;
   INIT_BOUNDS: Bounds;
 };
+
+export declare const STATIC: Readonly<{
+  equals: typeof equals;
+  isValid: typeof isValid;
+  setBounds: typeof setBounds;
+  reset: typeof reset;
+  addPoint: typeof addPoint;
+  addPoints: typeof addPoints;
+  addBounds: typeof addBounds;
+  setMinPoint: typeof setMinPoint;
+  setMaxPoint: typeof setMaxPoint;
+  inflate: typeof inflate;
+  scale: typeof scale;
+  scaleAboutCenter: typeof scaleAboutCenter;
+  getCenter: typeof getCenter;
+  getLength: typeof getLength;
+  getLengths: typeof getLengths;
+  getMaxLength: typeof getMaxLength;
+  getDiagonalLength: typeof getDiagonalLength;
+  getDiagonalLength2: typeof getDiagonalLength2;
+  getMinPoint: typeof getMinPoint;
+  getMaxPoint: typeof getMaxPoint;
+  getXRange: typeof getXRange;
+  getYRange: typeof getYRange;
+  getZRange: typeof getZRange;
+  getCorners: typeof getCorners;
+  computeCornerPoints: typeof computeCornerPoints;
+  computeLocalBounds: typeof computeLocalBounds;
+  transformBounds: typeof transformBounds;
+  computeScale3: typeof computeScale3;
+  cutWithPlane: typeof cutWithPlane;
+  intersectBox: typeof intersectBox;
+  intersectPlane: typeof intersectPlane;
+  intersect: typeof intersect;
+  intersects: typeof intersects;
+  containsPoint: typeof containsPoint;
+  contains: typeof contains;
+  computeDivisions: typeof computeDivisions;
+  clampDivisions: typeof clampDivisions;
+  distance2ToBounds: typeof distance2ToBounds;
+  INIT_BOUNDS: typeof INIT_BOUNDS;
+}>;
 
 export default vtkBoundingBox;

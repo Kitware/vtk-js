@@ -3,6 +3,8 @@ import vtkCompositeKeyboardManipulator from '../../Manipulators/CompositeKeyboar
 import vtkCompositeMouseManipulator from '../../Manipulators/CompositeMouseManipulator';
 import vtkCompositeVRManipulator from '../../Manipulators/CompositeVRManipulator';
 import vtkInteractorStyle from '../../../Rendering/Core/InteractorStyle';
+import vtkRenderer from '../../../Rendering/Core/Renderer';
+import vtkRenderWindowInteractor from '../../../Rendering/Core/RenderWindowInteractor';
 import {
   Device,
   Input,
@@ -117,13 +119,13 @@ export interface vtkInteractorStyleManipulator extends vtkInteractorStyle {
    * Finds a mouse manipulator with a given control set.
    * @param button which button
    * @param shift shift enabled
-   * @param scroll scroll enabled
+   * @param control control enabled
    * @param alt alt enabled
    */
   findMouseManipulator(
     button: MouseButton,
     shift: boolean,
-    scroll: boolean,
+    control: boolean,
     alt: boolean
   ): Nullable<vtkCompositeMouseManipulator>;
 
@@ -172,6 +174,11 @@ export interface vtkInteractorStyleManipulator extends vtkInteractorStyle {
    * @param callData event data
    */
   handleRightButtonRelease(callData: unknown): void;
+
+  /**
+   * Handles the end of a pointer lock event.
+   */
+  handleEndPointerLock(): void;
 
   /**
    * Handles the start of a wheel event.
@@ -306,9 +313,9 @@ export interface vtkInteractorStyleManipulator extends vtkInteractorStyle {
   getRotationFactor(): number;
 
   getMouseManipulators(): vtkCompositeMouseManipulator[];
-  getMouseManipulators(): vtkCompositeMouseManipulator[];
-  getMouseManipulators(): vtkCompositeMouseManipulator[];
-  getMouseManipulators(): vtkCompositeMouseManipulator[];
+  getKeyboardManipulators(): vtkCompositeKeyboardManipulator[];
+  getVrManipulators(): vtkCompositeVRManipulator[];
+  getGestureManipulators(): vtkCompositeGestureManipulator[];
 
   /**
    * Sets the center of rotation
@@ -320,16 +327,50 @@ export interface vtkInteractorStyleManipulator extends vtkInteractorStyle {
   setCenterOfRotation(xyz: Vector3): boolean;
 
   /**
+   * Sets the center of rotation from an array.
+   * @param {Vector3} xyz
+   */
+  setCenterOfRotationFrom(centerOfRotation: Vector3): void;
+
+  /**
    * Gets the center of rotation.
    * @returns {Vector3}
    */
   getCenterOfRotation(): Vector3;
+
+  /**
+   * Gets the center of rotation by reference.
+   * @returns {Vector3}
+   */
+  getCenterOfRotationByReference(): Vector3;
 }
 
 export interface IInteractorStyleManipulatorInitialValues {
   centerOfRotation?: Vector3;
   rotationFactor?: number;
 }
+
+declare function translateCamera(
+  renderer: vtkRenderer,
+  rwi: vtkRenderWindowInteractor,
+  toX: number,
+  toY: number,
+  fromX: number,
+  fromY: number
+): void;
+
+declare function dollyToPosition(
+  fact: number,
+  position: { x: number; y: number },
+  renderer: vtkRenderer,
+  rwi: vtkRenderWindowInteractor
+): void;
+
+declare function dollyByFactor(
+  interactor: vtkRenderWindowInteractor,
+  renderer: vtkRenderer,
+  factor: number
+): void;
 
 export function newInstance(
   initialValues?: IInteractorStyleManipulatorInitialValues
@@ -341,9 +382,18 @@ export function extend(
   initialValues?: IInteractorStyleManipulatorInitialValues
 ): void;
 
+export declare const STATIC: Readonly<{
+  dollyToPosition: typeof dollyToPosition;
+  translateCamera: typeof translateCamera;
+  dollyByFactor: typeof dollyByFactor;
+}>;
+
 export const vtkInteractorStyleManipulator: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  dollyToPosition: typeof dollyToPosition;
+  translateCamera: typeof translateCamera;
+  dollyByFactor: typeof dollyByFactor;
 };
 
 export default vtkInteractorStyleManipulator;

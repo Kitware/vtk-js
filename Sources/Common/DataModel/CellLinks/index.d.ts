@@ -17,6 +17,11 @@ export interface ICellLink {
   cells: Nullable<number[]>;
 }
 
+/**
+ * Default (empty) link record used to initialize a point's link entry.
+ */
+export const InitLink: ICellLink;
+
 export interface vtkCellLinks extends vtkObject {
   /**
    * Build the link list array from the input dataset.

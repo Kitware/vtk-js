@@ -1,3 +1,10 @@
+## From 37.x to 38
+
+- **TypeScript declaration coverage and accuracy have been improved.** Runtime behavior is unchanged, but builds that compiled against the old declarations may fail. Modules that shipped no types resolved to `any`, and local `declare module '@kitware/vtk.js/...'` shims now collide with the real ones: delete the shims and fix what the types reject.
+- **TypeScript library definitions**: the typed-array factories now declare their BigInt array support. If your project uses a TypeScript `lib` list older than `ES2020`, add `ES2020.BigInt` to that list. Your `target` can stay unchanged.
+- **Accessors**: `setXFrom` and hand-written setters that only `return;` are `void`, not `boolean`. Accessors that can read back `null` or `undefined` now say so, and fields absent from `DEFAULT_VALUES` are `T | undefined` rather than `Nullable<T>`.
+
+
 ## From 35.x to 36
 
 - **`vtk-lite.js` deprecated.** The UMD build previously produced a slimmed-down companion bundle `dist/umd/vtk-lite.js` (curated ColorMaps subset; `PDBReader`, `MoleculeToRepresentation`, `MobileVR`, and `webvr-polyfill` stubbed out). The Vite build pipeline no longer produces a distinct lite bundle; `vtk-lite.js` now ships as a byte-identical alias of `vtk.js` so existing `<script src=…/vtk-lite.js>` and CDN consumers continue to load. Consumers should migrate to `vtk.js` directly — the alias will be removed in a future major. Note that anything that indexed into the `ColorMaps` array by position will now see the full preset set, not the lite subset.

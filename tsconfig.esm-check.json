@@ -1,10 +1,4 @@
 {
-  "include": ["dist/esm/**/*.d.ts"],
-  "compilerOptions": {
-    "noEmit": true,
-    "lib": [
-      "esnext",
-      "dom"
-    ]
-  }
+  "extends": "./tsconfig.json",
+  "include": ["dist/esm/**/*.d.ts"]
 }

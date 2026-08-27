@@ -5,6 +5,7 @@ import {
   IAbstractMapper3DInitialValues,
 } from '../AbstractMapper3D';
 import { BlendMode } from './Constants';
+import { EventHandler, vtkSubscription } from '../../../interfaces';
 
 /**
  *
@@ -86,7 +87,7 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
    * Set blend mode to COMPOSITE_BLEND
    * @param {BlendMode} blendMode
    */
-  setBlendMode(blendMode: BlendMode): void;
+  setBlendMode(blendMode: BlendMode): boolean;
 
   /**
    * Set blend mode to COMPOSITE_BLEND
@@ -107,6 +108,9 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
    * Set blend mode to AVERAGE_INTENSITY_BLEND
    */
   setBlendModeToAverageIntensity(): void;
+
+  /** Set blend mode to ADDITIVE_INTENSITY_BLEND. */
+  setBlendModeToAdditiveIntensity(): void;
 
   /**
    * Set blend mode to RADON_TRANSFORM_BLEND
@@ -232,6 +236,24 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
    * Get the label outline texture width.
    */
   getLabelOutlineTextureWidth(): number;
+
+  /**
+   * Register a callback to be invoked when the `LightingActivated` event occurs.
+   *
+   * @param {EventHandler} cb The callback to register
+   * @param {Number} [priority] Priority of this subscription
+   */
+  onLightingActivated(
+    cb: EventHandler,
+    priority?: number
+  ): Readonly<vtkSubscription>;
+
+  /**
+   * Invoke the `LightingActivated` event with the given payload.
+   *
+   * @param args The event payload
+   */
+  invokeLightingActivated(...args: unknown[]): void;
 }
 
 /**
@@ -257,7 +279,7 @@ export interface vtkVolumeMapper extends vtkAbstractMapper3D {
  * @param {vtkPiecewiseFunction} outputTransferFunction: To provide optionally to avoid instantiating a new transfer function each time.
  * @return {vtkPiecewiseFunction} the created absorption transfer function to set on VolumeMapper scalarOpacity.
  */
-export function createRadonTransferFunction(
+declare function createRadonTransferFunction(
   firstAbsorbentMaterialHounsfieldValue: number,
   firstAbsorbentMaterialAbsorption: number,
   maxAbsorbentMaterialHounsfieldValue: number,
@@ -292,6 +314,9 @@ export function newInstance(
 export declare const vtkVolumeMapper: {
   newInstance: typeof newInstance;
   extend: typeof extend;
-  BlendMode: typeof BlendMode;
+  createRadonTransferFunction: typeof createRadonTransferFunction;
 };
+export declare const STATIC: Readonly<{
+  createRadonTransferFunction: typeof createRadonTransferFunction;
+}>;
 export default vtkVolumeMapper;

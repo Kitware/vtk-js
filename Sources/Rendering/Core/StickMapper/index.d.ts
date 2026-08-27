@@ -1,10 +1,11 @@
 import vtkMapper, { IMapperInitialValues } from '../Mapper';
+import { Nullable } from '../../../types';
 
 interface IStickMappereInitialValues extends IMapperInitialValues {
   radius?: number;
   length?: number;
-  scaleArray?: number[];
-  orientationArray?: number[];
+  scaleArray?: Nullable<string>;
+  orientationArray?: Nullable<string>;
 }
 
 export interface vtkStickMapper extends vtkMapper {
@@ -16,7 +17,7 @@ export interface vtkStickMapper extends vtkMapper {
   /**
    *
    */
-  getScaleArray(): number[];
+  getScaleArray(): Nullable<string>;
 
   /**
    *
@@ -28,7 +29,24 @@ export interface vtkStickMapper extends vtkMapper {
    *
    * @param scaleArray
    */
-  setScaleArray(scaleArray: number[]): boolean;
+  setScaleArray(scaleArray: Nullable<string>): boolean;
+
+  /**
+   * Get the name of the point data array holding the stick orientations.
+   */
+  getOrientationArray(): Nullable<string>;
+
+  /**
+   * Set the name of the point data array holding the stick orientations.
+   * @param {String} orientationArray Name of the array
+   */
+  setOrientationArray(orientationArray: Nullable<string>): boolean;
+
+  /**
+   *
+   * @param {Number} length
+   */
+  setLength(length: number): boolean;
 }
 
 /**

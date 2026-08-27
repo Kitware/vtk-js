@@ -1,12 +1,9 @@
 import { mat4 } from 'gl-matrix';
 import { vtkObject } from '../../../interfaces';
 import vtkPoints from '../../Core/Points';
+import { Mode } from './Constants';
 
-export enum Mode {
-  RIGID_BODY,
-  SIMILARITY,
-  AFFINE,
-}
+export type { Mode };
 
 export interface ILandmarkTransformInitialValues {
   mode?: Mode;
@@ -27,12 +24,12 @@ export interface vtkLandmarkTransform extends vtkObject {
   /**
    * Get list of 3D points which defines the source points.
    */
-  getSourceLandmark(): vtkPoints;
+  getSourceLandmark(): vtkPoints | undefined;
 
   /**
    * Get list of 3D points which defines the target points.
    */
-  getTargetLandmark(): vtkPoints;
+  getTargetLandmark(): vtkPoints | undefined;
 
   /**
    * Set the number of degrees of freedom to constrain the solution to:
@@ -105,5 +102,6 @@ export function newInstance(
 export declare const vtkLandmarkTransform: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  Mode: typeof Mode;
 };
 export default vtkLandmarkTransform;

@@ -18,11 +18,37 @@ export interface vtkSpline3D extends vtkObject {
   computeCoefficients(points: number[]): void;
 
   /**
+   * Get whether the spline is closed (the last point is joined to the first).
+   * @default false
+   */
+  getClose(): boolean;
+
+  /**
+   * Get the parametric values delimiting each spline interval. When empty, the
+   * intervals default to the point indices.
+   * @default []
+   */
+  getIntervals(): number[] | Float32Array;
+
+  /**
    *
    * @param {Number} intervalIndex
    * @param {Number} t
    */
   getPoint(intervalIndex: number, t: number): number[];
+
+  /**
+   * Set whether the spline is closed (the last point is joined to the first).
+   * @param {Boolean} close
+   */
+  setClose(close: boolean): boolean;
+
+  /**
+   * Set the parametric values delimiting each spline interval. Pass an empty
+   * array to fall back to the point indices.
+   * @param {Number[]} intervals
+   */
+  setIntervals(intervals: number[] | Float32Array): boolean;
 }
 
 /**

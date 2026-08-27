@@ -72,10 +72,10 @@ export interface vtkCylinderSource extends vtkCylinderSourceBase {
   /**
    * Get the radius on Z axis. If not null and different from radius,
    * the cylinder base becomes an ellipse instead of a circle.
-   * @default null
+   * @default undefined
    * @see getRadius()
    */
-  getOtherRadius(): number;
+  getOtherRadius(): number | undefined;
 
   /**
    * Get the base radius of the cylinder.
@@ -117,7 +117,7 @@ export interface vtkCylinderSource extends vtkCylinderSourceBase {
    * @param {Vector3} center The center point's coordinates.
    * @default [0, 0, 0]
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenterFrom(center: Vector3): void;
 
   /**
    * Set the direction for the cylinder.
@@ -137,7 +137,7 @@ export interface vtkCylinderSource extends vtkCylinderSourceBase {
    * Set the direction for the cylinder.
    * @param {Vector3} direction The direction coordinates.
    */
-  setDirectionFrom(direction: Vector3): boolean;
+  setDirectionFrom(direction: Vector3): void;
 
   /**
    * Set the height of the cylinder.

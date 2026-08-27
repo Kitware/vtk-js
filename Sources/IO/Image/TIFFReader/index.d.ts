@@ -13,7 +13,9 @@ interface ITIFFReaderOptions {
 /**
  *
  */
-export interface ITIFFReaderInitialValues {}
+export interface ITIFFReaderInitialValues {
+  flipY?: boolean;
+}
 
 type vtkTIFFReaderBase = vtkObject &
   Omit<
@@ -30,7 +32,7 @@ export interface vtkTIFFReader extends vtkTIFFReaderBase {
   /**
    * Get the base url.
    */
-  getBaseURL(): string;
+  getBaseURL(): string | undefined;
 
   /**
    * Get if the image is flipped vertically.
@@ -49,7 +51,7 @@ export interface vtkTIFFReader extends vtkTIFFReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    * Load the object data.

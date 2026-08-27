@@ -1,5 +1,5 @@
 import { Nullable } from '../../../types';
-import { vtkObject } from '../../../interfaces';
+import { vtkObject, vtkSubscription } from '../../../interfaces';
 import vtkAnimationClip from '../../DataModel/AnimationClip';
 import vtkAnimationScene from '../AnimationScene';
 import vtkArmature from '../../DataModel/Armature';
@@ -12,17 +12,32 @@ export interface SkinningData {
   jointCount: number;
 }
 
-export interface AnimationBindingContext {
-  animation: object;
+export type AnimationBindingContext = {
   deltaTime: number;
   mixer: vtkAnimationMixer;
   time: number;
-}
+} & (
+  | { animation: object; animations?: never }
+  | { animation?: never; animations: object[] }
+);
 
 export interface AnimationSource {
   name: string;
-  evaluate(time: number): unknown;
+  duration?: number;
+  weight?: number;
+  evaluate(time: number, loop?: boolean): unknown;
 }
+
+export type AnimationBindingOptions = {
+  enabled?: boolean;
+  time?: number;
+  loop?: boolean;
+  timeScale?: number;
+};
+
+export type AnimationEndEvent =
+  | { name: string; clip: vtkAnimationClip }
+  | { name: string; binding: object };
 
 export interface AnimationSceneData {
   actors?: Map<string, object>;
@@ -125,6 +140,16 @@ export interface vtkAnimationMixer extends vtkObject {
    */
   stop(): void;
 
+  /** Alias of stop(). */
+  stopAll(): void;
+
+  /** Subscribe to a clip or animation binding reaching its end. */
+  onAnimationEnd(
+    callback: (event: AnimationEndEvent) => void,
+    priority?: number
+  ): vtkSubscription;
+  invokeAnimationEnd(event: AnimationEndEvent): void;
+
   /**
    * Get the name of the currently playing clip.
    */
@@ -133,7 +158,7 @@ export interface vtkAnimationMixer extends vtkObject {
   /**
    * Check if the mixer is currently playing.
    */
-  isPlaying(): boolean;
+  isPlaying(): Nullable<boolean>;
 
   /**
    * Set the skeleton to animate.
@@ -197,7 +222,7 @@ export interface vtkAnimationMixer extends vtkObject {
     name: string,
     apply: (updates: unknown, context: AnimationBindingContext) => void,
     animations?: object[],
-    options?: { enabled?: boolean; time?: number }
+    options?: AnimationBindingOptions
   ): boolean;
 
   /**
@@ -239,13 +264,19 @@ export interface vtkAnimationMixer extends vtkObject {
   getAnimationNames(): string[];
 
   /** Play every imported animation channel with the given name. */
-  playAnimation(name: string): boolean;
+  playAnimation(name: string, options?: AnimationBindingOptions): boolean;
 
   /** Play a node animation by name, or the first one when omitted. */
-  playNodeAnimation(name?: string): void;
+  playNodeAnimation(
+    name?: Nullable<string>,
+    options?: AnimationBindingOptions
+  ): void;
 
   /** Play a pointer animation by name, or the first one when omitted. */
-  playPointerAnimation(name?: string): void;
+  playPointerAnimation(
+    name?: Nullable<string>,
+    options?: AnimationBindingOptions
+  ): void;
 
   /** Return true when the mixer contains any animation. */
   hasAnimations(): boolean;

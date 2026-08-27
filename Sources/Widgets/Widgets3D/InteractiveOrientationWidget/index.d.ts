@@ -5,9 +5,24 @@ import {
 import vtkAbstractWidget from '../../Core/AbstractWidget';
 import { Bounds } from '../../../types';
 import { ViewTypes } from '../../Core/WidgetManager/Constants';
+import { EventHandler, vtkSubscription } from '../../../interfaces';
+
+export type vtkInteractiveOrientationWidgetHandle = vtkAbstractWidget & {
+  /**
+   * Registers a callback when an orientation change event occurs.
+   * @param cb EventHandler
+   */
+  onOrientationChange(cb: EventHandler): vtkSubscription;
+
+  /**
+   * Invokes an orientation change event.
+   */
+  invokeOrientationChange(data: unknown): void;
+};
 
 export interface vtkInteractiveOrientationWidget<
-  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget,
+  WidgetInstance extends vtkAbstractWidget =
+    vtkInteractiveOrientationWidgetHandle,
 > extends vtkAbstractWidgetFactory<WidgetInstance> {
   /**
    * Set the widget bounds
@@ -19,7 +34,7 @@ export interface vtkInteractiveOrientationWidget<
   /**
    * @param {ViewTypes} viewType
    */
-  getRepresentationForViewType(viewType: ViewTypes): unknown;
+  getRepresentationsForViewType(viewType: ViewTypes): unknown;
 }
 
 export interface IInteractiveOrientationWidgetInitialValues<
@@ -45,7 +60,8 @@ export function extend<WidgetInstance extends vtkAbstractWidget>(
  * @param {object} [initialValues] for pre-setting some of its content
  */
 export function newInstance<
-  WidgetInstance extends vtkAbstractWidget = vtkAbstractWidget,
+  WidgetInstance extends vtkAbstractWidget =
+    vtkInteractiveOrientationWidgetHandle,
 >(
   initialValues?: IInteractiveOrientationWidgetInitialValues<WidgetInstance>
 ): vtkInteractiveOrientationWidget<WidgetInstance>;
