@@ -181,6 +181,9 @@ const DEFAULT_VALUES = {
   invertibleScalars: null,
 
   customShaderAttributes: [],
+
+  // PBR debug channel (0 = normal rendering)
+  debugChannel: 0,
 };
 
 // ----------------------------------------------------------------------------
@@ -200,6 +203,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'renderTime',
     'static',
     'customShaderAttributes', // point data array names that will be transferred to the VBO
+    'debugChannel',
   ]);
 
   CoincidentTopologyHelper.implementCoincidentTopologyMethods(publicAPI, model);
