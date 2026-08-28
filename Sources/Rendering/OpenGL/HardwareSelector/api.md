@@ -25,3 +25,8 @@ if (hws.captureBuffers()) {
   hws.releasePixBuffers();
 }
 ```
+
+## releaseGraphicsResources()
+
+Releases the captured pixel buffers and the framebuffer resources owned by the
+selector. This is called automatically when the selector is deleted.
