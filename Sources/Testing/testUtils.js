@@ -194,6 +194,74 @@ function alignTo256(value) {
   return Math.ceil(value / 256) * 256;
 }
 
+// Counts live WebGL objects by wrapping the create/delete pairs on the
+// rendering context prototypes.
+function trackWebGLObjects() {
+  const pairs = [
+    ['createBuffer', 'deleteBuffer'],
+    ['createFramebuffer', 'deleteFramebuffer'],
+    ['createRenderbuffer', 'deleteRenderbuffer'],
+    ['createTexture', 'deleteTexture'],
+    ['createVertexArray', 'deleteVertexArray'],
+  ];
+  const prototypes = [
+    globalThis.WebGL2RenderingContext?.prototype,
+    globalThis.WebGLRenderingContext?.prototype,
+  ].filter(Boolean);
+
+  const live = new Set();
+
+  function trackObjectType(prototype, createName, deleteName) {
+    const create = prototype[createName];
+    const remove = prototype[deleteName];
+    function trackedCreate(...args) {
+      const glObject = create.apply(this, args);
+      live.add(glObject);
+      return glObject;
+    }
+    function trackedDelete(glObject, ...args) {
+      live.delete(glObject);
+      return remove.call(this, glObject, ...args);
+    }
+    prototype[createName] = trackedCreate;
+    prototype[deleteName] = trackedDelete;
+    return () => {
+      // Unwrap only our own wrappers, so overlapping trackers cannot
+      // reinstall a dead one on the prototype
+      if (prototype[createName] === trackedCreate) {
+        prototype[createName] = create;
+      }
+      if (prototype[deleteName] === trackedDelete) {
+        prototype[deleteName] = remove;
+      }
+    };
+  }
+
+  const restoreCallbacks = prototypes.flatMap((prototype) =>
+    pairs
+      // WebGL 1 has no vertex array objects
+      .filter(([create, remove]) => prototype[create] && prototype[remove])
+      .map(([create, remove]) => trackObjectType(prototype, create, remove))
+  );
+
+  function stop() {
+    restoreCallbacks.forEach((restore) => restore());
+    // Stop pinning the objects this tracker exists to detect
+    live.clear();
+  }
+  onTestFinished(stop);
+
+  return { count: () => live.size, stop };
+}
+
+function createRenderContainer(gc, size = 200) {
+  const container = gc.registerDOMElement(document.createElement('div'));
+  container.style.width = `${size}px`;
+  container.style.height = `${size}px`;
+  document.querySelector('body').appendChild(container);
+  return container;
+}
+
 async function createWebGPUTestDevice() {
   const adapter = await navigator.gpu.requestAdapter({
     powerPreference: 'high-performance',
@@ -267,10 +335,12 @@ export default {
   compareImages,
   createGarbageCollector,
   createImage,
+  createRenderContainer,
   createWebGPUTestDevice,
   getImageDataFromURI,
   readWebGPUTexture2D,
   keepDOM,
   objEquals,
   removeDOM,
+  trackWebGLObjects,
 };
