@@ -340,4 +340,17 @@ export const newInstance = macro.newInstance(extend);
 
 // ----------------------------------------------------------------------------
 
+// Shared by the poly data mappers, whose primitives are vtkHelper instances.
+export function releasePolyDataMapperResources(publicAPI, model, renderWindow) {
+  model.primitives.forEach((prim) => prim.releaseGraphicsResources());
+  model.internalColorTexture?.releaseGraphicsResources(
+    renderWindow ?? model._openGLRenderWindow
+  );
+  // Force the buffers to be rebuilt on the next render
+  model.VBOBuildString = null;
+  publicAPI.modified();
+}
+
+// ----------------------------------------------------------------------------
+
 export default { newInstance, extend, primTypes };
