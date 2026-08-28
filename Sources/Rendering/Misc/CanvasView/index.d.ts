@@ -1,5 +1,6 @@
 import { vtkObject } from '../../../interfaces';
-import { Size } from '../../../types';
+import { Nullable, Size } from '../../../types';
+import vtkRenderWindowInteractor from '../../Core/RenderWindowInteractor';
 
 /**
  *
@@ -32,22 +33,22 @@ export interface vtkCanvasView extends vtkObject {
   /**
    * Get the interactor
    */
-  getInteractor(): any;
+  getInteractor(): Nullable<vtkRenderWindowInteractor>;
 
   /**
    *
    */
-  getRenderable(): any;
+  getRenderable(): vtkCanvasView;
 
   /**
    *
    */
-  getRenderers(): any[];
+  getRenderers(): vtkCanvasView[];
 
   /**
    *
    */
-  getRenderersByReference(): any[];
+  getRenderersByReference(): vtkCanvasView[];
 
   /**
    * Get the size of the canvas view
@@ -57,7 +58,7 @@ export interface vtkCanvasView extends vtkObject {
   /**
    * Get the size of the canvas view
    */
-  getSizeByReference(): boolean;
+  getSizeByReference(): Size;
 
   /**
    *
@@ -78,7 +79,7 @@ export interface vtkCanvasView extends vtkObject {
    *
    * @param {HTMLImageElement} backgroundImage The background image HTML element.
    */
-  setBackgroundImage(backgroundImage: HTMLImageElement): boolean;
+  setBackgroundImage(backgroundImage: HTMLImageElement): void;
 
   /**
    *
@@ -90,7 +91,7 @@ export interface vtkCanvasView extends vtkObject {
    *
    * @param {HTMLElement} container The container HTML element.
    */
-  setContainer(container: HTMLElement): boolean;
+  setContainer(container: HTMLElement): void;
 
   /**
    *
@@ -102,7 +103,7 @@ export interface vtkCanvasView extends vtkObject {
    *
    * @param interactor
    */
-  setInteractor(interactor: any): boolean;
+  setInteractor(interactor: Nullable<vtkRenderWindowInteractor>): boolean;
 
   /**
    * Set the size of the canvas view.
@@ -121,7 +122,7 @@ export interface vtkCanvasView extends vtkObject {
    * Set the size of the canvas view.
    * @param {Size} size The size of the canvas view.
    */
-  setSizeFrom(size: Size): boolean;
+  setSizeFrom(size: Size): void;
 
   /**
    *

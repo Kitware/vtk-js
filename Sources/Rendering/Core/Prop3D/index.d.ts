@@ -4,6 +4,7 @@ import vtkProp, { IPropInitialValues } from '../Prop';
 import { vtkObject } from '../../../interfaces';
 
 export interface IProp3DInitialValues extends IPropInitialValues {
+  properties?: vtkObject[];
   origin?: number[];
   position?: Vector3;
   orientation?: number[];
@@ -133,6 +134,9 @@ export interface vtkProp3D extends vtkProp {
    */
   getZRange(): Range;
 
+  /** Recompute the transformed bounds from the mapper. */
+  computeBounds(): void;
+
   /**
    * Get the transformation matrix set for your own use.
    */
@@ -213,6 +217,13 @@ export interface vtkProp3D extends vtkProp {
   setOrientation(x: number, y: number, z: number): boolean;
 
   /**
+   * Set the orientation of the Prop3D from a quaternion.
+   * The quaternion should follow the gl-matrix convention: [x,y,z,w]
+   * @param {quat} q The orientation quaternion.
+   */
+  setOrientationFromQuaternion(q: quat): boolean;
+
+  /**
    * Set the origin of the Prop3D. This is the point about which all rotations take place.
    * @param {Number} x The x coordinate.
    * @param {Number} y The y coordinate.
@@ -232,7 +243,7 @@ export interface vtkProp3D extends vtkProp {
    * take place.
    * @param {Number[]} origin
    */
-  setOriginFrom(origin: number[]): boolean;
+  setOriginFrom(origin: number[]): void;
 
   /**
    * Set the origin of the Prop3D.
@@ -247,7 +258,7 @@ export interface vtkProp3D extends vtkProp {
    * Set the origin of the Prop3D.
    * @param {Vector3} position
    */
-  setPositionFrom(position: Vector3): boolean;
+  setPositionFrom(position: Vector3): void;
 
   /**
    * Set the scale of the actor.
@@ -262,7 +273,7 @@ export interface vtkProp3D extends vtkProp {
    *
    * @param {Number[]} scale
    */
-  setScaleFrom(scale: number[]): boolean;
+  setScaleFrom(scale: number[]): void;
 
   /**
    * In addition to the instance variables such as position and orientation,
@@ -272,7 +283,7 @@ export interface vtkProp3D extends vtkProp {
    * setOrientation().
    * @param {mat4} matrix
    */
-  setUserMatrix(matrix: mat4): void;
+  setUserMatrix(matrix: mat4): boolean;
 
   /**
    * Generate the matrix based on internal model.

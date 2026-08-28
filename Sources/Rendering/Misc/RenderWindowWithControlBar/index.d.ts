@@ -1,4 +1,4 @@
-import { Placement } from '../../../types';
+import { Nullable, Placement } from '../../../types';
 import vtkGenericRenderWindow, {
   IGenericRenderWindowInitialValues,
 } from '../GenericRenderWindow';
@@ -26,7 +26,7 @@ export interface vtkRenderWindowWithControlBar extends vtkGenericRenderWindow {
   /**
    * Get root container element
    */
-  getRootContainer(): HTMLElement;
+  getRootContainer(): Nullable<HTMLElement>;
 
   /**
    * Set control container element

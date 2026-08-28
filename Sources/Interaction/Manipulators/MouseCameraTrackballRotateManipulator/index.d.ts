@@ -13,6 +13,11 @@ export interface vtkMouseCameraTrackballRotateManipulator
     vtkCompositeCameraManipulator,
     vtkCompositeMouseManipulator {
   /**
+   * Get whether to use a given world-up vector.
+   */
+  getUseWorldUpVec(): boolean;
+
+  /**
    * Sets whether to use a given world-up vector.
    * @param use boolean
    */
@@ -26,9 +31,20 @@ export interface vtkMouseCameraTrackballRotateManipulator
   setWorldUpVec(x: number, y: number, z: number): boolean;
 
   /**
+   * Sets the world-up vector from an array.
+   * @param worldUpVec the world-up vector
+   */
+  setWorldUpVecFrom(worldUpVec: Vector3): void;
+
+  /**
    * Gets the world-up vector.
    */
   getWorldUpVec(): Vector3;
+
+  /**
+   * Gets the world-up vector by reference.
+   */
+  getWorldUpVecByReference(): Vector3;
 
   /**
    * Gets whether to use the focal point as the center of rotation.

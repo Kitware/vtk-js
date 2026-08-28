@@ -19,34 +19,6 @@ import {
 export function createArray(size?: number): number[];
 
 /**
- * Given two rows indices, swap the two rows of a nxn matrix
- * @param {Number[]} matrix The n by n matrix in wich we want to swap the vectors.
- * @param {Number} n size of the matrix.
- * @param {Number} row1 index of first row to swap with the other.
- * @param {Number} row2 index of second row to swap with the other.
- */
-export function swapRowsMatrix_nxn(
-  matrix: number[],
-  n: number,
-  row1: number,
-  row2: number
-): void;
-
-/**
- * Given two columns indices, swap the two columns of a nxn matrix
- * @param {Number[]} matrix The n by n matrix in wich we want to swap the vectors.
- * @param {Number} n size of the matrix.
- * @param {Number} column1 index of first col to swap with the other.
- * @param {Number} column2 index of second col to swap with the other.
- */
-export function swapColumnsMatrix_nxn(
-  matrix: number[],
-  n: number,
-  column1: number,
-  column2: number
-): void;
-
-/**
  * Get the number π.
  */
 export function Pi(): number;
@@ -612,7 +584,7 @@ export function invert3x3(in_3x3: Matrix3x3, outI_3x3: Matrix3x3): void;
  * @see isIdentity()
  * @see identity3x3()
  */
-export function identity(n: number, mat: number[]): void;
+export function identity(n: number, mat: number[]): number[];
 
 /**
  * Set mat_3x3 to the identity matrix.
@@ -624,12 +596,12 @@ export function identity3x3(mat_3x3: Matrix3x3): void;
 
 /**
  * Returns true if provided matrix is the identity matrix.
- * @param {Number[]} mat The 3x3 matrix to check
+ * @param {Number[]} mat The 4x4 matrix to check
  * @param {Number} [eps] The tolerance value.
  * @see isIdentity()
  * @see identity()
  */
-export function isIdentity(mat: Matrix3x3, eps?: number): boolean;
+export function isIdentity(mat: Matrix, eps?: number): boolean;
 
 /**
  * Returns true if provided 3x3 matrix is the identity matrix.
@@ -663,6 +635,14 @@ export function quaternionToMatrix3x3(
  * @param {Number} [eps] The tolerance value.
  */
 export function areEquals(a: number[], b: number[], eps?: number): boolean;
+
+/**
+ * Returns true if elements of both arrays are equals.
+ * @param {Number[]} a An array of numbers (vector, point, matrix...)
+ * @param {Number[]} b An array of numbers (vector, point, matrix...)
+ * @param {Number} [eps] The tolerance value.
+ */
+export const areMatricesEqual: typeof areEquals;
 
 /**
  *
@@ -1138,6 +1118,16 @@ export function isNaN(value: number): boolean;
 export function isFinite(value: any): boolean;
 
 /**
+ * Value used to represent positive infinity.
+ */
+export const inf: number;
+
+/**
+ * Value used to represent negative infinity.
+ */
+export const negInf: number;
+
+/**
  * vtkMath provides methods to perform common math operations. These include
  * providing constants such as Pi; conversion from degrees to radians; vector
  * operations such as dot and cross products and vector norm; matrix determinant
@@ -1145,11 +1135,9 @@ export function isFinite(value: any): boolean;
  * number generation (for backward compatibility only).
  * **Contrary to the rest of vtk.js, vtkMath is in row-major format (similar to VTK C++).**
  */
-export declare const vtkMath: {
-  createArray: typeof createArray;
-  swapRowsMatrix_nxn: typeof swapRowsMatrix_nxn;
-  swapColumnsMatrix_nxn: typeof swapColumnsMatrix_nxn;
+declare const vtkMath: {
   Pi: typeof Pi;
+  ldexp: typeof ldexp;
   radiansFromDegrees: typeof radiansFromDegrees;
   degreesFromRadians: typeof degreesFromRadians;
   round: typeof round;
@@ -1194,10 +1182,6 @@ export declare const vtkMath: {
   norm2D: typeof norm2D;
   normalize2D: typeof normalize2D;
   determinant2x2: typeof determinant2x2;
-  rowsToMat4: typeof rowsToMat4;
-  columnsToMat4: typeof columnsToMat4;
-  rowsToMat3: typeof rowsToMat3;
-  columnsToMat3: typeof columnsToMat3;
   LUFactor3x3: typeof LUFactor3x3;
   LUSolve3x3: typeof LUSolve3x3;
   linearSolve3x3: typeof linearSolve3x3;
@@ -1207,6 +1191,9 @@ export declare const vtkMath: {
   transpose3x3: typeof transpose3x3;
   invert3x3: typeof invert3x3;
   identity3x3: typeof identity3x3;
+  identity: typeof identity;
+  isIdentity: typeof isIdentity;
+  isIdentity3x3: typeof isIdentity3x3;
   determinant3x3: typeof determinant3x3;
   quaternionToMatrix3x3: typeof quaternionToMatrix3x3;
   areEquals: typeof areEquals;

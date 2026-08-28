@@ -17,7 +17,16 @@ export interface IVectorTextInitialValues {
   perLetterFaceColors?: (letterIndex: number) => [number, number, number];
 }
 
-type vtkVectorTextBase = vtkObject & vtkAlgorithm;
+type vtkVectorTextBase = vtkObject &
+  Omit<
+    vtkAlgorithm,
+    | 'getInputData'
+    | 'setInputData'
+    | 'setInputConnection'
+    | 'getInputConnection'
+    | 'addInputConnection'
+    | 'addInputData'
+  >;
 
 export interface vtkVectorText extends vtkVectorTextBase {
   /**
@@ -68,13 +77,20 @@ export interface vtkVectorText extends vtkVectorTextBase {
   /**
    * Returns the current text string.
    */
-  getText(): string;
+  getText(): string | null;
 
   /**
    * Gets or sets the per-letter face color function.
    * @param fn - Function mapping letter index to [r,g,b] color.
    */
   getPerLetterFaceColors(): Nullable<(letterIndex: number) => RGBColor>;
+
+  /**
+   * Expose methods
+   * @param inData
+   * @param outData
+   */
+  requestData(inData: any, outData: any): void;
 
   /**
    * Enables or disables beveling.

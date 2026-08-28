@@ -135,13 +135,19 @@ export interface vtkCursor3D extends vtkCursor3DBase {
    * point.)
    * @param {Vector3} points
    */
-  setFocalPoint(points: Vector3): boolean;
+  setFocalPoint(points: Vector3): void;
 
   /**
    * Set the boundary of the 3D cursor.
    * @param {Bounds} bounds The bounds of the 3D cursor.
    */
-  setModelBounds(bounds: Bounds): boolean;
+  setModelBounds(bounds: Bounds): void;
+
+  /**
+   * Turn on/off the wireframe bounding box.
+   * @param {Boolean} outline
+   */
+  setOutline(outline: boolean): boolean;
 
   /**
    * Enable/disable the translation mode.
@@ -156,29 +162,29 @@ export interface vtkCursor3D extends vtkCursor3DBase {
    * If the cursor focus moves outside the specified bounds,
    * the cursor will either be restrained against the nearest "wall" (Wrap=off),
    * or it will wrap around (Wrap=on).
-   * @param {Number} wrap
+   * @param {Boolean} wrap
    */
-  setWrap(wrap: number): boolean;
+  setWrap(wrap: boolean): boolean;
 
   /**
 	 * Turn on/off the wireframe x-shadows.
 
-	 * @param {Number} xLength 
+	 * @param {Boolean} xShadows
 	 */
-  setXShadows(xLength: number): boolean;
+  setXShadows(xShadows: boolean): boolean;
 
   /**
 	 * Turn on/off the wireframe y-shadows.
 
-	 * @param {Number} yLength 
+	 * @param {Boolean} yShadows
 	 */
-  setYShadows(yLength: number): boolean;
+  setYShadows(yShadows: boolean): boolean;
 
   /**
    * Turn on/off the wireframe z-shadows.
-   * @param {Number} zLength
+   * @param {Boolean} zShadows
    */
-  setZShadows(zLength: number): boolean;
+  setZShadows(zShadows: boolean): boolean;
 }
 
 /**

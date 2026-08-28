@@ -28,7 +28,7 @@ export interface vtkImplicitFunction extends vtkObject {
   /**
    * Get the transform. undefined by default
    */
-  getTransform(): vtkTransform;
+  getTransform(): vtkTransform | undefined;
 
   /**
    * Set the transform to apply on all points.

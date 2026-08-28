@@ -1,7 +1,10 @@
 import { vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkCanvasView from '../CanvasView';
 import vtkImageStream from '../../../IO/Core/ImageStream';
 import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
+import vtkRenderWindowInteractor from '../../Core/RenderWindowInteractor';
+import vtkInteractorStyleRemoteMouse from '../../../Interaction/Style/InteractorStyleRemoteMouse';
 
 interface IRemoteViewInitialValues {
   viewId?: string;
@@ -20,12 +23,12 @@ export interface vtkRemoteView extends vtkObject {
   /**
    * Get container HTML element
    */
-  getContainer(): HTMLElement;
+  getContainer(): HTMLElement | undefined;
 
   /**
    * Get vtkViewStream object
    */
-  getViewStream(): vtkViewStream;
+  getViewStream(): vtkViewStream | undefined;
 
   /**
    * Get the canvas HTML element
@@ -40,12 +43,12 @@ export interface vtkRemoteView extends vtkObject {
   /**
    *
    */
-  getInteractor(): any;
+  getInteractor(): vtkRenderWindowInteractor;
 
   /**
    *
    */
-  getInteractorStyle(): any;
+  getInteractorStyle(): vtkInteractorStyleRemoteMouse;
 
   /**
    *
@@ -92,24 +95,24 @@ export interface vtkRemoteView extends vtkObject {
   /**
    *
    */
-  getRpcGestureEvent(): any;
+  getRpcGestureEvent(): Nullable<string>;
 
   /**
    *
    * @param rpcGestureEvent
    */
-  setRpcGestureEvent(rpcGestureEvent: any): boolean;
+  setRpcGestureEvent(rpcGestureEvent: Nullable<string>): boolean;
 
   /**
    *
    */
-  getRpcWheelEvent(): any;
+  getRpcWheelEvent(): Nullable<string>;
 
   /**
    *
    * @param rpcWheelEvent
    */
-  setRpcWheelEvent(rpcWheelEvent: any): boolean;
+  setRpcWheelEvent(rpcWheelEvent: Nullable<string>): boolean;
 
   /**
    * Release GL context
@@ -120,7 +123,7 @@ export interface vtkRemoteView extends vtkObject {
    *
    * @param viewStream
    */
-  setViewStream(viewStream: vtkViewStream): boolean;
+  setViewStream(viewStream: vtkViewStream): void;
 
   /**
    *
@@ -132,7 +135,7 @@ export interface vtkRemoteView extends vtkObject {
    *
    * @param {HTMLElement} container The container HTML element.
    */
-  setContainer(container: HTMLElement): boolean;
+  setContainer(container: HTMLElement): void;
 
   /**
    * Handle window resize
@@ -195,7 +198,7 @@ export function newInstance(
   initialValues?: IRemoteViewInitialValues
 ): vtkRemoteView;
 
-export function connectImageStream(session: any): void;
+export function connectImageStream(session: any, protocol?: any): void;
 
 export function disconnectImageStream(): void;
 

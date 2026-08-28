@@ -1,5 +1,6 @@
-import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes';
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkPlanes from '../../../Common/DataModel/Planes';
 
 /**
@@ -31,7 +32,7 @@ export interface vtkFrustumSource extends vtkFrustumSourceBase {
   /**
    * Get the planes defining the frustum.
    */
-  getPlanes(): vtkPlanes;
+  getPlanes(): Nullable<vtkPlanes>;
 
   /**
    * Get whether to show lines.

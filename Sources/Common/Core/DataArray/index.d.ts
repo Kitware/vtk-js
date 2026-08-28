@@ -1,3 +1,4 @@
+import { DataTypeByteSize, VtkDataTypes } from './Constants';
 import { vtkObject, vtkRange, GetStateOptions } from '../../../interfaces';
 import { float, int, Nullable, Range, TypedArray } from '../../../types';
 
@@ -55,6 +56,12 @@ export interface vtkDataArray extends vtkObject {
    */
   setComponent(tupleIdx: number, componentIndex: number, value: number): void;
 
+  /** Get a value by its flat component index. */
+  getValue(valueIdx: number): number;
+
+  /** Set a value by its flat component index. */
+  setValue(valueIdx: number, value: number): void;
+
   /**
    *
    */
@@ -98,7 +105,7 @@ export interface vtkDataArray extends vtkObject {
    * @param {boolean} [computeRanges] (default: true)
    * @returns {vtkRange[]}
    */
-  getRanges(computeRanges: boolean): vtkRange[];
+  getRanges(computeRanges?: boolean): vtkRange[];
 
   /**
    * Set the given tuple at the given index.
@@ -279,7 +286,7 @@ export interface vtkDataArray extends vtkObject {
    * without converting and copying to a plain Array.
    * @returns {object}
    */
-  getState(options?: GetStateOptions): object;
+  getState(options?: GetStateOptions): object | null;
 
   /**
    * Deep copy of another vtkDataArray into this one.
@@ -306,7 +313,7 @@ export interface vtkDataArray extends vtkObject {
     source2: vtkDataArray,
     source2Idx: int,
     t: float
-  ): void;
+  ): number;
 
   /**
    * Resize the array to the requested number of extra tuples
@@ -345,7 +352,7 @@ export interface vtkDataArray extends vtkObject {
    * @see insertNextTuple
    * @see insertNextTuples
    */
-  initialize(): void;
+  initialize(): vtkDataArray;
 
   // --- via macro --
 
@@ -381,7 +388,7 @@ export interface vtkDataArray extends vtkObject {
  * @param {Number} [component] (default: 0) indice to use inside tuple size
  * @param {Number} [numberOfComponents] (default: 1) size of the tuple
  */
-export function computeRange(
+declare function computeRange(
   values: ArrayLike<number>,
   component?: number,
   numberOfComponents?: number
@@ -394,7 +401,7 @@ export function computeRange(
  * @param {Number} offset offset index to select the desired component in the tuple
  * @param {Number} numberOfComponents size of tuple in a multi-channel array
  */
-export function fastComputeRange(
+declare function fastComputeRange(
   values: ArrayLike<number>,
   offset: number,
   numberOfComponents: number
@@ -405,7 +412,7 @@ export function fastComputeRange(
  * Create helper object that can be used to gather min, max, count, sum of
  * a set of values.
  */
-export function createRangeHelper(): vtkRangeHelper;
+declare function createRangeHelper(): vtkRangeHelper;
 
 /**
  * Return the name of a typed array
@@ -417,14 +424,22 @@ export function createRangeHelper(): vtkRangeHelper;
  *
  * @param typedArray to extract its type from
  */
-export function getDataType(typedArray: TypedArray): string;
+declare function getDataType(typedArray: TypedArray): string;
 
 /**
  * Return the max norm of a given vtkDataArray
  *
  * @param dataArray to process
  */
-export function getMaxNorm(dataArray: vtkDataArray): number;
+declare function getMaxNorm(dataArray: vtkDataArray): number;
+
+export declare const STATIC: Readonly<{
+  computeRange: typeof computeRange;
+  createRangeHelper: typeof createRangeHelper;
+  fastComputeRange: typeof fastComputeRange;
+  getDataType: typeof getDataType;
+  getMaxNorm: typeof getMaxNorm;
+}>;
 
 /**
  * Method use to decorate a given object (publicAPI+model) with vtkDataArray characteristics.
@@ -450,37 +465,6 @@ export function extend(
  * @param {object} [initialValues] for pre-setting some of its content
  */
 export function newInstance(initialValues?: object): vtkDataArray;
-
-/**
- * Constants capturing the number of bytes per element based on its data type.
- */
-export enum DataTypeByteSize {
-  Int8Array,
-  Uint8Array,
-  Uint8ClampedArray,
-  Int16Array,
-  Uint16Array,
-  Int32Array,
-  Uint32Array,
-  Float32Array,
-  Float64Array,
-}
-
-/**
- * Constants capturing the various VTK data types.
- */
-export enum VtkDataTypes {
-  VOID,
-  CHAR,
-  SIGNED_CHAR,
-  UNSIGNED_CHAR,
-  SHORT,
-  UNSIGNED_SHORT,
-  INT,
-  UNSIGNED_INT,
-  FLOAT,
-  DOUBLE,
-}
 
 /**
  * vtkDataArray is an abstract superclass for data array objects containing

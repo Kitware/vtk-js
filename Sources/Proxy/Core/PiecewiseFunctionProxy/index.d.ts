@@ -18,11 +18,16 @@ export interface PiecewiseNode {
   sharpness: number;
 }
 
-export enum IPiecewiseFunctionProxyMode {
+declare enum IPiecewiseFunctionProxyMode {
   Gaussians = 0,
   Points = 1,
   Nodes = 2,
 }
+
+/**
+ * The type is public; the value is reached through the module default export.
+ */
+export type { IPiecewiseFunctionProxyMode };
 
 export interface IPiecewiseFunctionProxyDefaults {
   Gaussians: PiecewiseGaussian[];
@@ -44,11 +49,25 @@ export interface vtkPiecewiseFunctionProxy extends VtkProxy {
   setDataRange(min: number, max: number): void;
   getDataRange(): [number, number];
   getPiecewiseFunction(): vtkPiecewiseFunction;
+  setArrayName(arrayName: string): boolean;
+  getArrayName(): string;
 }
 
 export interface IPiecewiseFunctionProxyInitialValues {
+  arrayName?: string;
+  dataRange?: [number, number];
+  gaussians?: PiecewiseGaussian[];
+  mode?: number;
+  nodes?: PiecewiseNode[];
+  points?: number[][];
   piecewiseFunction?: vtkPiecewiseFunction;
 }
+
+declare function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IPiecewiseFunctionProxyInitialValues
+): void;
 
 export function newInstance(
   initialValues?: IPiecewiseFunctionProxyInitialValues
@@ -56,6 +75,7 @@ export function newInstance(
 
 export declare const vtkPiecewiseFunctionProxy: {
   newInstance: typeof newInstance;
+  extend: typeof extend;
   Mode: typeof IPiecewiseFunctionProxyMode;
   Defaults: IPiecewiseFunctionProxyDefaults;
 };

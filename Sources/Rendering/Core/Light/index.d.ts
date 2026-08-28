@@ -9,6 +9,7 @@ export enum LIGHT_TYPES {
 }
 
 export interface ILightInitialValues {
+  transformMatrix?: mat4;
   switch?: boolean;
   intensity?: number;
   color?: RGBColor;
@@ -112,6 +113,26 @@ export interface vtkLight extends vtkObject {
   getPositional(): boolean;
 
   /**
+   * Get the shadow intensity of the light.
+   * By default a light will be completely blocked when in shadow. By setting
+   * this value to less than 1.0 you can control how much light is attenuated
+   * when in shadow.
+   */
+  getShadowAttenuation(): number;
+
+  /**
+   * Get whether the light is on or off.
+   */
+  getSwitch(): boolean;
+
+  /**
+   * Get the light's transformation matrix. If a matrix is set for a light,
+   * the light's parameters (position and focal point) are transformed by the
+   * matrix before being rendered.
+   */
+  getTransformMatrix(): mat4 | null;
+
+  /**
    * Get the position of the light, modified by the transformation matrix (if
    * it exists).
    */
@@ -135,7 +156,7 @@ export interface vtkLight extends vtkObject {
    * Set the quadratic attenuation constants from an array.
    * @param {Number[]} attenuationValues The quadratic attenuation.
    */
-  setAttenuationValuesFrom(attenuationValues: number[]): boolean;
+  setAttenuationValuesFrom(attenuationValues: number[]): void;
 
   /**
    * Set the color of the object. Has the side effect of setting the
@@ -159,19 +180,9 @@ export interface vtkLight extends vtkObject {
    * Set the color of the object. Has the side effect of setting the
    * ambient diffuse and specular colors as well. This is basically
    * a quick overall color setting method.
-   * @param {Number} r Defines the red component (between 0 and 1).
-   * @param {Number} g Defines the green component (between 0 and 1).
-   * @param {Number} b Defines the blue component (between 0 and 1).
-   */
-  setColorFrom(r: number, g: number, b: number): boolean;
-
-  /**
-   * Set the color of the object. Has the side effect of setting the
-   * ambient diffuse and specular colors as well. This is basically
-   * a quick overall color setting method.
    * @param {RGBColor} color Defines the RGB color array..
    */
-  setColorFrom(color: RGBColor): boolean;
+  setColorFrom(color: RGBColor): void;
 
   /**
    * Set the lighting cone angle of a positional light in degrees.
@@ -201,21 +212,13 @@ export interface vtkLight extends vtkObject {
    * @param {Number} elevation
    * @param {Number} azimuth
    */
-  setDirectionAngle(elevation: number, azimuth: number): boolean;
-
-  /**
-   * Set the direction vector of the light from X, Y, and Z values
-   * @param {Number} x The x coordinate.
-   * @param {Number} y The y coordinate.
-   * @param {Number} z The z coordinate.
-   */
-  setDirection(x: number, y: number, z: number): boolean;
+  setDirectionAngle(elevation: number, azimuth: number): void;
 
   /**
    * Set the direction vector of the light from X, Y, and Z values
    * @param {Vector3} direction
    */
-  setDirection(direction: Vector3): boolean;
+  setDirection(direction: Vector3): void;
 
   /**
    * Set the exponent of the cosine used in positional lighting.
@@ -235,7 +238,7 @@ export interface vtkLight extends vtkObject {
    * Set the focal point from an array
    * @param {Vector3} focalPoint The focal point array.
    */
-  setFocalPointFrom(focalPoint: Vector3): boolean;
+  setFocalPointFrom(focalPoint: Vector3): void;
 
   /**
    * Set the brightness of the light (from one to zero).
@@ -252,17 +255,17 @@ export interface vtkLight extends vtkObject {
   /**
    * Set the type of the light is CameraLight.
    */
-  setLightTypeToCameraLight(): boolean;
+  setLightTypeToCameraLight(): void;
 
   /**
    * Set the the type of the light is HeadLight.
    */
-  setLightTypeToHeadLight(): boolean;
+  setLightTypeToHeadLight(): void;
 
   /**
    * Set the the type of the light is SceneLight.
    */
-  setLightTypeToSceneLight(): boolean;
+  setLightTypeToSceneLight(): void;
 
   /**
    * Check if the type of the light is CameraLight.
@@ -291,7 +294,7 @@ export interface vtkLight extends vtkObject {
    * Set the position of the light.
    * @param {Vector3} position The position coordinate of the light.
    */
-  setPositionFrom(position: Vector3): boolean;
+  setPositionFrom(position: Vector3): void;
 
   /**
    * Turn positional lighting on or off.

@@ -1,5 +1,9 @@
 import { vtkObject } from '../../../interfaces';
 
+export interface IWidgetStateInitialValues {
+  active?: boolean;
+}
+
 export interface vtkWidgetState extends vtkObject {
   /**
    * Set the active flag of the widget state instance
@@ -70,12 +74,12 @@ export interface vtkWidgetState extends vtkObject {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {object} [initialValues] (default: {})
+ * @param {IWidgetStateInitialValues} [initialValues] (default: {})
  */
 export function extend(
   publicAPI: object,
   model: object,
-  initialValues?: object
+  initialValues?: IWidgetStateInitialValues
 ): vtkWidgetState;
 
 export declare const vtkWidgetState: {

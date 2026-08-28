@@ -1,5 +1,15 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 
+declare enum OperationType {
+  Below = 'Below',
+  Above = 'Above',
+}
+
+/**
+ * The type is public; the value is reached through the module default export.
+ */
+export type { OperationType };
+
 export interface ThresholdCriteria {
   arrayName: string;
   fieldAssociation: string;
@@ -23,10 +33,21 @@ export interface vtkThresholdPoints extends vtkThresholdPointsBase {
   getCriterias(): ThresholdCriteria[];
 
   /**
+   * Get the desired precision for the output types.
+   */
+  getCriteriasByReference(): ThresholdCriteria[];
+
+  /**
    * Set the desired precision for the output types.
    * @param outputPointsPrecision
    */
   setCriterias(criterias: ThresholdCriteria[]): boolean;
+
+  /**
+   * Set the desired precision for the output types.
+   * @param outputPointsPrecision
+   */
+  setCriteriasFrom(criterias: ThresholdCriteria[]): void;
 
   /**
    *
@@ -68,5 +89,6 @@ export function newInstance(
 export declare const vtkThresholdPoints: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  OperationType: typeof OperationType;
 };
 export default vtkThresholdPoints;

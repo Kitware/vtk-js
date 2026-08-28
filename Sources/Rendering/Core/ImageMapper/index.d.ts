@@ -17,6 +17,8 @@ export interface IClosestIJKAxis {
 }
 
 export interface IImageMapperInitialValues extends IAbstractImageMapperInitialValues {
+  preferSizeOverAccuracy?: boolean;
+  slicingMode?: SlicingMode;
   closestIJKAxis?: IClosestIJKAxis;
   renderToRectangle?: boolean;
   sliceAtFocalPoint?: boolean;
@@ -108,7 +110,7 @@ export interface vtkImageMapper
    * Set the slice from a given camera.
    * @param {vtkCamera} cam The camera object.
    */
-  setSliceFromCamera(cam: vtkCamera): boolean;
+  setSliceFromCamera(cam: vtkCamera): void;
 
   /**
    * Set the slice from a given focal point.
@@ -120,37 +122,37 @@ export interface vtkImageMapper
    * Set the slice for the X axis.
    * @param {Number} id The slice index.
    */
-  setXSlice(id: number): boolean;
+  setXSlice(id: number): void;
 
   /**
    * Set the slice for the Y axis.
    * @param {Number} id The slice index.
    */
-  setYSlice(id: number): boolean;
+  setYSlice(id: number): void;
 
   /**
    * Set the slice for the Z axis.
    * @param {Number} id The slice index.
    */
-  setZSlice(id: number): boolean;
+  setZSlice(id: number): void;
 
   /**
    * Set the slice for the I axis.
    * @param {Number} id The slice index.
    */
-  setISlice(id: number): boolean;
+  setISlice(id: number): void;
 
   /**
    * Set the slice for the J axis.
    * @param {Number} id The slice index.
    */
-  setJSlice(id: number): boolean;
+  setJSlice(id: number): void;
 
   /**
    * Set the slice for the K axis.
    * @param {Number} id The slice index.
    */
-  setKSlice(id: number): boolean;
+  setKSlice(id: number): void;
 
   /**
    *
@@ -166,7 +168,7 @@ export interface vtkImageMapper
    * Set the slicing mode.
    * @param {SlicingMode} mode The slicing mode.
    */
-  setSlicingMode(mode: SlicingMode): boolean;
+  setSlicingMode(mode: SlicingMode): void;
 
   /**
    * Get the preference to use halfFloat representation of float

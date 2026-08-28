@@ -5,7 +5,7 @@ import { Nullable } from '../../../types';
  */
 export function getEndianness(): Nullable<string>;
 
-export const ENDIANNESS: string;
+export const ENDIANNESS: Nullable<string>;
 
 /**
  *
@@ -13,3 +13,10 @@ export const ENDIANNESS: string;
  * @param {Number} wordSize
  */
 export function swapBytes(buffer: ArrayBuffer, wordSize: number): void;
+
+declare const _default: {
+  ENDIANNESS: Nullable<string>;
+  getEndianness: typeof getEndianness;
+  swapBytes: typeof swapBytes;
+};
+export default _default;

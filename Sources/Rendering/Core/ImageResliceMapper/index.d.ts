@@ -4,7 +4,7 @@ import {
 } from '../AbstractImageMapper';
 import { vtkPlane } from '../../../Common/DataModel/Plane';
 import { vtkPolyData } from '../../../Common/DataModel/PolyData';
-import { Bounds } from '../../../types';
+import { Bounds, Nullable } from '../../../types';
 import { SlabTypes } from './Constants';
 import {
   CoincidentTopologyHelper,
@@ -54,13 +54,13 @@ export interface vtkImageResliceMapper
    *
    * Get the implicit plane used to slice the volume with.
    */
-  getSlicePlane(): vtkPlane;
+  getSlicePlane(): Nullable<vtkPlane>;
 
   /**
    *
    * Get the custom polydata used to slice the volume with.
    */
-  getSlicePolyData(): vtkPolyData;
+  getSlicePolyData(): Nullable<vtkPolyData>;
 
   /**
    *

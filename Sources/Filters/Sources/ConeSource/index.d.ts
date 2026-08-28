@@ -115,7 +115,7 @@ export interface vtkConeSource extends vtkConeSourceBase {
    * @param {Vector3} center
    * @default [0, 0, 0]
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenterFrom(center: Vector3): void;
 
   /**
    * Set the direction for the cone.
@@ -144,7 +144,7 @@ export interface vtkConeSource extends vtkConeSourceBase {
    * @param {Vector3} direction
    * @default [1, 0, 0]
    */
-  setDirectionFrom(direction: Vector3): boolean;
+  setDirectionFrom(direction: Vector3): void;
 
   /**
    * Set the height of the cone.

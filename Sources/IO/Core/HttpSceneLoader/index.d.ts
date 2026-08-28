@@ -1,8 +1,10 @@
-import { vtkObject } from '../../../interfaces';
+import { vtkObject, vtkSubscription } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkAnnotatedCubeActor from '../../../Rendering/Core/AnnotatedCubeActor';
 import vtkAxesActor from '../../../Rendering/Core/AxesActor';
 import vtkRenderer from '../../../Rendering/Core/Renderer';
 import vtkRenderWindowInteractor from '../../../Rendering/Core/RenderWindowInteractor';
+import vtkTimeStepBasedAnimationHandler from '../../../Interaction/Animations/TimeStepBasedAnimationHandler';
 
 /**
  *
@@ -19,18 +21,17 @@ export interface vtkHttpSceneLoader extends vtkObject {
   /**
    *
    */
-  getAnimationHandler(): any; // vtkTimeStepBasedAnimationHandler
+  getAnimationHandler(): Nullable<vtkTimeStepBasedAnimationHandler>;
 
   /**
    *
    */
-  getBaseURL(): string;
+  getBaseURL(): Nullable<string>;
 
   /**
    *
-   * @param {Boolean} fetchGzip
    */
-  getFetchGzip(fetchGzip: boolean): boolean;
+  getFetchGzip(): boolean;
 
   /**
    *
@@ -40,7 +41,7 @@ export interface vtkHttpSceneLoader extends vtkObject {
   /**
    *
    */
-  getRenderer(): vtkRenderer;
+  getRenderer(): vtkRenderer | undefined;
 
   /**
    *
@@ -50,7 +51,7 @@ export interface vtkHttpSceneLoader extends vtkObject {
   /**
    *
    */
-  getUrl(): string;
+  getUrl(): Nullable<string>;
 
   /**
    *
@@ -60,7 +61,7 @@ export interface vtkHttpSceneLoader extends vtkObject {
   /**
    *
    */
-  onReady(): void;
+  onReady(callback: () => void, priority?: number): vtkSubscription;
 
   /**
    *
@@ -111,14 +112,14 @@ export function newInstance(
  * @param sceneItem
  * @param settings
  */
-export function applySettings(sceneItem: object, settings: object): void;
+declare function applySettings(sceneItem: object, settings: object): void;
 
 /**
  *
  * @param typeName
  * @param handler
  */
-export function updateDatasetTypeMapping(typeName: string, handler: any): void;
+declare function updateDatasetTypeMapping(typeName: string, handler: any): void;
 
 /**
  * vtkHttpSceneLoader

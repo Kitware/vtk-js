@@ -1,8 +1,11 @@
-export declare enum ProjectionMode {
-  MAX = 0,
-  MIN = 1,
-  AVERAGE = 2,
-}
+export declare const ProjectionMode: {
+  readonly MAX: 0;
+  readonly MIN: 1;
+  readonly AVERAGE: 2;
+};
+
+export type ProjectionMode =
+  (typeof ProjectionMode)[keyof typeof ProjectionMode];
 
 declare const _default: {
   ProjectionMode: typeof ProjectionMode;

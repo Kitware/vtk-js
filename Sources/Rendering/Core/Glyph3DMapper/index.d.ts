@@ -1,4 +1,6 @@
 import { Bounds, Nullable, vtkPipelineConnection } from '../../../types';
+import { vtkObject } from '../../../interfaces';
+import vtkDataArray from '../../../Common/Core/DataArray';
 import vtkMapper, { IMapperInitialValues } from '../Mapper';
 import { OrientationModes, ScaleModes } from './Constants';
 
@@ -64,12 +66,12 @@ export interface vtkGlyph3DMapper extends vtkMapper {
   /**
    * Gets the name of the array used as scale values.
    */
-  getScaleArray(): string;
+  getScaleArray(): Nullable<string>;
 
   /**
    * Get scale mode as array
    */
-  getScaleArrayData(): number[];
+  getScaleArrayData(): vtkDataArray | null;
 
   /**
    * An orientation array is a vtkDataArray with 3 components. The first
@@ -94,7 +96,7 @@ export interface vtkGlyph3DMapper extends vtkMapper {
   /**
    * Get orientation as array
    */
-  getOrientationArrayData(): number[];
+  getOrientationArrayData(): vtkDataArray | null;
 
   /**
    * Sets the name of the array to use as orientation.
@@ -105,7 +107,7 @@ export interface vtkGlyph3DMapper extends vtkMapper {
   /**
    * Gets the name of the array used as orientation values.
    */
-  getOrientationArray(): string;
+  getOrientationArray(): Nullable<string>;
 
   /**
    * Orientation mode indicates if the OrientationArray provides the direction
@@ -164,6 +166,55 @@ export interface vtkGlyph3DMapper extends vtkMapper {
    * @param {vtkPipelineConnection} outputPort The output port of the glyph source.
    */
   setSourceConnection(outputPort: vtkPipelineConnection): void;
+
+  /**
+   * Timestamp of the last `buildArrays()` execution.
+   */
+  getBuildTime(): vtkObject;
+
+  /**
+   * Colors computed by `buildArrays()` by mapping the input scalars through the
+   * lookup table. Null when there is no lookup table or no scalars.
+   */
+  getColorArray(): Nullable<vtkDataArray>;
+
+  /**
+   * Per-glyph 4x4 model matrices computed by `buildArrays()`, packed as 16
+   * floats per input point.
+   */
+  getMatrixArray(): Nullable<Float32Array>;
+
+  /**
+   * Per-glyph 3x3 normal matrices computed by `buildArrays()`, packed as 9
+   * floats per input point.
+   */
+  getNormalArray(): Nullable<Float32Array>;
+
+  /**
+   * Check whether glyphs are oriented using the orientation array.
+   * @default true
+   */
+  getOrient(): boolean;
+
+  /**
+   * Turn on/off orienting glyphs with the orientation array.
+   * @param {Boolean} orient
+   * @default true
+   */
+  setOrient(orient: boolean): boolean;
+
+  /**
+   * Check whether glyphs are scaled using the scale array and scale factor.
+   * @default true
+   */
+  getScaling(): boolean;
+
+  /**
+   * Turn on/off scaling glyphs with the scale array and scale factor.
+   * @param {Boolean} scaling
+   * @default true
+   */
+  setScaling(scaling: boolean): boolean;
 }
 
 /**

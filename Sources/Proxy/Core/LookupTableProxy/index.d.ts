@@ -11,16 +11,32 @@ export enum Mode {
   Nodes = 3,
 }
 
+export interface ILookupTableProxyDefaults {
+  Preset: string;
+  RGBPoints: RGBHSVPoint[];
+  HSVPoints: RGBHSVPoint[];
+  Nodes: {
+    x: number;
+    r: number;
+    g: number;
+    b: number;
+    midpoint: number;
+    sharpness: number;
+  }[];
+}
+
 export interface vtkLookupTableProxy extends VtkProxy {
   setPresetName(name: string): void;
   getPresetName(): string;
   setRGBPoints(points: RGBHSVPoint[]): void;
-  getRGBPoints(): RGBHSVPoint[];
+  getRgbPoints(): RGBHSVPoint[];
   setHSVPoints(points: RGBHSVPoint[]): void;
-  getHSVPoints(): RGBHSVPoint[];
+  getHsvPoints(): RGBHSVPoint[];
+  setArrayName(arrayName: string): boolean;
+  getArrayName(): string;
   // Node: { x, y, midpoint, sharpness }
   setNodes(nodes: number[][]): void;
-  getNodes(nodes): number[][];
+  getNodes(): number[][];
   setMode(mode: number): void;
   getMode(): number;
   applyMode(): void;
@@ -30,8 +46,19 @@ export interface vtkLookupTableProxy extends VtkProxy {
 }
 
 export interface ILookupTableProxyInitialValues {
+  arrayName?: string;
+  dataRange?: [number, number];
+  mode?: number;
+  nodes?: number[][];
+  presetName?: string;
   lookupTable?: vtkColorTransferFunction;
 }
+
+declare function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: ILookupTableProxyInitialValues
+): void;
 
 export function newInstance(
   initialValues?: ILookupTableProxyInitialValues
@@ -39,7 +66,9 @@ export function newInstance(
 
 export declare const vtkLookupTableProxy: {
   newInstance: typeof newInstance;
-  Mode: Mode;
+  extend: typeof extend;
+  Mode: typeof Mode;
+  Defaults: ILookupTableProxyDefaults;
 };
 
 export default vtkLookupTableProxy;

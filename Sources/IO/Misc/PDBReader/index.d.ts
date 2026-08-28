@@ -33,7 +33,7 @@ export interface vtkPDBReader extends vtkPDBReaderBase {
   /**
    *
    */
-  getBaseURL(): string;
+  getBaseURL(): string | undefined;
 
   /**
    *
@@ -47,7 +47,7 @@ export interface vtkPDBReader extends vtkPDBReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    *
@@ -68,7 +68,7 @@ export interface vtkPDBReader extends vtkPDBReaderBase {
   /**
    *
    */
-  isBusy(): number;
+  isBusy(): boolean;
 
   /**
    * Load the object data.
@@ -86,7 +86,7 @@ export interface vtkPDBReader extends vtkPDBReaderBase {
    * Parse data as text.
    * @param {String} content The content to parse.
    */
-  parseAsText(content: string): void;
+  parseAsText(content: string): boolean;
   /**
    *
    * @param inData
@@ -111,7 +111,7 @@ export interface vtkPDBReader extends vtkPDBReaderBase {
    * @param {String} url the url of the object to load.
    * @param {IPDBReaderOptions} [option] The PDB reader options.
    */
-  setUrl(url: string, option?: IPDBReaderOptions): Promise<string>;
+  setUrl(url: string, option?: IPDBReaderOptions): Promise<boolean>;
 }
 
 /**
