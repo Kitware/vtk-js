@@ -134,6 +134,10 @@ function createGarbageCollector() {
     }
   }
 
+  // A failing assertion skips the releaseResources() call at the end of a test
+  // body, so run it on test teardown too. Releasing twice is a no-op.
+  onTestFinished(releaseResources);
+
   return {
     registerResource,
     registerDOMElement,
