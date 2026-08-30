@@ -1142,9 +1142,22 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     );
   }
 
+  // Render passes are not view nodes and are not registered graphics
+  // resources, so nothing else in teardown reaches the framebuffers they own.
+  // Kept module local: the public releaseGraphicsResources is proxied to the
+  // root window, whose passes a child window must not free.
+  function releaseRenderPassResources() {
+    model.renderPasses
+      ?.filter((renderPass) => !renderPass.isDeleted())
+      .forEach((renderPass) =>
+        renderPass.releaseGraphicsResources?.(publicAPI)
+      );
+  }
+
   publicAPI.delete = macro.chain(
     () => {
       if (model.context) {
+        releaseRenderPassResources();
         deleteGLContext();
       }
       publicAPI.setContainer();
@@ -1222,6 +1235,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.releaseGraphicsResources = () => {
+    releaseRenderPassResources();
     // Clear the shader cache
     if (model.shaderCache !== null) {
       model.shaderCache.releaseGraphicsResources(publicAPI);

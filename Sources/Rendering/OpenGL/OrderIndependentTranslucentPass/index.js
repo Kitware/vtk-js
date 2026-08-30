@@ -350,7 +350,7 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
     return null;
   };
 
-  publicAPI.releaseGraphicsResources = (viewNode) => {
+  publicAPI.releaseGraphicsResources = macro.chain((viewNode) => {
     if (model.framebuffer) {
       model.framebuffer.releaseGraphicsResources(viewNode);
       model.framebuffer = null;
@@ -371,16 +371,12 @@ function vtkOpenGLOrderIndependentTranslucentPass(publicAPI, model) {
       model.copyVAO.releaseGraphicsResources(viewNode);
       model.copyVAO = null;
     }
-    if (model.copyShader) {
-      model.copyShader.releaseGraphicsResources(viewNode);
-      model.copyShader = null;
-    }
-    if (model.tris) {
-      model.tris.releaseGraphicsResources(viewNode);
-      model.tris = null;
-    }
+    // The shader cache owns the programs it hands out, so only drop the
+    // reference.
+    model.copyShader = null;
+    model.tris.releaseGraphicsResources(viewNode);
     publicAPI.modified();
-  };
+  }, publicAPI.releaseGraphicsResources);
 }
 
 // ----------------------------------------------------------------------------
