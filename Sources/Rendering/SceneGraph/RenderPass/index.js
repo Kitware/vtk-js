@@ -41,6 +41,15 @@ function vtkRenderPass(publicAPI, model) {
       viewNode.traverse(publicAPI);
     });
   };
+
+  // The cascade covers model.delegates only: a pass that holds another pass
+  // outside that array releases it itself. A deleted delegate has no model
+  // left to walk, so reaching into it would throw and abort teardown.
+  publicAPI.releaseGraphicsResources = (viewNode) => {
+    model.delegates
+      .filter((delegate) => !delegate.isDeleted())
+      .forEach((delegate) => delegate.releaseGraphicsResources?.(viewNode));
+  };
 }
 
 // ----------------------------------------------------------------------------

@@ -179,6 +179,23 @@ function vtkConvolution2DPass(publicAPI, model) {
     tex.deactivate();
   };
 
+  publicAPI.releaseGraphicsResources = macro.chain((viewNode) => {
+    if (model.framebuffer) {
+      model.framebuffer.releaseGraphicsResources();
+      model.framebuffer = null;
+    }
+    if (model.copyVAO) {
+      model.copyVAO.releaseGraphicsResources();
+      model.copyVAO = null;
+    }
+    // The shader cache owns the programs it hands out, so only drop the
+    // reference. A null shader is also what makes the next traverse rebuild
+    // the vertex array that reads from it.
+    model.convolutionShader = null;
+    model.tris.releaseGraphicsResources(viewNode);
+    publicAPI.modified();
+  }, publicAPI.releaseGraphicsResources);
+
   publicAPI.getFragmentShaderCode = (kernelDimension) => {
     // generate new shader code
     const kernelLength = kernelDimension * kernelDimension;
