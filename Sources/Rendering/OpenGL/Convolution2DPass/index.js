@@ -120,8 +120,13 @@ function vtkConvolution2DPass(publicAPI, model) {
       const program = model.convolutionShader;
 
       // prepare the vertex and triangle data for the image plane to render to
-      model.copyVAO = vtkVertexArrayObject.newInstance();
+      if (!model.copyVAO) {
+        model.copyVAO = vtkVertexArrayObject.newInstance();
+      }
       model.copyVAO.setOpenGLRenderWindow(viewNode);
+      // The vertex array refuses attributes from a program other than the one
+      // it was built against, so it is reset rather than replaced.
+      model.copyVAO.shaderProgramChanged();
 
       model.tris.getCABO().bind();
       if (
