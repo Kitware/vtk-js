@@ -1146,18 +1146,34 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   // resources, so nothing else in teardown reaches the framebuffers they own.
   // Kept module local: the public releaseGraphicsResources is proxied to the
   // root window, whose passes a child window must not free.
-  function releaseRenderPassResources() {
-    model.renderPasses
+  function releaseRenderPassResources(renderPasses) {
+    renderPasses
       ?.filter((renderPass) => !renderPass.isDeleted())
       .forEach((renderPass) =>
         renderPass.releaseGraphicsResources?.(publicAPI)
       );
   }
 
+  // A pass the window no longer renders through is unreachable from teardown,
+  // so it has to give up what it owns as it leaves.
+  const superSetRenderPasses = publicAPI.setRenderPasses;
+  publicAPI.setRenderPasses = (renderPasses) => {
+    const replacedPasses = model.renderPasses;
+    if (!superSetRenderPasses(renderPasses)) {
+      return false;
+    }
+    releaseRenderPassResources(
+      replacedPasses?.filter(
+        (renderPass) => !model.renderPasses?.includes(renderPass)
+      )
+    );
+    return true;
+  };
+
   publicAPI.delete = macro.chain(
     () => {
       if (model.context) {
-        releaseRenderPassResources();
+        releaseRenderPassResources(model.renderPasses);
         deleteGLContext();
       }
       publicAPI.setContainer();
@@ -1235,7 +1251,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.releaseGraphicsResources = () => {
-    releaseRenderPassResources();
+    releaseRenderPassResources(model.renderPasses);
     // Clear the shader cache
     if (model.shaderCache !== null) {
       model.shaderCache.releaseGraphicsResources(publicAPI);
