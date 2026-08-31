@@ -66,7 +66,7 @@ export async function expectSameImageAfterRelease(createActor) {
 // A post processing pass renders its delegate into a framebuffer it owns.
 // Translucency puts resources on the delegated forward pass too, so releasing
 // one has to reach through the delegate chain and not just the pass itself.
-function usePostProcessingPass(gc, view, createPass) {
+export function usePostProcessingPass(gc, view, createPass) {
   const pass = createPass(gc);
   pass.setDelegates([gc.registerResource(vtkForwardPass.newInstance())]);
   view.setRenderPasses([pass]);
