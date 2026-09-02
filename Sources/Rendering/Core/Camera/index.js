@@ -3,9 +3,13 @@ import { quat, vec3, vec4, mat4 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macros';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
-const { vtkDebugMacro } = macro;
+const { vtkDebugMacro, vtkWarningMacro } = macro;
 
 /* eslint-disable new-cap */
+
+// vtkWarningMacro doesn't dedupe; without this, callers such as the WebXR
+// frame loop would spam the console.
+let warned = false;
 
 /*
  * Convenience function to access elements of a gl-matrix.  If it turns
@@ -557,23 +561,34 @@ function vtkCamera(publicAPI, model) {
   };
 
   publicAPI.setProjectionMatrix = (mat) => {
-    model.projectionMatrix = mat;
+    if (!warned) {
+      warned = true;
+      vtkWarningMacro(
+        'setProjectionMatrix() is deprecated. Use setExplicitProjectionMatrix() instead.'
+      );
+    }
+    return publicAPI.setExplicitProjectionMatrix(mat);
   };
 
-  publicAPI.getProjectionMatrix = (aspect, nearz, farz) => {
-    const result = new Float64Array(16);
-    mat4.identity(result);
+  publicAPI.getProjectionMatrix = (
+    aspect,
+    nearz,
+    farz,
+    out = new Float64Array(16)
+  ) => {
+    const result = out;
 
-    if (model.projectionMatrix) {
+    if (model.explicitProjectionMatrix) {
       const scale = 1 / model.physicalScale;
       vec3.set(tmpvec1, scale, scale, scale);
 
-      mat4.copy(result, model.projectionMatrix);
+      mat4.copy(result, model.explicitProjectionMatrix);
       mat4.scale(result, result, tmpvec1);
       mat4.transpose(result, result);
       return result;
     }
 
+    mat4.identity(result);
     mat4.identity(tmpMatrix);
 
     // FIXME: Not sure what to do about adjust z buffer here
@@ -795,7 +810,7 @@ export const DEFAULT_VALUES = {
   screenBottomRight: [0.5, -0.5, -0.5],
   screenTopRight: [0.5, 0.5, -0.5],
   freezeFocalPoint: false,
-  projectionMatrix: null,
+  explicitProjectionMatrix: null,
   viewMatrix: null,
   modelTransformMatrix: null,
   cameraLightTransform: mat4.create(),
@@ -826,6 +841,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'freezeFocalPoint',
     'physicalScale',
     'modelTransformMatrix',
+    'explicitProjectionMatrix',
   ]);
 
   macro.getArray(publicAPI, model, [
