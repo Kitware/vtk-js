@@ -202,7 +202,7 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
       model.initBackground = null;
     }
 
-    ren.getActiveCamera().setProjectionMatrix(null);
+    ren.getActiveCamera().setExplicitProjectionMatrix(null);
     ren.resetCamera();
 
     ren.setViewport(0.0, 0, 1.0, 1.0);
@@ -345,7 +345,9 @@ function vtkWebXRRenderWindowHelper(publicAPI, model) {
           .computeViewParametersFromPhysicalMatrix(
             view.transform.inverse.matrix
           );
-        ren.getActiveCamera().setProjectionMatrix(view.projectionMatrix);
+        ren
+          .getActiveCamera()
+          .setExplicitProjectionMatrix(view.projectionMatrix);
 
         model.renderWindow.traverseAllPasses();
       });

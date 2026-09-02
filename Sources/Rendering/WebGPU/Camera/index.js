@@ -5,6 +5,12 @@ import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
+// Reversed Z backend (see RenderEncoder) vs. Core/Camera's GL style output
+// (near/far -> -1/+1): z' = 0.5*w - 0.5*z remaps one into the other.
+const Z_REMAP = mat4.create();
+Z_REMAP[10] = -0.5;
+Z_REMAP[14] = 0.5;
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUCamera methods
 // ----------------------------------------------------------------------------
@@ -14,6 +20,18 @@ function vtkWebGPUCamera(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPUCamera');
 
   publicAPI.getProjectionMatrix = (outMat, aspect, cRange, windowCenter) => {
+    const explicitProjectionMatrix =
+      model.renderable.getExplicitProjectionMatrix?.();
+    if (explicitProjectionMatrix) {
+      // Delegate to Core rather than duplicate its copy + physicalScale
+      // scaling; the second transpose cancels Core's own (same trick
+      // WebGL/Camera uses).
+      model.renderable.getProjectionMatrix(aspect, -1, 1, outMat);
+      mat4.transpose(outMat, outMat);
+      mat4.multiply(outMat, Z_REMAP, outMat);
+      return;
+    }
+
     mat4.identity(outMat);
     if (model.renderable.getParallelProjection()) {
       // set up a rectangular parallelipiped
@@ -31,8 +49,10 @@ function vtkWebGPUCamera(publicAPI, model) {
       outMat[0] = 2.0 * xr;
       outMat[5] = 2.0 * yr;
       outMat[10] = 1.0 / (cRange[1] - cRange[0]);
-      outMat[12] = (xmax + xmin) * xr;
-      outMat[13] = (ymax + ymin) * yr;
+      // Sign matches gl-matrix's mat4.ortho and Core: positive windowCenter
+      // shifts NDC negative.
+      outMat[12] = -(xmax + xmin) * xr;
+      outMat[13] = -(ymax + ymin) * yr;
       outMat[14] = cRange[1] / (cRange[1] - cRange[0]);
     } else {
       const tmp = Math.tan((Math.PI * model.renderable.getViewAngle()) / 360.0);
@@ -63,7 +83,13 @@ function vtkWebGPUCamera(publicAPI, model) {
   };
 
   publicAPI.convertToOpenGLDepth = (val) => {
-    if (model.renderable.getParallelProjection()) {
+    // The remap above is affine in depth after division, so inverting it gives
+    // the same "1 - val" formula parallel projection uses for affine
+    // explicit matrices only (matches Core's oblique projection check).
+    if (
+      model.renderable.getParallelProjection() ||
+      model.renderable.getExplicitProjectionMatrix?.()
+    ) {
       return 1.0 - val;
     }
     const cRange = model.renderable.getClippingRangeByReference();
