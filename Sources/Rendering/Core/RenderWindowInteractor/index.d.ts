@@ -63,6 +63,8 @@ export interface IRenderWindowInteractorInitialValues {
   preventDefaultOnPointerDown?: boolean;
   preventDefaultOnPointerUp?: boolean;
   mouseScrollDebounceByPass?: boolean;
+  wheelEndDebounceDelay?: number;
+  mouseWheelSpinYBuffering?: boolean;
   longTapDuration?: number;
   longTapDistance?: number;
 }
@@ -189,6 +191,16 @@ export interface vtkRenderWindowInteractor extends vtkObject {
    * @default false
    */
   getMouseScrollDebounceByPass(): boolean;
+
+  /**
+   * @default 200
+   */
+  getWheelEndDebounceDelay(): number;
+
+  /**
+   * @default false
+   */
+  getMouseWheelSpinYBuffering(): boolean;
 
   /**
    * @default 500
@@ -1070,6 +1082,21 @@ export interface vtkRenderWindowInteractor extends vtkObject {
    */
 
   setMouseScrollDebounceByPass(mouseScrollDebounceByPass: boolean): boolean;
+
+  /**
+   * Set the delay (in ms) after the last wheel event before the wheel-end
+   * event is fired.
+   * @param wheelEndDebounceDelay
+   */
+  setWheelEndDebounceDelay(wheelEndDebounceDelay: number): boolean;
+
+  /**
+   * When enabled, fractional spinY deltas from high-frequency wheel events
+   * (e.g. trackpads) are accumulated and only dispatched once they add up to
+   * a full step, instead of firing a mouseWheelEvent for every wheel tick.
+   * @param mouseWheelSpinYBuffering
+   */
+  setMouseWheelSpinYBuffering(mouseWheelSpinYBuffering: boolean): boolean;
 
   /**
    *

@@ -11,6 +11,9 @@ const { vtkWarningMacro, vtkErrorMacro, normalizeWheel, vtkOnceErrorMacro } =
 // Global methods
 // ----------------------------------------------------------------------------
 
+// Spin amount (in normalized wheel units) needed to trigger a buffered wheel event.
+const SCROLL_THRESHOLD = 1;
+
 const EMPTY_MOUSE_EVENT = {
   ctrlKey: false,
   altKey: false,
@@ -109,6 +112,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
 
   // Factor to apply on wheel spin.
   let wheelCoefficient = 1;
+
+  // Accumulates fractional spinY deltas when mouseWheelSpinYBuffering is enabled.
+  let scrollBuffer = 0;
 
   // Track mouse button bitmask for detecting chorded button interactions.
   // Per W3C Pointer Events spec §10, pointerdown/pointerup only fire for the
@@ -887,25 +893,54 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
     callData.spinY /= wheelCoefficient;
 
+    if (model.mouseWheelSpinYBuffering) {
+      // Reset the buffer when the scroll direction reverses so a direction
+      // change is never delayed by leftover buffer from the previous one.
+      if (
+        scrollBuffer !== 0 &&
+        Math.sign(callData.spinY) !== Math.sign(scrollBuffer)
+      ) {
+        scrollBuffer = 0;
+      }
+      scrollBuffer += callData.spinY;
+    }
+
     if (model.wheelTimeoutID === 0) {
       publicAPI.startMouseWheelEvent(callData);
-      publicAPI.mouseWheelEvent(callData);
+      if (!model.mouseWheelSpinYBuffering) {
+        publicAPI.mouseWheelEvent(callData);
+      }
     } else {
-      publicAPI.mouseWheelEvent(callData);
+      if (!model.mouseWheelSpinYBuffering) {
+        publicAPI.mouseWheelEvent(callData);
+      }
       clearTimeout(model.wheelTimeoutID);
+    }
+
+    // Only fire once the buffered spin reaches a full step, rounding fractional
+    // high-frequency deltas (e.g. trackpads) into a single integer-sized event.
+    if (
+      model.mouseWheelSpinYBuffering &&
+      Math.abs(scrollBuffer) >= SCROLL_THRESHOLD
+    ) {
+      callData.spinY = Math.sign(scrollBuffer);
+      scrollBuffer -= callData.spinY;
+      publicAPI.mouseWheelEvent(callData);
     }
 
     if (model.mouseScrollDebounceByPass) {
       publicAPI.extendAnimation(600);
       publicAPI.endMouseWheelEvent();
       model.wheelTimeoutID = 0;
+      scrollBuffer = 0;
     } else {
       // start a timer to keep us animating while we get wheel events
       model.wheelTimeoutID = setTimeout(() => {
         publicAPI.extendAnimation(600);
         publicAPI.endMouseWheelEvent();
         model.wheelTimeoutID = 0;
-      }, 200);
+        scrollBuffer = 0;
+      }, model.wheelEndDebounceDelay);
     }
   };
 
@@ -1389,6 +1424,8 @@ const DEFAULT_VALUES = {
   preventDefaultOnPointerDown: false,
   preventDefaultOnPointerUp: false,
   mouseScrollDebounceByPass: false,
+  wheelEndDebounceDelay: 200,
+  mouseWheelSpinYBuffering: false,
   longTapDuration: 500,
   longTapMaximumDistance: 30,
 };
@@ -1431,6 +1468,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'preventDefaultOnPointerDown',
     'preventDefaultOnPointerUp',
     'mouseScrollDebounceByPass',
+    'wheelEndDebounceDelay',
+    'mouseWheelSpinYBuffering',
     'longTapDuration',
     'longTapMaximumDistance',
   ]);
