@@ -178,13 +178,154 @@ function vtkImageInterpolator(publicAPI, model) {
     }
   };
 
+  publicAPI.interpolateCubic = (interpolationInfo, point, value) => {
+    const inPtr = interpolationInfo.pointer;
+    const inExt = interpolationInfo.extent;
+    const inInc = interpolationInfo.increments;
+    const numscalars = interpolationInfo.numberOfComponents;
+
+    const floorX = vtkInterpolationMathFloor(point[0]);
+    const floorY = vtkInterpolationMathFloor(point[1]);
+    const floorZ = vtkInterpolationMathFloor(point[2]);
+
+    let inIdX0 = floorX.floored;
+    let inIdY0 = floorY.floored;
+    let inIdZ0 = floorZ.floored;
+    const fx = floorX.error;
+    const fy = floorY.error;
+    const fz = floorZ.error;
+    let inIdX1 = inIdX0 + (fx !== 0);
+    let inIdY1 = inIdY0 + (fy !== 0);
+    let inIdZ1 = inIdZ0 + (fz !== 0);
+
+    const inIncX = inInc[0];
+    const inIncY = inInc[1];
+    const inIncZ = inInc[2];
+
+    const minX = inExt[0];
+    const maxX = inExt[1];
+    const minY = inExt[2];
+    const maxY = inExt[3];
+    const minZ = inExt[4];
+    const maxZ = inExt[5];
+
+    let factX = Array(4);
+    let factY = Array(4);
+    let factZ = Array(4);
+    switch (interpolationInfo.borderMode) {
+      case ImageBorderMode.REPEAT:
+        factX[0] = vtkInterpolationMathWrap(inIdX0 - 1, minX, maxX) * inIncX;
+        factX[1] = vtkInterpolationMathWrap(inIdX0, minX, maxX) * inIncX;
+        factX[2] = vtkInterpolationMathWrap(inIdX0 + 1, minX, maxX) * inIncX;
+        factX[3] = vtkInterpolationMathWrap(inIdX0 + 2, minX, maxX) * inIncX;
+
+        factY[0] = vtkInterpolationMathWrap(inIdY0 - 1, minY, maxY) * inIncY;
+        factY[1] = vtkInterpolationMathWrap(inIdY0, minY, maxY) * inIncY;
+        factY[2] = vtkInterpolationMathWrap(inIdY0 + 1, minY, maxY) * inIncY;
+        factY[3] = vtkInterpolationMathWrap(inIdY0 + 2, minY, maxY) * inIncY;
+
+        factZ[0] = vtkInterpolationMathWrap(inIdZ0 - 1, minZ, maxZ) * inIncZ;
+        factZ[1] = vtkInterpolationMathWrap(inIdZ0, minZ, maxZ) * inIncZ;
+        factZ[2] = vtkInterpolationMathWrap(inIdZ0 + 1, minZ, maxZ) * inIncZ;
+        factZ[3] = vtkInterpolationMathWrap(inIdZ0 + 2, minZ, maxZ) * inIncZ;
+        break;
+
+      case ImageBorderMode.MIRROR:
+        factX[0] = vtkInterpolationMathMirror(inIdX0 - 1, minX, maxX) * inIncX;
+        factX[1] = vtkInterpolationMathMirror(inIdX0, minX, maxX) * inIncX;
+        factX[2] = vtkInterpolationMathMirror(inIdX0 + 1, minX, maxX) * inIncX;
+        factX[3] = vtkInterpolationMathMirror(inIdX0 + 2, minX, maxX) * inIncX;
+
+        factY[0] = vtkInterpolationMathMirror(inIdY0 - 1, minY, maxY) * inIncY;
+        factY[1] = vtkInterpolationMathMirror(inIdY0, minY, maxY) * inIncY;
+        factY[2] = vtkInterpolationMathMirror(inIdY0 + 1, minY, maxY) * inIncY;
+        factY[3] = vtkInterpolationMathMirror(inIdY0 + 2, minY, maxY) * inIncY;
+
+        factZ[0] = vtkInterpolationMathMirror(inIdZ0 - 1, minZ, maxZ) * inIncZ;
+        factZ[1] = vtkInterpolationMathMirror(inIdZ0, minZ, maxZ) * inIncZ;
+        factZ[2] = vtkInterpolationMathMirror(inIdZ0 + 1, minZ, maxZ) * inIncZ;
+        factZ[3] = vtkInterpolationMathMirror(inIdZ0 + 2, minZ, maxZ) * inIncZ;
+        break;
+
+      default:
+        factX[0] = vtkInterpolationMathClamp(inIdX0 - 1, minX, maxX) * inIncX;
+        factX[1] = vtkInterpolationMathClamp(inIdX0, minX, maxX) * inIncX;
+        factX[2] = vtkInterpolationMathClamp(inIdX0 + 1, minX, maxX) * inIncX;
+        factX[3] = vtkInterpolationMathClamp(inIdX0 + 2, minX, maxX) * inIncX;
+
+        factY[0] = vtkInterpolationMathClamp(inIdY0 - 1, minY, maxY) * inIncY;
+        factY[1] = vtkInterpolationMathClamp(inIdY0, minY, maxY) * inIncY;
+        factY[2] = vtkInterpolationMathClamp(inIdY0 + 1, minY, maxY) * inIncY;
+        factY[3] = vtkInterpolationMathClamp(inIdY0 + 2, minY, maxY) * inIncY;
+
+        factZ[0] = vtkInterpolationMathClamp(inIdZ0 - 1, minZ, maxZ) * inIncZ;
+        factZ[1] = vtkInterpolationMathClamp(inIdZ0, minZ, maxZ) * inIncZ;
+        factZ[2] = vtkInterpolationMathClamp(inIdZ0 + 1, minZ, maxZ) * inIncZ;
+        factZ[3] = vtkInterpolationMathClamp(inIdZ0 + 2, minZ, maxZ) * inIncZ;
+        break;
+    }
+
+    const fX = publicAPI.vtkTricubicInterpWeights(fx);
+    const fY = publicAPI.vtkTricubicInterpWeights(fy);
+    const fZ = publicAPI.vtkTricubicInterpWeights(fz);
+
+    const multipleY = (minY != maxY) & (fy != 0);
+    const multipleZ = (minZ != maxZ) & (fz != 0);
+
+    // interpolation limits
+    const j1 = 1 - multipleY;
+    const j2 = 1 + 2 * multipleY;
+
+    const k1 = 1 - multipleZ;
+    const k2 = 1 + 2 * multipleZ;
+
+    // if only one coefficient will be used
+    if (multipleY == 0) {
+      fY[1] = 1;
+    }
+
+    if (multipleZ == 0) {
+      fZ[1] = 1;
+    }
+
+    let idx = 0;
+    let nscalars = numscalars;
+    do {
+      // loop over components
+      let val = 0;
+      let k = k1;
+      do {
+        // loop over z
+        let ifz = fZ[k];
+        let factz = factZ[k];
+        let j = j1;
+        do {
+          // loop over y
+          let ify = fY[j];
+          let fzy = ifz * ify;
+          let factzy = factz + factY[j];
+          // loop over x is unrolled (significant performance boost)
+          val +=
+            fzy *
+            (fX[0] * inPtr[idx + factzy + factX[0]] +
+              fX[1] * inPtr[idx + factzy + factX[1]] +
+              fX[2] * inPtr[idx + factzy + factX[2]] +
+              fX[3] * inPtr[idx + factzy + factX[3]]);
+        } while (++j <= j2);
+      } while (++k <= k2);
+
+      value[idx] = val;
+      idx++;
+    } while (--nscalars);
+  };
+
   publicAPI.interpolatePoint = (interpolationInfo, point, value) => {
     switch (model.interpolationMode) {
       case InterpolationMode.LINEAR:
         publicAPI.interpolateLinear(interpolationInfo, point, value);
         break;
       case InterpolationMode.CUBIC:
-        console.log('CUBIC not implemented');
+        publicAPI.interpolateCubic(interpolationInfo, point, value);
         break;
       case InterpolationMode.NEAREST:
       default:
