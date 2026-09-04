@@ -1,5 +1,6 @@
 import { it, expect } from 'vitest';
 import vtk from 'vtk.js/Sources/vtk';
+import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -580,4 +581,161 @@ it('Test vtkDataArray getState preserveTypedArrays option', () => {
     'Values preserved after round-trip'
   ).toEqual(Array.from(values));
   expect(da2.getDataType(), 'Data type preserved').toBe('Uint8Array');
+});
+
+it('Test vtkDataArray flat value access', () => {
+  const dataArray = vtkDataArray.newInstance({
+    numberOfComponents: 3,
+    size: 6,
+    values: new Float32Array([0, 1, 2, 3, 4, 5, 6, 7, 8]),
+  });
+
+  expect(dataArray.getValue(1)).toBe(1);
+  expect(dataArray.getValue(5)).toBe(5);
+
+  dataArray.setValue(1, 10);
+  expect(dataArray.getData()).toEqual(new Float32Array([0, 10, 2, 3, 4, 5]));
+  expect(dataArray.get()).toMatchObject({
+    values: new Float32Array([0, 10, 2, 3, 4, 5, 6, 7, 8]),
+  });
+});
+
+it('Test vtkDataArray tuple mutations invalidate cached ranges', () => {
+  const dataArray = vtkDataArray.newInstance({
+    values: new Float32Array([1, 2]),
+  });
+
+  expect(dataArray.getRange(0)).toEqual([1, 2]);
+  const initialMTime = dataArray.getMTime();
+
+  dataArray.setTuple(0, [10]);
+  expect(dataArray.getMTime()).toBeGreaterThan(initialMTime);
+  expect(dataArray.getRange(0)).toEqual([2, 10]);
+
+  dataArray.setTuples(0, [-2, -1]);
+  expect(dataArray.getRange(0)).toEqual([-2, -1]);
+
+  dataArray.insertNextTuple([4]);
+  expect(dataArray.getRange(0)).toEqual([-2, 4]);
+});
+
+it('Test vtkDataArray rejects invalid resize and allocation sizes', () => {
+  const dataArray = vtkDataArray.newInstance({
+    numberOfComponents: 2,
+    values: new Float32Array([1, 2, 3, 4]),
+  });
+  const originalData = dataArray.getData().slice();
+
+  expect(dataArray.resize(-1)).toBe(false);
+  expect(dataArray.resize(1.5)).toBe(false);
+  dataArray.allocate(-1);
+
+  expect(dataArray.getNumberOfTuples()).toBe(2);
+  expect(dataArray.getData()).toEqual(originalData);
+});
+
+it('Test vtkDataArray validates and applies component-count changes', () => {
+  const dataArray = vtkDataArray.newInstance({
+    numberOfComponents: 2,
+    values: new Float32Array([1, 100, 2, 200]),
+  });
+
+  expect(dataArray.getRange(0)).toEqual([1, 2]);
+  expect(dataArray.setNumberOfComponents(1)).toBe(true);
+  expect(dataArray.getRange(0)).toEqual([1, 200]);
+
+  const warnings = [];
+  macro.setLoggerFunction('warn', (...args) => warnings.push(args.join(' ')));
+  expect(dataArray.setNumberOfComponents(0)).toBe(false);
+  expect(dataArray.setNumberOfComponents(3)).toBe(false);
+  macro.setLoggerFunction('warn', console.warn);
+  expect(warnings).toHaveLength(2);
+  expect(dataArray.getNumberOfComponents()).toBe(1);
+});
+
+it('Test vtkDataArray setData requires a typed array', () => {
+  const dataArray = vtkDataArray.newInstance({
+    dataType: VtkDataTypes.FLOAT,
+    empty: true,
+  });
+
+  expect(() => dataArray.setData([1, 2, 3, 4], 2)).toThrow(TypeError);
+
+  dataArray.setData(Float32Array.from([1, 2, 3, 4]), 2);
+
+  expect(dataArray.getData()).toBeInstanceOf(Float32Array);
+  expect(dataArray.getDataType()).toBe('Float32Array');
+  expect(dataArray.getElementComponentSize()).toBe(4);
+  expect(dataArray.getTuples(0, 1)).toEqual(new Float32Array([1, 2]));
+});
+
+it('Test vtkDataArray newClone preserves independent cached ranges', () => {
+  const source = vtkDataArray.newInstance({
+    values: new Float32Array([1, 2]),
+  });
+  source.setRange({ min: -1, max: 3 }, 0);
+
+  const clone = source.newClone();
+
+  expect(clone.getRanges(false)).toEqual([{ min: -1, max: 3 }, null]);
+  source.setRange({ min: -2, max: 4 }, 0);
+  expect(clone.getRanges(false)).toEqual([{ min: -1, max: 3 }, null]);
+});
+
+it('Test vtkDataArray rejects incomplete tuple batches', () => {
+  const dataArray = vtkDataArray.newInstance({
+    numberOfComponents: 3,
+    empty: true,
+  });
+
+  expect(() => dataArray.insertNextTuples([1, 2, 3, 4])).toThrow(RangeError);
+  expect(() => dataArray.insertTuple(1.5, [1, 2, 3])).toThrow(RangeError);
+  expect(() => dataArray.insertTuples(1.5, [1, 2, 3])).toThrow(RangeError);
+  expect(dataArray.getNumberOfValues()).toBe(0);
+});
+
+it('Test vtkDataArray rejects interpolation with mismatched components', () => {
+  const target = vtkDataArray.newInstance({
+    numberOfComponents: 3,
+    empty: true,
+  });
+  const source1 = vtkDataArray.newInstance({
+    numberOfComponents: 3,
+    values: new Float32Array([0, 0, 0]),
+  });
+  const source2 = vtkDataArray.newInstance({
+    numberOfComponents: 2,
+    values: new Float32Array([1, 1]),
+  });
+
+  expect(() => target.interpolateTuple(0, source1, 0, source2, 0, 0.5)).toThrow(
+    RangeError
+  );
+  expect(target.getNumberOfValues()).toBe(0);
+});
+
+it('Test vtkDataArray deepCopy preserves independent cached ranges', () => {
+  const uncachedSource = vtkDataArray.newInstance({
+    values: new Float32Array([1, 2]),
+  });
+  const uncachedTarget = vtkDataArray.newInstance({
+    values: new Float32Array(2),
+  });
+  uncachedTarget.deepCopy(uncachedSource);
+  expect(uncachedSource.getRanges(false)).toBeUndefined();
+  expect(uncachedTarget.getRanges(false)).toBeUndefined();
+
+  const source = vtkDataArray.newInstance({
+    values: new Float32Array([1, 2]),
+  });
+  source.setRange({ min: -1, max: 3 }, 0);
+
+  const target = vtkDataArray.newInstance({
+    values: new Float32Array(2),
+  });
+  target.deepCopy(source);
+
+  expect(target.getRanges(false)).toEqual([{ min: -1, max: 3 }, null]);
+  source.setRange({ min: -2, max: 4 }, 0);
+  expect(target.getRanges(false)).toEqual([{ min: -1, max: 3 }, null]);
 });
