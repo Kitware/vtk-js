@@ -18,7 +18,9 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     const gc = testUtils.createGarbageCollector();
     expect('rendering', 'vtkView2DProxy Rendering').toBeTruthy();
 
-    const source = gc.registerResource(vtkRTAnalyticSource.newInstance());
+    const source = gc.registerResource(
+      vtkRTAnalyticSource.newInstance({ maximum: 120, offset: 40 })
+    );
     const size = 50;
     source.setWholeExtent([0, size, 0, size, 0, size]);
     source.update();

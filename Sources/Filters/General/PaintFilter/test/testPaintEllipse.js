@@ -40,7 +40,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     renderer.setBackground(0.32, 0.34, 0.43);
 
     const backgroundSource = gc.registerResource(
-      vtkRTAnalyticSource.newInstance()
+      vtkRTAnalyticSource.newInstance({ maximum: 120, offset: 40 })
     );
     backgroundSource.setWholeExtent([0, size, 0, size, 0, size]);
     backgroundSource.update();

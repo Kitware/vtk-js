@@ -148,7 +148,10 @@ function createGarbageCollector() {
  * @returns Constructed image as vtkImageData
  */
 function createImage(size, spacing) {
-  const source = vtkRTAnalyticSource.newInstance();
+  const source = vtkRTAnalyticSource.newInstance({
+    maximum: 120,
+    offset: 40,
+  });
   source.setWholeExtent([0, size[0] - 1, 0, size[1] - 1, 0, size[2] - 1]);
   source.update();
   const image = source.getOutputData();

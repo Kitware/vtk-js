@@ -41,7 +41,9 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)('Test ImageResliceMapperPolyData', () => {
   // Test code
   // ----------------------------------------------------------------------------
 
-  const rtSource = gc.registerResource(vtkRTAnalyticSource.newInstance());
+  const rtSource = gc.registerResource(
+    vtkRTAnalyticSource.newInstance({ maximum: 120, offset: 40 })
+  );
   rtSource.setWholeExtent(0, 199, 0, 199, 0, 199);
   rtSource.setCenter(100, 100, 100);
 
