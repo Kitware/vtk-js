@@ -58,10 +58,12 @@ export interface IRenderWindowInteractorInitialValues {
   recognizeGestures?: boolean;
   currentGesture?: string;
   lastFrameTime?: number;
-  wheelTimeoutID?: number;
   moveTimeoutID?: number;
   preventDefaultOnPointerDown?: boolean;
   preventDefaultOnPointerUp?: boolean;
+  /**
+   * @deprecated Use wheelEndDebounceDelay = 0 instead.
+   */
   mouseScrollDebounceByPass?: boolean;
   wheelEndDebounceDelay?: number;
   mouseWheelSpinYBuffering?: boolean;
@@ -189,13 +191,14 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 
   /**
    * @default false
+    * @deprecated Use getWheelEndDebounceDelay() instead.
    */
   getMouseScrollDebounceByPass(): boolean;
 
   /**
    * @default 200
    */
-  getWheelEndDebounceDelay(): number;
+    getWheelEndDebounceDelay(): number;
 
   /**
    * @default false
@@ -1079,8 +1082,8 @@ export interface vtkRenderWindowInteractor extends vtkObject {
   /**
    * Allow system to bypass scrolling debounce. This function must be called to allow the debounce to be bypassed
    * @param mouseScrollDebounceByPass
+    * @deprecated Use setWheelEndDebounceDelay(0) instead.
    */
-
   setMouseScrollDebounceByPass(mouseScrollDebounceByPass: boolean): boolean;
 
   /**
