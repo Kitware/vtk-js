@@ -1,14 +1,14 @@
 import Constants from 'vtk.js/Sources/Common/Core/DataArray/Constants';
-import * as macro from 'vtk.js/Sources/macros';
-import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import macro from 'vtk.js/Sources/macros';
+import vtkMath from 'vtk.js/Sources/Common/Core/Math';
+import { EPSILON } from 'vtk.js/Sources/Common/Core/Math/Constants';
 
-const { vtkErrorMacro } = macro;
+const { vtkWarningMacro } = macro;
 const { DefaultDataType } = Constants;
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
-const EPSILON = 1e-6;
 
 // Original source from https://www.npmjs.com/package/compute-range
 // Modified to accept type arrays
@@ -141,18 +141,13 @@ function vtkDataArray(publicAPI, model) {
   /**
    * Resize model.values and copy the old values to the new array.
    * @param {Number} requestedNumTuples Final expected number of tuples; must be >= 0
-   * @returns {Boolean} True if a resize occured, false otherwise
    */
   function resize(requestedNumTuples) {
-    if (requestedNumTuples < 0) {
-      return false;
-    }
-
     const numComps = publicAPI.getNumberOfComponents();
     const numAllocatedTuples =
       model.values.length / (numComps > 0 ? numComps : 1);
     if (requestedNumTuples === numAllocatedTuples) {
-      return true;
+      return;
     }
 
     if (requestedNumTuples > numAllocatedTuples) {
@@ -166,16 +161,7 @@ function vtkDataArray(publicAPI, model) {
       );
       model.values.set(oldValues);
       // The actual number of tuples is not increased, only memory is allocated.
-      return true;
     }
-
-    // Requested size is smaller than currently allocated size
-    if (model.size > requestedNumTuples * numComps) {
-      model.size = requestedNumTuples * numComps;
-      publicAPI.dataChange();
-    }
-
-    return true;
   }
 
   publicAPI.dataChange = () => {
@@ -184,10 +170,16 @@ function vtkDataArray(publicAPI, model) {
   };
 
   publicAPI.allocate = (extraNumTuples) => {
+    if (!Number.isInteger(extraNumTuples) || extraNumTuples < 0) {
+      return;
+    }
     resize(publicAPI.getNumberOfTuples() + extraNumTuples);
   };
 
   publicAPI.resize = (requestedNumTuples) => {
+    if (!Number.isInteger(requestedNumTuples) || requestedNumTuples < 0) {
+      return false;
+    }
     resize(requestedNumTuples);
     const newSize = requestedNumTuples * publicAPI.getNumberOfComponents();
     if (model.size !== newSize) {
@@ -225,16 +217,13 @@ function vtkDataArray(publicAPI, model) {
     }
   };
 
-  publicAPI.getValue = (valueIdx) => {
-    const idx = valueIdx / model.numberOfComponents;
-    const comp = valueIdx % model.numberOfComponents;
-    return publicAPI.getComponent(idx, comp);
-  };
+  publicAPI.getValue = (valueIdx) => model.values[valueIdx];
 
   publicAPI.setValue = (valueIdx, value) => {
-    const idx = valueIdx / model.numberOfComponents;
-    const comp = valueIdx % model.numberOfComponents;
-    publicAPI.setComponent(idx, comp, value);
+    if (value !== model.values[valueIdx]) {
+      model.values[valueIdx] = value;
+      publicAPI.dataChange();
+    }
   };
 
   publicAPI.getData = () =>
@@ -319,35 +308,75 @@ function vtkDataArray(publicAPI, model) {
 
   publicAPI.setTuple = (idx, tuple) => {
     const offset = idx * model.numberOfComponents;
+    let changed = false;
     for (let i = 0; i < model.numberOfComponents; i++) {
-      model.values[offset + i] = tuple[i];
+      const valueIdx = offset + i;
+      const previousValue = model.values[valueIdx];
+      model.values[valueIdx] = tuple[i];
+      if (model.values[valueIdx] !== previousValue) {
+        changed = true;
+      }
     }
+    if (changed) {
+      publicAPI.dataChange();
+    }
+    return changed;
   };
 
   publicAPI.setTuples = (idx, tuples) => {
     let i = idx * model.numberOfComponents;
     const last = Math.min(tuples.length, model.size - i);
+    let changed = false;
     for (let j = 0; j < last; ) {
-      model.values[i++] = tuples[j++];
+      const previousValue = model.values[i];
+      model.values[i] = tuples[j];
+      if (!Object.is(model.values[i], previousValue)) {
+        changed = true;
+      }
+      i++;
+      j++;
     }
+    if (changed) {
+      publicAPI.dataChange();
+    }
+    return changed;
   };
 
   publicAPI.insertTuple = (idx, tuple) => {
-    if (model.size <= idx * model.numberOfComponents) {
-      model.size = (idx + 1) * model.numberOfComponents;
-      resize(idx + 1);
+    if (!Number.isInteger(idx) || idx < 0) {
+      throw new RangeError('idx must be a nonnegative integer');
     }
-    publicAPI.setTuple(idx, tuple);
+    const sizeIncreased = model.size <= idx * model.numberOfComponents;
+    if (sizeIncreased) {
+      resize(idx + 1);
+      model.size = (idx + 1) * model.numberOfComponents;
+    }
+    const changed = publicAPI.setTuple(idx, tuple);
+    if (sizeIncreased && !changed) {
+      publicAPI.dataChange();
+    }
     return idx;
   };
 
   publicAPI.insertTuples = (idx, tuples) => {
-    const end = idx + tuples.length / model.numberOfComponents;
-    if (model.size < end * model.numberOfComponents) {
-      model.size = end * model.numberOfComponents;
-      resize(end);
+    if (!Number.isInteger(idx) || idx < 0) {
+      throw new RangeError('idx must be a nonnegative integer');
     }
-    publicAPI.setTuples(idx, tuples);
+    if (tuples.length % model.numberOfComponents !== 0) {
+      throw new RangeError(
+        'tuples.length must be a multiple of numberOfComponents'
+      );
+    }
+    const end = idx + tuples.length / model.numberOfComponents;
+    const sizeIncreased = model.size < end * model.numberOfComponents;
+    if (sizeIncreased) {
+      resize(end);
+      model.size = end * model.numberOfComponents;
+    }
+    const changed = publicAPI.setTuples(idx, tuples);
+    if (sizeIncreased && !changed) {
+      publicAPI.dataChange();
+    }
     return end;
   };
 
@@ -418,6 +447,24 @@ function vtkDataArray(publicAPI, model) {
   publicAPI.getNumberOfValues = () => model.size;
   publicAPI.getNumberOfTuples = () => model.size / model.numberOfComponents;
   publicAPI.getDataType = () => model.dataType;
+  publicAPI.setNumberOfComponents = (numberOfComponents) => {
+    if (
+      !Number.isInteger(numberOfComponents) ||
+      numberOfComponents <= 0 ||
+      model.size % numberOfComponents !== 0
+    ) {
+      vtkWarningMacro(
+        'numberOfComponents must be a positive integer that divides the array size'
+      );
+      return false;
+    }
+    if (model.numberOfComponents !== numberOfComponents) {
+      model.numberOfComponents = numberOfComponents;
+      publicAPI.dataChange();
+      return true;
+    }
+    return false;
+  };
   /* eslint-disable no-use-before-define */
   publicAPI.newClone = () =>
     newInstance({
@@ -425,6 +472,7 @@ function vtkDataArray(publicAPI, model) {
       name: model.name,
       dataType: model.dataType,
       numberOfComponents: model.numberOfComponents,
+      ranges: structuredClone(model.ranges),
     });
   /* eslint-enable no-use-before-define */
 
@@ -437,14 +485,21 @@ function vtkDataArray(publicAPI, model) {
   };
 
   publicAPI.setData = (typedArray, numberOfComponents) => {
+    if (!ArrayBuffer.isView(typedArray) || typedArray instanceof DataView) {
+      throw new TypeError('Array must be a TypedArray');
+    }
+    const nextNumberOfComponents =
+      numberOfComponents ?? model.numberOfComponents;
     model.values = typedArray;
     model.size = typedArray.length;
     model.dataType = getDataType(typedArray);
-    if (numberOfComponents) {
-      model.numberOfComponents = numberOfComponents;
-    }
-    if (model.size % model.numberOfComponents !== 0) {
-      model.numberOfComponents = 1;
+    model.numberOfComponents = 1;
+    if (
+      Number.isInteger(nextNumberOfComponents) &&
+      nextNumberOfComponents > 0 &&
+      model.size % nextNumberOfComponents === 0
+    ) {
+      model.numberOfComponents = nextNumberOfComponents;
     }
     publicAPI.dataChange();
   };
@@ -493,8 +548,7 @@ function vtkDataArray(publicAPI, model) {
     const currentArray = model.values;
     publicAPI.shallowCopy(other);
 
-    // set the ranges
-    model.ranges = structuredClone(other.getRanges());
+    const ranges = structuredClone(other.getRanges(false));
 
     // Avoid array reallocation if size already sufficient
     // and dataTypes match.
@@ -504,10 +558,12 @@ function vtkDataArray(publicAPI, model) {
     ) {
       currentArray.set(other.getData());
       model.values = currentArray;
-      publicAPI.dataChange();
     } else {
-      publicAPI.setData(other.getData().slice());
+      model.values = other.getData().slice();
     }
+    model.ranges = ranges;
+    model.rangeTuple = [0, 0];
+    publicAPI.modified();
   };
 
   publicAPI.interpolateTuple = (
@@ -523,7 +579,7 @@ function vtkDataArray(publicAPI, model) {
       numberOfComponents !== source1.getNumberOfComponents() ||
       numberOfComponents !== source2.getNumberOfComponents()
     ) {
-      vtkErrorMacro('numberOfComponents must match');
+      throw new RangeError('numberOfComponents must match');
     }
 
     const tuple1 = source1.getTuple(source1Idx);
@@ -606,11 +662,15 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   macro.obj(publicAPI, model);
-  macro.set(publicAPI, model, ['name', 'numberOfComponents']);
+  macro.set(publicAPI, model, ['name']);
 
-  if (model.size % model.numberOfComponents !== 0) {
+  if (
+    !Number.isInteger(model.numberOfComponents) ||
+    model.numberOfComponents <= 0 ||
+    model.size % model.numberOfComponents !== 0
+  ) {
     throw new RangeError(
-      'model.size is not a multiple of model.numberOfComponents'
+      'numberOfComponents must be a positive integer that divides model.size'
     );
   }
 
