@@ -58,6 +58,26 @@ function vtkWidgetManager(publicAPI, model) {
   model.classHierarchy.push('vtkWidgetManager');
   const propsWeakMap = new WeakMap();
   const subscriptions = [];
+  // not a model field: delete() wipes the model and this must survive it
+  let tearingDown = false;
+
+  function deleteSelectorWhenReady() {
+    const selector = model._selector;
+    const captureInProgress = model._captureInProgress;
+    if (!selector) {
+      return;
+    }
+    const deleteSelector = () => {
+      if (!selector.isDeleted()) {
+        selector.delete();
+      }
+    };
+    if (captureInProgress) {
+      captureInProgress.then(deleteSelector, deleteSelector);
+    } else {
+      deleteSelector();
+    }
+  }
 
   // --------------------------------------------------------------------------
   // API internal
@@ -229,14 +249,20 @@ function vtkWidgetManager(publicAPI, model) {
     renderPickingBuffer();
 
     model._capturedBuffers = null;
-    model._captureInProgress = model._selector.getSourceDataAsync(
+    const captureInProgress = model._selector.getSourceDataAsync(
       model._renderer,
       x1,
       y1,
       x2,
       y2
     );
-    model._capturedBuffers = await model._captureInProgress;
+    model._captureInProgress = captureInProgress;
+    const capturedBuffers = await captureInProgress;
+    // deleted or re-targeted while awaiting: the buffers describe a stale scene
+    if (model._captureInProgress !== captureInProgress) {
+      return;
+    }
+    model._capturedBuffers = capturedBuffers;
     model._captureInProgress = null;
     model.previousSelectedData = null;
     renderFrontBuffer();
@@ -248,6 +274,11 @@ function vtkWidgetManager(publicAPI, model) {
   };
 
   publicAPI.renderWidgets = () => {
+    // Losing focus re-enables picking, so a widget focused at deletion time
+    // would otherwise start a full window capture on the way out.
+    if (tearingDown) {
+      return;
+    }
     if (model.pickingEnabled && model.captureOn === CaptureOn.MOUSE_RELEASE) {
       const [w, h] = model._apiSpecificRenderWindow.getSize();
       captureBuffers(0, 0, w, h);
@@ -262,6 +293,9 @@ function vtkWidgetManager(publicAPI, model) {
   };
 
   publicAPI.setRenderer = (renderer) => {
+    deleteSelectorWhenReady();
+    model._capturedBuffers = null;
+    model._captureInProgress = null;
     const renderingComponents = extractRenderingComponents(renderer);
     Object.assign(model, renderingComponents);
     macro.moveToProtected({}, model, Object.keys(renderingComponents));
@@ -355,8 +389,18 @@ function vtkWidgetManager(publicAPI, model) {
   };
 
   function removeWidgetInternal(viewWidget) {
-    model._renderer.removeActor(viewWidget);
-    viewWidget.delete();
+    if (model._renderer && !model._renderer.isDeleted()) {
+      model._renderer.removeActor(viewWidget);
+    }
+    if (!viewWidget.isDeleted()) {
+      viewWidget.delete();
+    }
+  }
+
+  function removeAllWidgetsInternal() {
+    model.widgets.forEach(removeWidgetInternal);
+    model.widgets = [];
+    model.widgetInFocus = null;
   }
 
   function onWidgetRemoved() {
@@ -365,9 +409,7 @@ function vtkWidgetManager(publicAPI, model) {
   }
 
   publicAPI.removeWidgets = () => {
-    model.widgets.forEach(removeWidgetInternal);
-    model.widgets = [];
-    model.widgetInFocus = null;
+    removeAllWidgetsInternal();
     onWidgetRemoved();
   };
 
@@ -404,6 +446,12 @@ function vtkWidgetManager(publicAPI, model) {
         ) {
           await captureBuffers(x, y, x, y);
         }
+      }
+
+      // a capture can settle with nothing to select against: the manager was
+      // deleted or re-targeted while awaiting, or the selector had no view
+      if (!model._capturedBuffers) {
+        return {};
       }
 
       model.selections = model._capturedBuffers.generateSelection(x, y, x, y);
@@ -467,10 +515,37 @@ function vtkWidgetManager(publicAPI, model) {
 
   const superDelete = publicAPI.delete;
   publicAPI.delete = () => {
+    if (tearingDown || publicAPI.isDeleted()) {
+      return;
+    }
+    tearingDown = true;
     while (subscriptions.length) {
       subscriptions.pop().unsubscribe();
     }
-    superDelete();
+    // A focused widget holds an animation request on the interactor that only
+    // losing focus cancels. loseFocus() ends in a render, so it throws when the
+    // view is already gone, and it is skipped for a deleted widget; neither may
+    // abort teardown, and the request has to be dropped either way.
+    const focused = model.widgetInFocus;
+    model.widgetInFocus = null;
+    if (focused) {
+      try {
+        if (!focused.isDeleted()) {
+          focused.loseFocus();
+        }
+      } catch {
+        // the view this widget rendered into is already torn down
+      }
+      model._interactor?.cancelAnimation(focused, true);
+    }
+    try {
+      removeAllWidgetsInternal();
+    } finally {
+      // the selector owns GPU objects, so it is freed even when a widget
+      // failed to tear down, which also leaves the manager deletable
+      deleteSelectorWhenReady();
+      superDelete();
+    }
   };
 }
 
