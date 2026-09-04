@@ -10,6 +10,12 @@ preparefor rendering
 
 do the rendering
 
+### releaseGraphicsResources(openGLRenderWindow)
+
+Release the GPU resources owned by this OpenGL mapper view node. If the view
+node remains active, the resources are recreated as needed on a subsequent
+render.
+
 ## Shader customization
 
 In order to provide specific properties for rendering, you will have to add
@@ -144,4 +150,3 @@ mapperSpecificProp.ShaderCallbacks.push({
 
 Defined 'userData' will be the first parameters which will be passed to the callback.
 These callbacks will be executed when updateShaders() of OpenGLPolyDataMapper is called.
-

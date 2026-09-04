@@ -1,7 +1,9 @@
 import { mat3, mat4, vec3 } from 'gl-matrix';
 
 import * as macro from 'vtk.js/Sources/macros';
-import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
+import vtkHelper, {
+  releasePolyDataMapperResources,
+} from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
@@ -2018,6 +2020,14 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // Return in MB
     return memUsed;
   };
+
+  publicAPI.releaseGraphicsResources = (renderWindow) =>
+    releasePolyDataMapperResources(publicAPI, model, renderWindow);
+
+  publicAPI.delete = macro.chain(
+    () => publicAPI.releaseGraphicsResources(),
+    publicAPI.delete
+  );
 }
 
 // ----------------------------------------------------------------------------
