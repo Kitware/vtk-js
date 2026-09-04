@@ -116,6 +116,8 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // Accumulates fractional spinY deltas when mouseWheelSpinYBuffering is enabled.
   let scrollBuffer = 0;
 
+  let wheelTimeoutID = 0;
+
   // Track mouse button bitmask for detecting chorded button interactions.
   // Per W3C Pointer Events spec §10, pointerdown/pointerup only fire for the
   // first press / last release. Chorded (additional) button changes while
@@ -326,9 +328,10 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   const _unbindEvents = () => {
     // Clear any previous timeouts and state variables that control mouse / touchpad behavior.
     clearTimeout(model.moveTimeoutID);
-    clearTimeout(model.wheelTimeoutID);
+    clearTimeout(wheelTimeoutID);
     model.moveTimeoutID = 0;
-    model.wheelTimeoutID = 0;
+    wheelTimeoutID = 0;
+    scrollBuffer = 0;
     wheelCoefficient = 1.0;
 
     const { container } = model;
@@ -879,7 +882,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // mouse wheel events have absolute spin values higher than 1.
     // Here the first spin value is "recorded", and used to normalize
     // all the following mouse wheel events.
-    if (model.wheelTimeoutID === 0) {
+    if (wheelTimeoutID === 0) {
       // we attempt to distinguish between trackpads and mice
       // .3 will be larger than the first trackpad event,
       // but small enough to detect some common edge case mice
@@ -893,6 +896,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
     callData.spinY /= wheelCoefficient;
 
+    if (wheelTimeoutID === 0) {
+      publicAPI.startMouseWheelEvent(callData);
+    } else {
+      clearTimeout(wheelTimeoutID);
+    }
+
     if (model.mouseWheelSpinYBuffering) {
       // Reset the buffer when the scroll direction reverses so a direction
       // change is never delayed by leftover buffer from the previous one.
@@ -903,42 +912,27 @@ function vtkRenderWindowInteractor(publicAPI, model) {
         scrollBuffer = 0;
       }
       scrollBuffer += callData.spinY;
-    }
 
-    if (model.wheelTimeoutID === 0) {
-      publicAPI.startMouseWheelEvent(callData);
-      if (!model.mouseWheelSpinYBuffering) {
+      if (Math.abs(scrollBuffer) >= SCROLL_THRESHOLD) {
+        callData.spinY = Math.trunc(scrollBuffer);
+        scrollBuffer -= callData.spinY;
         publicAPI.mouseWheelEvent(callData);
       }
     } else {
-      if (!model.mouseWheelSpinYBuffering) {
-        publicAPI.mouseWheelEvent(callData);
-      }
-      clearTimeout(model.wheelTimeoutID);
-    }
-
-    // Only fire once the buffered spin reaches a full step, rounding fractional
-    // high-frequency deltas (e.g. trackpads) into a single integer-sized event.
-    if (
-      model.mouseWheelSpinYBuffering &&
-      Math.abs(scrollBuffer) >= SCROLL_THRESHOLD
-    ) {
-      callData.spinY = Math.sign(scrollBuffer);
-      scrollBuffer -= callData.spinY;
       publicAPI.mouseWheelEvent(callData);
     }
 
-    if (model.mouseScrollDebounceByPass) {
+    if (model.mouseScrollDebounceByPass || model.wheelEndDebounceDelay === 0) {
       publicAPI.extendAnimation(600);
       publicAPI.endMouseWheelEvent();
-      model.wheelTimeoutID = 0;
+      wheelTimeoutID = 0;
       scrollBuffer = 0;
     } else {
       // start a timer to keep us animating while we get wheel events
-      model.wheelTimeoutID = setTimeout(() => {
+      wheelTimeoutID = setTimeout(() => {
         publicAPI.extendAnimation(600);
         publicAPI.endMouseWheelEvent();
-        model.wheelTimeoutID = 0;
+        wheelTimeoutID = 0;
         scrollBuffer = 0;
       }, model.wheelEndDebounceDelay);
     }
@@ -1418,7 +1412,6 @@ const DEFAULT_VALUES = {
   animationRequest: null,
   lastFrameTime: 0.1,
   recentAnimationFrameRate: 10.0,
-  wheelTimeoutID: 0,
   moveTimeoutID: 0,
   lastGamepadValues: {},
   preventDefaultOnPointerDown: false,
