@@ -42,7 +42,7 @@ function vtkRTAnalyticSource(publicAPI, model) {
       (_, i) => model.wholeExtent[i * 2 + 1] - model.wholeExtent[i * 2] + 1
     );
 
-    const newArray = new Uint8Array(dims[0] * dims[1] * dims[2]);
+    const newArray = new Float32Array(dims[0] * dims[1] * dims[2]);
     const temp2 =
       1.0 / (2.0 * model.standardDeviation * model.standardDeviation);
 
@@ -85,7 +85,7 @@ function vtkRTAnalyticSource(publicAPI, model) {
       numberOfComponents: 1,
       values: newArray,
     });
-    da.setName('scalars');
+    da.setName('RTData');
 
     const cpd = id.getPointData();
     cpd.setScalars(da);
@@ -100,8 +100,8 @@ function vtkRTAnalyticSource(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 const DEFAULT_VALUES = {
-  offset: 40,
-  maximum: 120,
+  offset: 0,
+  maximum: 255,
   center: [0, 0, 0],
   frequency: [60, 30, 40],
   magnitude: [10, 18, 5],

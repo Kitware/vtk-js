@@ -24,20 +24,20 @@ it('Test vtkImageData histogram', () => {
   const hist = image.computeHistogram(bounds);
 
   const baseline1 = {
-    minimum: 9,
-    maximum: 185,
-    average: 64.65,
-    variance: 782.87,
-    sigma: 27.98,
+    minimum: -29.26,
+    maximum: 272.73,
+    average: 53.95,
+    variance: 2824.76,
+    sigma: 53.15,
     count: 132651,
   };
 
   expect(
-    hist.minimum === baseline1.minimum,
+    compareFloat(hist.minimum.toFixed(2), baseline1.minimum),
     'computeHistogram return value test: minimum'
   ).toBeTruthy();
   expect(
-    hist.maximum === baseline1.maximum,
+    compareFloat(hist.maximum.toFixed(2), baseline1.maximum),
     'computeHistogram return value test: maximum'
   ).toBeTruthy();
   expect(
@@ -61,19 +61,19 @@ it('Test vtkImageData histogram', () => {
   const voxelFunc = (idx) => idx[0] > 9 && idx[0] < 40;
 
   const baseline2 = {
-    minimum: 9,
-    maximum: 173,
-    average: 65.29,
-    variance: 676.51,
-    sigma: 26.01,
+    minimum: -28.52,
+    maximum: 252.4,
+    average: 55.48,
+    variance: 2333.78,
+    sigma: 48.31,
     count: 78030,
   };
 
   const histWithMask = image.computeHistogram(bounds, voxelFunc);
 
   expect(
-    histWithMask.minimum === baseline2.minimum &&
-      histWithMask.maximum === baseline2.maximum &&
+    compareFloat(histWithMask.minimum.toFixed(2), baseline2.minimum) &&
+      compareFloat(histWithMask.maximum.toFixed(2), baseline2.maximum) &&
       compareFloat(histWithMask.average.toFixed(2), baseline2.average) &&
       compareFloat(histWithMask.variance.toFixed(2), baseline2.variance) &&
       compareFloat(histWithMask.sigma.toFixed(2), baseline2.sigma) &&
