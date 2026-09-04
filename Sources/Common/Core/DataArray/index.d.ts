@@ -1,5 +1,11 @@
 import { vtkObject, vtkRange, GetStateOptions } from '../../../interfaces';
-import { float, int, Nullable, Range, TypedArray } from '../../../types';
+import {
+  Float,
+  NonNegativeInteger,
+  Nullable,
+  Range,
+  TypedArray,
+} from '../../../types';
 
 /**
  * Output of the rangeHelper instance
@@ -42,18 +48,40 @@ export interface vtkDataArray extends vtkObject {
 
   /**
    * Get the component for a given tupleIdx.
+   *
    * @param {Number} tupleIdx
    * @param {Number} [componentIndex] (default: 0)
    */
-  getComponent(tupleIdx: number, componentIndex?: number): number;
+  getComponent(
+    tupleIdx: NonNegativeInteger,
+    componentIndex?: NonNegativeInteger
+  ): number;
 
   /**
    * Set the component value for a given tupleIdx and componentIndex.
+   *
    * @param {Number} tupleIdx
    * @param {Number} componentIndex
    * @param {Number} value
    */
-  setComponent(tupleIdx: number, componentIndex: number, value: number): void;
+  setComponent(
+    tupleIdx: NonNegativeInteger,
+    componentIndex: NonNegativeInteger,
+    value: number
+  ): void;
+
+  /**
+   * Get the value at a flat array index.
+   * @param {Number} valueIdx
+   */
+  getValue(valueIdx: NonNegativeInteger): number;
+
+  /**
+   * Set the value at a flat array index.
+   * @param {Number} valueIdx
+   * @param {Number} value
+   */
+  setValue(valueIdx: NonNegativeInteger, value: number): void;
 
   /**
    *
@@ -98,21 +126,28 @@ export interface vtkDataArray extends vtkObject {
    * @param {boolean} [computeRanges] (default: true)
    * @returns {vtkRange[]}
    */
-  getRanges(computeRanges: boolean): vtkRange[];
+  getRanges(computeRanges?: true): vtkRange[];
+  getRanges(computeRanges: false): Nullable<vtkRange>[] | undefined;
+  getRanges(computeRanges: boolean): Nullable<vtkRange>[] | undefined;
 
   /**
    * Set the given tuple at the given index.
    * @param {Number} idx
    * @param {Array<Number>|TypedArray} tuple
+   * @returns Whether any value changed.
    */
-  setTuple(idx: number, tuple: Array<number> | TypedArray): void;
+  setTuple(idx: NonNegativeInteger, tuple: Array<number> | TypedArray): boolean;
 
   /**
    * Set the given tuples starting at the given index.
    * @param {Number} idx
    * @param {Array<Number>|TypedArray} tuples
+   * @returns Whether any value changed.
    */
-  setTuples(idx: number, tuples: Array<number> | TypedArray): void;
+  setTuples(
+    idx: NonNegativeInteger,
+    tuples: Array<number> | TypedArray
+  ): boolean;
 
   /**
    * Get the tuple at the given index.
@@ -131,7 +166,7 @@ export interface vtkDataArray extends vtkObject {
    * @returns {Number[]|TypedArray}
    */
   getTuple(
-    idx: number,
+    idx: NonNegativeInteger,
     tupleToFill?: number[] | TypedArray
   ): number[] | TypedArray;
 
@@ -173,8 +208,12 @@ export interface vtkDataArray extends vtkObject {
    * @param {Number} idx
    * @param {Array<Number>|TypedArray} tuple
    * @returns {Number} Index of the inserted tuple
+   * @throws {RangeError} If idx is not a nonnegative integer.
    */
-  insertTuple(idx: number, tuple: Array<number> | TypedArray): number;
+  insertTuple(
+    idx: NonNegativeInteger,
+    tuple: Array<number> | TypedArray
+  ): NonNegativeInteger;
 
   /**
    * Insert tuples starting at the given idx.
@@ -182,8 +221,13 @@ export interface vtkDataArray extends vtkObject {
    * @param {Number} idx
    * @param {Array<Number>|TypedArray} tuples Flat array of tuples to insert
    * @returns The index of the last inserted tuple
+   * @throws {RangeError} If idx is not a nonnegative integer or tuples does
+   * not contain a whole number of tuples.
    */
-  insertTuples(idx: number, tuples: Array<number> | TypedArray): number;
+  insertTuples(
+    idx: NonNegativeInteger,
+    tuples: Array<number> | TypedArray
+  ): NonNegativeInteger;
 
   /**
    * Insert the given tuple at the next available slot and return the index of the insertion.
@@ -195,7 +239,7 @@ export interface vtkDataArray extends vtkObject {
    * @param {Array<Number>|TypedArray} tuple
    * @returns {Number} Index of the inserted tuple.
    */
-  insertNextTuple(tuple: Array<number> | TypedArray): number;
+  insertNextTuple(tuple: Array<number> | TypedArray): NonNegativeInteger;
 
   /**
    * Convenience function to insert an array of tuples with insertNextTuple.
@@ -203,14 +247,14 @@ export interface vtkDataArray extends vtkObject {
    * @param {Array<Number>|TypedArray} tuples
    * @returns The index of the last inserted tuple
    */
-  insertNextTuples(tuples: Array<number> | TypedArray): number;
+  insertNextTuples(tuples: Array<number> | TypedArray): NonNegativeInteger;
 
   /**
    *
    * @param {Number} [idx] (default: 1)
    * @returns {Number}
    */
-  getTupleLocation(idx?: number): number;
+  getTupleLocation(idx?: NonNegativeInteger): NonNegativeInteger;
 
   /**
    * Get the dimension (n) of the components.
@@ -267,10 +311,11 @@ export interface vtkDataArray extends vtkObject {
    * If this dataArray's numberOfComponents doesn't divide the given array's
    * length, this dataArray's numberOfComponents is set to 1.
    *
-   * @param {Number[]|TypedArray} typedArray The Array value.
+   * @param {TypedArray} typedArray The typed array value.
    * @param {Number} [numberOfComponents]
+   * @throws {TypeError} If typedArray is not a TypedArray.
    */
-  setData(typedArray: number[] | TypedArray, numberOfComponents?: number): void;
+  setData(typedArray: TypedArray, numberOfComponents?: number): void;
 
   /**
    * Get the state of this array.
@@ -292,21 +337,21 @@ export interface vtkDataArray extends vtkObject {
    * and source2 with the resp. indices and set the
    * resulting tuple to the idx of this DataArray.
    *
-   * @param {int} idx,
+   * @param {NonNegativeInteger} idx,
    * @param {vtkDataArray} source1,
-   * @param {int} source1Idx,
+   * @param {NonNegativeInteger} source1Idx,
    * @param {vtkDataArray} source2,
-   * @param {int} source2Idx,
-   * @param {float} t
+   * @param {NonNegativeInteger} source2Idx,
+   * @param {Float} t
    */
   interpolateTuple(
-    idx: int,
+    idx: NonNegativeInteger,
     source1: vtkDataArray,
-    source1Idx: int,
+    source1Idx: NonNegativeInteger,
     source2: vtkDataArray,
-    source2Idx: int,
-    t: float
-  ): void;
+    source2Idx: NonNegativeInteger,
+    t: Float
+  ): number;
 
   /**
    * Resize the array to the requested number of extra tuples
@@ -331,7 +376,8 @@ export interface vtkDataArray extends vtkObject {
    * If requestedNumTuples < getNumberOfTuples(), the typed array is untouched,
    * only model.size is modified.
    * @param {Number} requestedNumTuples Final expected number of tuples; must be >= 0
-   * @returns {Boolean} True if a resize occured, false otherwise
+   * @returns {Boolean} True if a resize occurred. False if the size is
+   * unchanged or requestedNumTuples is invalid.
    * @see insertNextTuple
    * @see insertNextTuples
    * @see initialize

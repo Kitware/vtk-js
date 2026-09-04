@@ -79,9 +79,9 @@ function vtkRectangleContextRepresentation(publicAPI, model) {
         model.internalPolyData.getLines().setData(line, 1);
       }
     } else {
-      model.internalPolyData.getPoints().setData([], 0);
-      model.internalPolyData.getPolys().setData([], 0);
-      model.internalPolyData.getLines().setData([], 0);
+      model.internalPolyData.getPoints().initialize();
+      model.internalPolyData.getPolys().initialize();
+      model.internalPolyData.getLines().initialize();
     }
 
     model.internalPolyData.modified();

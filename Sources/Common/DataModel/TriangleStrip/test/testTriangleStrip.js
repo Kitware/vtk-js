@@ -41,23 +41,25 @@ function createComplexTriangleStrip() {
   const points = vtkPoints.newInstance();
 
   // Create a zigzag pattern with 5 points
-  points.setData([
-    0,
-    0,
-    0, // Point 0
-    1,
-    0,
-    0, // Point 1
-    0.5,
-    1,
-    0, // Point 2
-    1.5,
-    1,
-    0, // Point 3
-    1,
-    2,
-    0, // Point 4
-  ]);
+  points.setData(
+    Float32Array.from([
+      0,
+      0,
+      0, // Point 0
+      1,
+      0,
+      0, // Point 1
+      0.5,
+      1,
+      0, // Point 2
+      1.5,
+      1,
+      0, // Point 3
+      1,
+      2,
+      0, // Point 4
+    ])
+  );
 
   triangleStrip.initialize(points, [0, 1, 2, 3, 4]);
   return triangleStrip;
@@ -92,7 +94,7 @@ it('vtkTriangleStrip - edge cases', () => {
   const points = vtkPoints.newInstance();
 
   // Test with minimum points (3 points = 1 triangle)
-  points.setData([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+  points.setData(Float32Array.from([0, 0, 0, 1, 0, 0, 0, 1, 0]));
 
   triangleStrip.initialize(points, [0, 1, 2]);
 
@@ -207,7 +209,7 @@ it('vtkTriangleStrip - evaluatePosition', () => {
   );
 
   expect(result.evaluation, 'Should return valid status').toBeTruthy();
-  expect(dist2[0] >= 0, 'Distance should be non-negative').toBeTruthy();
+  expect(dist2[0] >= 0, 'Distance should be nonnegative').toBeTruthy();
 
   // Check that weights sum to 1 for the relevant triangle
   const weightSum = weights.reduce((sum, w) => sum + w, 0);

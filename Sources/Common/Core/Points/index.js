@@ -3,7 +3,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, vtkWarningMacro } = macro;
 // ----------------------------------------------------------------------------
 // vtkPoints methods
 // ----------------------------------------------------------------------------
@@ -83,11 +83,6 @@ function vtkPoints(publicAPI, model) {
     }
     boundMTime = macro.getCurrentGlobalMTime();
   };
-
-  // Initialize
-  publicAPI.setNumberOfComponents(
-    model.numberOfComponents < 2 ? 3 : model.numberOfComponents
-  );
 }
 
 // ----------------------------------------------------------------------------
@@ -106,7 +101,32 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
 
-  vtkDataArray.extend(publicAPI, model, initialValues);
+  const normalizePointComponents =
+    initialValues.numberOfComponents == null ||
+    initialValues.numberOfComponents < 2;
+  let { numberOfComponents } = initialValues;
+  if (normalizePointComponents) {
+    numberOfComponents = DEFAULT_VALUES.numberOfComponents;
+  }
+  const dataArrayInitialValues = {
+    ...initialValues,
+    numberOfComponents,
+  };
+  const size = initialValues.size ?? initialValues.values?.length;
+  if (
+    normalizePointComponents &&
+    size != null &&
+    size % numberOfComponents !== 0
+  ) {
+    const alignedSize =
+      Math.floor(size / numberOfComponents) * numberOfComponents;
+    vtkWarningMacro(
+      `Dropping ${size - alignedSize} incomplete point component(s)`
+    );
+    dataArrayInitialValues.size = alignedSize;
+  }
+
+  vtkDataArray.extend(publicAPI, model, dataArrayInitialValues);
 
   macro.getArray(publicAPI, model, ['bounds'], 6);
   vtkPoints(publicAPI, model);
