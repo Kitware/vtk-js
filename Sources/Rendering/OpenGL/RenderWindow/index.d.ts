@@ -7,6 +7,7 @@ import vtkDataArray from '../../../Common/Core/DataArray';
 import vtkOpenGLTexture from '../../OpenGL/Texture';
 import vtkPoints from '../../../Common/Core/Points';
 import vtkRenderer from '../../Core/Renderer';
+import vtkRenderPass from '../../SceneGraph/RenderPass';
 import vtkTexture from '../../Core/Texture';
 import vtkViewNode from '../../SceneGraph/ViewNode';
 import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
@@ -56,6 +57,19 @@ export interface vtkOpenGLRenderWindow extends vtkViewNode {
    * This is what WindowRemap does.
    */
   initialize(): void;
+
+  /**
+   * Set the render passes this window renders through. A pass absent from
+   * the new list releases the GPU resources it owns as it leaves; a pass kept
+   * in the list, at any index, keeps them.
+   * @param {vtkRenderPass[] | null} renderPasses
+   */
+  setRenderPasses(renderPasses: Nullable<vtkRenderPass[]>): boolean;
+
+  /**
+   *
+   */
+  getRenderPasses(): Nullable<vtkRenderPass[]>;
 
   /**
    *

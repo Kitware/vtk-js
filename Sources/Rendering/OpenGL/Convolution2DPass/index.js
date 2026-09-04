@@ -120,8 +120,13 @@ function vtkConvolution2DPass(publicAPI, model) {
       const program = model.convolutionShader;
 
       // prepare the vertex and triangle data for the image plane to render to
-      model.copyVAO = vtkVertexArrayObject.newInstance();
+      if (!model.copyVAO) {
+        model.copyVAO = vtkVertexArrayObject.newInstance();
+      }
       model.copyVAO.setOpenGLRenderWindow(viewNode);
+      // The vertex array refuses attributes from a program other than the one
+      // it was built against, so it is reset rather than replaced.
+      model.copyVAO.shaderProgramChanged();
 
       model.tris.getCABO().bind();
       if (
@@ -178,6 +183,23 @@ function vtkConvolution2DPass(publicAPI, model) {
     gl.drawArrays(gl.TRIANGLES, 0, model.tris.getCABO().getElementCount());
     tex.deactivate();
   };
+
+  publicAPI.releaseGraphicsResources = macro.chain((viewNode) => {
+    if (model.framebuffer) {
+      model.framebuffer.releaseGraphicsResources();
+      model.framebuffer = null;
+    }
+    if (model.copyVAO) {
+      model.copyVAO.releaseGraphicsResources();
+      model.copyVAO = null;
+    }
+    // The shader cache owns the programs it hands out, so only drop the
+    // reference. A null shader is also what makes the next traverse rebuild
+    // the vertex array that reads from it.
+    model.convolutionShader = null;
+    model.tris.releaseGraphicsResources(viewNode);
+    publicAPI.modified();
+  }, publicAPI.releaseGraphicsResources);
 
   publicAPI.getFragmentShaderCode = (kernelDimension) => {
     // generate new shader code

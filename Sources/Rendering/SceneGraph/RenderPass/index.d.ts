@@ -47,6 +47,14 @@ export interface vtkRenderPass extends vtkObject {
   getTraverseOperation(): string;
 
   /**
+   * Release the GPU resources this pass owns, and those of the passes it
+   * delegates to. A pass that holds another pass outside its delegates is
+   * responsible for releasing that pass itself.
+   * @param viewNode
+   */
+  releaseGraphicsResources(viewNode: vtkViewNode): void;
+
+  /**
    *
    * @param {String} val
    */

@@ -1142,8 +1142,53 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     );
   }
 
+  // A child window owns no context and frees GPU objects through methods
+  // proxied to the root window, so it can only release while the root is alive.
+  const canReachGLContext = () => {
+    const rootWindow = model.rootOpenGLRenderWindow;
+    return rootWindow ? !rootWindow.isDeleted() : !!model.context;
+  };
+
+  // Render passes are not view nodes and are not registered graphics
+  // resources, so nothing else in teardown reaches the framebuffers they own.
+  // Kept module local so deleting a view or replacing its passes only releases
+  // what that view owns. The public release is context-wide and starts at root.
+  function releaseRenderPassResources(renderPasses, viewNode = publicAPI) {
+    if (!canReachGLContext()) {
+      return;
+    }
+    renderPasses
+      ?.filter((renderPass) => !renderPass.isDeleted())
+      .forEach((renderPass) => renderPass.releaseGraphicsResources?.(viewNode));
+  }
+
+  function releaseRenderWindowPassResources(viewNode) {
+    if (viewNode.isDeleted() || !viewNode.isA('vtkOpenGLRenderWindow')) {
+      return;
+    }
+    releaseRenderPassResources(viewNode.getRenderPasses(), viewNode);
+    viewNode.getChildrenByReference().forEach(releaseRenderWindowPassResources);
+  }
+
+  // A pass the window no longer renders through is unreachable from teardown,
+  // so it has to give up what it owns as it leaves.
+  const superSetRenderPasses = publicAPI.setRenderPasses;
+  publicAPI.setRenderPasses = (renderPasses) => {
+    const replacedPasses = model.renderPasses;
+    if (!superSetRenderPasses(renderPasses)) {
+      return false;
+    }
+    releaseRenderPassResources(
+      replacedPasses?.filter(
+        (renderPass) => !model.renderPasses?.includes(renderPass)
+      )
+    );
+    return true;
+  };
+
   publicAPI.delete = macro.chain(
     () => {
+      releaseRenderPassResources(model.renderPasses);
       if (model.context) {
         deleteGLContext();
       }
@@ -1222,6 +1267,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   };
 
   publicAPI.releaseGraphicsResources = () => {
+    releaseRenderWindowPassResources(publicAPI);
     // Clear the shader cache
     if (model.shaderCache !== null) {
       model.shaderCache.releaseGraphicsResources(publicAPI);
