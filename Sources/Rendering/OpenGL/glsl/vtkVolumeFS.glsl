@@ -1521,7 +1521,7 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
     vec4 value = getTextureValue(posIS);
 
     if (raySteps <= 1.0) {
-      gl_FragData[0] = getColorForValue(value * raySteps, posVC, posIS);
+      gl_FragData[0] = getColorForValue(value, posVC, posIS);
       return;
     }
 
@@ -1567,7 +1567,7 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
     posIS = posVCtoIS(posVC);
     value = getTextureValue(posIS);
     if (valueWithinScalarRange(value)) {
-      sum += value;
+      sum += value * (raySteps - stepsTraveled);
       #if vtkBlendMode == AVERAGE_INTENSITY_BLEND
         totalWeight += raySteps - stepsTraveled;
       #endif
