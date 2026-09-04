@@ -14,6 +14,8 @@ function vtkStringArray(publicAPI, model) {
   publicAPI.getComponent = (tupleIdx, compIdx = 0) =>
     model.values[tupleIdx * model.numberOfComponents + compIdx];
 
+  publicAPI.getValue = (valueIdx) => model.values[valueIdx];
+
   // Description:
   // Set the data component at the location specified by tupleIdx and compIdx
   // to value.
@@ -23,6 +25,13 @@ function vtkStringArray(publicAPI, model) {
   publicAPI.setComponent = (tupleIdx, compIdx, value) => {
     if (value !== model.values[tupleIdx * model.numberOfComponents + compIdx]) {
       model.values[tupleIdx * model.numberOfComponents + compIdx] = value;
+      publicAPI.modified();
+    }
+  };
+
+  publicAPI.setValue = (valueIdx, value) => {
+    if (value !== model.values[valueIdx]) {
+      model.values[valueIdx] = value;
       publicAPI.modified();
     }
   };

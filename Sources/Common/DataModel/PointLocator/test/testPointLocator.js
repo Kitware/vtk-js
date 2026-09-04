@@ -15,6 +15,20 @@ function createSphereSource() {
   return sphereSource;
 }
 
+it('vtkPointLocator - initPointInsertion resets point components', () => {
+  const points = vtkPoints.newInstance({
+    numberOfComponents: 2,
+    values: new Float32Array(10),
+  });
+  const locator = vtkPointLocator.newInstance();
+
+  locator.initPointInsertion(points, [0, 1, 0, 1, 0, 1]);
+  locator.insertNextPoint([0.25, 0.5, 0.75]);
+
+  expect(points.getNumberOfComponents()).toBe(3);
+  expect(points.getPoint(0)).toEqual([0.25, 0.5, 0.75]);
+});
+
 it('vtkPointLocator - buildLocator', () => {
   const points = vtkPoints.newInstance();
   const locator = vtkPointLocator.newInstance();

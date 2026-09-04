@@ -65,3 +65,27 @@ it('Test vtkDataSetAttributes instance', () => {
   instance.removeArray('FooScalars');
   expect(instance.getNumberOfArrays()).toBe(numArrs - 1);
 });
+
+it('Test vtkDataSetAttributes interpolateData copies complete arrays', () => {
+  const source = vtkDataSetAttributes.newInstance();
+  source.addArray(
+    vtkDataArray.newInstance({
+      name: 'values',
+      values: new Float32Array([1, 2]),
+    })
+  );
+
+  const destination = vtkDataSetAttributes.newInstance();
+  destination.addArray(
+    vtkDataArray.newInstance({
+      name: 'values',
+      values: new Float32Array([3]),
+    })
+  );
+
+  destination.interpolateData(source);
+
+  expect(destination.getArrayByName('values').getData()).toEqual(
+    new Float32Array([3, 1, 2])
+  );
+});

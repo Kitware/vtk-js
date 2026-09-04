@@ -26,19 +26,14 @@ function initializePolyData() {
   });
 
   // Create the tapered cylinder data
-  let pointData = new Float32Array(3 * numPoints);
-  let radiusData = new Float32Array(numPoints);
-  let verts = new Uint32Array(2 * numPoints);
-  let lines = new Uint32Array(numPoints + 1);
-
   // Cylinder axes from (0,0,0) to (12,0,0)
-  pointData = [0.0, 0.0, 0.0, 12.0, 0.0, 0.0];
+  const pointData = Float32Array.from([0.0, 0.0, 0.0, 12.0, 0.0, 0.0]);
 
   // Taper cylinder radius from 1 to 3
-  radiusData = [1.0, 3.0];
+  const radiusData = Float32Array.from([1.0, 3.0]);
 
-  verts = [1, 1, 1, 0];
-  lines = [2, 0, 1];
+  const verts = Uint32Array.from([1, 1, 1, 0]);
+  const lines = Uint32Array.from([2, 0, 1]);
 
   const radius = vtkDataArray.newInstance({
     name: 'Radius',

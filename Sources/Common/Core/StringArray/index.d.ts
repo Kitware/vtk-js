@@ -1,4 +1,5 @@
 import { vtkObject } from '../../../interfaces';
+import { NonNegativeInteger } from '../../../types';
 
 /**
  *
@@ -16,7 +17,15 @@ export interface vtkStringArray extends vtkObject {
    * @param {Number} tupleIdx
    * @param {Number} [compIdx]
    */
-  getComponent(tupleIdx: number, compIdx?: number): void;
+  getComponent(
+    tupleIdx: NonNegativeInteger,
+    compIdx?: NonNegativeInteger
+  ): string;
+
+  /**
+   * Get the value at a flat array index.
+   */
+  getValue(valueIdx: NonNegativeInteger): string;
 
   /**
    *
@@ -76,7 +85,16 @@ export interface vtkStringArray extends vtkObject {
    * @param {Number} compIdx
    * @param {String} value
    */
-  setComponent(tupleIdx: number, compIdx: number, value: string): void;
+  setComponent(
+    tupleIdx: NonNegativeInteger,
+    compIdx: NonNegativeInteger,
+    value: string
+  ): void;
+
+  /**
+   * Set the value at a flat array index.
+   */
+  setValue(valueIdx: NonNegativeInteger, value: string): void;
 
   /**
    *

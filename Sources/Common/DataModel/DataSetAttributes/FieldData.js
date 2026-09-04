@@ -198,7 +198,7 @@ function vtkFieldData(publicAPI, model) {
           } else {
             // if `fromId` is not provided, just copy all (or as much possible)
             // from `arr` to `destArr`.
-            destArr.insertTuples(arr.getTuples());
+            destArr.insertNextTuples(arr.getTuples());
           }
         } else {
           vtkErrorMacro('Unhandled case in interpolateData');

@@ -257,7 +257,9 @@ function vtkClipClosedSurface(publicAPI, model) {
     if (polyScalars) {
       const scalarValue = [...color];
       const n = outputPolys.getNumberOfCells();
-      polyScalars.insertTuple(n - 1, scalarValue);
+      if (n > 0) {
+        polyScalars.insertTuple(n - 1, scalarValue);
+      }
 
       if (inputScalars) {
         for (let i = 0; i < n; i++) {
