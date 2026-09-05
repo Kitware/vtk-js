@@ -353,7 +353,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
       }
     }
 
-    SphereData.getPoints().setData(pointsData, 3);
+    SphereData.getPoints().setData(Float32Array.from(pointsData), 3);
 
     if (radiusArray) {
       const scales = vtkDataArray.newInstance({
@@ -373,7 +373,7 @@ function vtkMoleculeToRepresentation(publicAPI, model) {
       SphereData.getPointData().setScalars(colors);
     }
 
-    StickData.getPoints().setData(bondPositionData, 3);
+    StickData.getPoints().setData(Float32Array.from(bondPositionData), 3);
 
     const stickScales = vtkDataArray.newInstance({
       numberOfComponents: 2,

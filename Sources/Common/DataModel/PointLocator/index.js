@@ -232,8 +232,8 @@ function vtkPointLocator(publicAPI, model) {
     publicAPI.freeSearchStructure();
     model.insertionPointId = 0;
     model.points = points;
-    model.points.setNumberOfComponents(3);
     model.points.initialize();
+    model.points.setNumberOfComponents(3);
 
     let numBuckets = 0;
     const ndivs = [0, 0, 0];
