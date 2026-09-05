@@ -1677,8 +1677,9 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
       (model.lastSelectionState === PassTypes.ID_LOW24 ||
         model.lastSelectionState === PassTypes.ID_HIGH24);
 
-    // for every primitive type
-    for (let i = primTypes.Start; i < primTypes.End; i++) {
+    const active = model.activePrimitiveIndices;
+    for (let a = 0; a < active.length; a++) {
+      const i = active[a];
       model.primitives[i].setPointPicking(pointPicking);
       const cabo = model.primitives[i].getCABO();
       if (cabo.getElementCount()) {
@@ -1767,6 +1768,12 @@ function vtkOpenGLPolyDataMapper(publicAPI, model) {
     // Rebuild buffers if needed
     if (publicAPI.getNeedToRebuildBufferObjects(ren, actor)) {
       publicAPI.buildBufferObjects(ren, actor);
+      model.activePrimitiveIndices.length = 0;
+      for (let i = primTypes.Start; i < primTypes.End; i++) {
+        if (model.primitives[i].getCABO().getElementCount()) {
+          model.activePrimitiveIndices.push(i);
+        }
+      }
     }
     // Always call this function as the selector can change
     publicAPI.updateMaximumPointCellIds();
@@ -2065,6 +2072,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   );
 
   model.primitives = [];
+  model.activePrimitiveIndices = [];
   model.primTypes = primTypes;
 
   model.tmpMat3 = mat3.identity(new Float64Array(9));
