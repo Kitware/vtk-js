@@ -4,6 +4,7 @@ var fs = require('fs');
 var { program } = require('commander');
 var shell = require('shelljs');
 var path = require('path');
+var { execFileSync } = require('child_process');
 var paraview = process.env.PARAVIEW_HOME;
 
 program.version('1.0.0')
@@ -44,7 +45,7 @@ if(!paraview) {
     });
 }
 
-if (!process.argv.slice(2).length || !options.help || paraview.length === 0) {
+if (!process.argv.slice(2).length || paraview.length === 0) {
   program.outputHelp();
   process.exit(0);
 }
@@ -65,7 +66,7 @@ if(pvPythonExecs.length < 1) {
   console.log('| Execute:');
   console.log('| $', cmdLineSample.join('\n|\t'));
   console.log('===============================================================================\n');
-  shell.exec(cmdLineSample.join(' '));
+  execFileSync(cmdLineSample[0], cmdLineSample.slice(1), { stdio: 'inherit' });
 } else {
     const cmdLine = [
         pvPythonExecs[0], '-dr',
@@ -86,5 +87,5 @@ if(pvPythonExecs.length < 1) {
     console.log('| Execute:');
     console.log('| $', cmdLine.join('\n|\t'));
     console.log('===============================================================================\n');
-    shell.exec(cmdLine.join(' '));
+    execFileSync(cmdLine[0], cmdLine.slice(1), { stdio: 'inherit' });
 }

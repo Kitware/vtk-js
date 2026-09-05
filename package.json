@@ -116,6 +116,7 @@
     "test:debug": "vitest run --reporter=verbose",
     "test:firefox": "cross-env TEST_BROWSER=firefox vitest run",
     "test:webgpu": "cross-env WEBGPU=1 NO_WEBGL=1 vitest run",
+    "test:convert-cli-security": "node Utilities/DataGenerator/convert-cli.security-test.js",
     "commit": "git cz",
     "semantic-release": "semantic-release",
     "prepare": "node ./Utilities/prepare.js"
