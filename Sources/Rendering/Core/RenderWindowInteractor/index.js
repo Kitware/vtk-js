@@ -932,7 +932,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       clearTimeout(wheelTimeoutID);
     }
 
+    let triggerMouseWheelEvent = true;
+
     if (model.mouseWheelSpinYBuffering) {
+      triggerMouseWheelEvent = false;
+
       // Reset the buffer when the scroll direction reverses so a direction
       // change is never delayed by leftover buffer from the previous one.
       if (
@@ -946,9 +950,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       if (Math.abs(scrollBuffer) >= SCROLL_THRESHOLD) {
         callData.spinY = Math.trunc(scrollBuffer);
         scrollBuffer -= callData.spinY;
-        publicAPI.mouseWheelEvent(callData);
+        triggerMouseWheelEvent = true;
       }
-    } else {
+    }
+
+    if (triggerMouseWheelEvent) {
       publicAPI.mouseWheelEvent(callData);
     }
 
@@ -1497,6 +1503,16 @@ export function extend(publicAPI, model, initialValues = {}) {
     'longTapMaximumDistance',
   ]);
   macro.moveToProtected(publicAPI, model, ['view']);
+
+  // mouseScrollDebounceByPass is deprecated; warn while preserving the
+  // original setter's boolean return value (macro.chain would return an array).
+  const setMouseScrollDebounceByPass = publicAPI.setMouseScrollDebounceByPass;
+  publicAPI.setMouseScrollDebounceByPass = (...args) => {
+    vtkWarningMacro(
+      'mouseScrollDebounceByPass is deprecated. Use wheelEndDebounceDelay instead.'
+    );
+    return setMouseScrollDebounceByPass(...args);
+  };
 
   // For more macro methods, see "Sources/macros.js"
 
