@@ -4,45 +4,45 @@ import vtkRenderer from '../Renderer';
 import { Axis, Device, Input, MouseButton } from './Constants';
 
 declare enum handledEvents {
-  'StartAnimation',
-  'Animation',
-  'EndAnimation',
-  'MouseEnter',
-  'MouseLeave',
-  'StartMouseMove',
-  'MouseMove',
-  'EndMouseMove',
-  'LeftButtonPress',
-  'LeftButtonRelease',
-  'MiddleButtonPress',
-  'MiddleButtonRelease',
-  'RightButtonPress',
-  'RightButtonRelease',
-  'KeyPress',
-  'KeyDown',
-  'KeyUp',
-  'StartMouseWheel',
-  'MouseWheel',
-  'EndMouseWheel',
-  'StartPinch',
-  'Pinch',
-  'EndPinch',
-  'StartPan',
-  'Pan',
-  'EndPan',
-  'Tap',
-  'LongTap',
-  'StartRotate',
-  'Rotate',
-  'EndRotate',
-  'Button3D',
-  'Move3D',
-  'StartPointerLock',
-  'EndPointerLock',
-  'StartInteraction',
-  'Interaction',
-  'EndInteraction',
-  'AnimationFrameRateUpdate',
+  StartAnimation,
+  Animation,
+  EndAnimation,
+  MouseEnter,
+  MouseLeave,
+  StartMouseMove,
+  MouseMove,
+  EndMouseMove,
+  LeftButtonPress,
+  LeftButtonRelease,
+  MiddleButtonPress,
+  MiddleButtonRelease,
+  RightButtonPress,
+  RightButtonRelease,
+  KeyPress,
+  KeyDown,
+  KeyUp,
+  StartMouseWheel,
+  MouseWheel,
+  EndMouseWheel,
+  StartPinch,
+  Pinch,
+  EndPinch,
+  StartPan,
+  Pan,
+  EndPan,
+  Tap,
+  LongTap,
+  StartRotate,
+  Rotate,
+  EndRotate,
+  Button3D,
+  Move3D,
+  StartPointerLock,
+  EndPointerLock,
+  StartInteraction,
+  Interaction,
+  EndInteraction,
+  AnimationFrameRateUpdate,
 }
 
 /**
@@ -191,14 +191,14 @@ export interface vtkRenderWindowInteractor extends vtkObject {
 
   /**
    * @default false
-    * @deprecated Use getWheelEndDebounceDelay() instead.
+   * @deprecated Use getWheelEndDebounceDelay() instead.
    */
   getMouseScrollDebounceByPass(): boolean;
 
   /**
    * @default 200
    */
-    getWheelEndDebounceDelay(): number;
+  getWheelEndDebounceDelay(): number;
 
   /**
    * @default false
@@ -1082,7 +1082,7 @@ export interface vtkRenderWindowInteractor extends vtkObject {
   /**
    * Allow system to bypass scrolling debounce. This function must be called to allow the debounce to be bypassed
    * @param mouseScrollDebounceByPass
-    * @deprecated Use setWheelEndDebounceDelay(0) instead.
+   * @deprecated Use setWheelEndDebounceDelay(0) instead.
    */
   setMouseScrollDebounceByPass(mouseScrollDebounceByPass: boolean): boolean;
 
