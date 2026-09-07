@@ -163,36 +163,42 @@ clearBtn.addEventListener('click', () => {
 // ----------------------------------------------------------------------------
 
 interactor.onLeftButtonPress(() => {
+  const inconsistent = buttonState.left;
   buttonState.left = true;
   updateIndicators();
-  logEvent('LeftButtonPress', '#53d769');
+  logEvent('LeftButtonPress', inconsistent ? 'orange' : 'green');
 });
 interactor.onLeftButtonRelease(() => {
+  const inconsistent = !buttonState.left;
   buttonState.left = false;
   updateIndicators();
-  logEvent('LeftButtonRelease', '#fc3d39');
+  logEvent('LeftButtonRelease', inconsistent ? 'orange' : 'red');
 });
 
 interactor.onMiddleButtonPress(() => {
+  const inconsistent = buttonState.middle;
   buttonState.middle = true;
   updateIndicators();
-  logEvent('MiddleButtonPress', '#53d769');
+  logEvent('MiddleButtonPress', inconsistent ? 'orange' : 'green');
 });
 interactor.onMiddleButtonRelease(() => {
+  const inconsistent = !buttonState.middle;
   buttonState.middle = false;
   updateIndicators();
-  logEvent('MiddleButtonRelease', '#fc3d39');
+  logEvent('MiddleButtonRelease', inconsistent ? 'orange' : 'red');
 });
 
 interactor.onRightButtonPress(() => {
+  const inconsistent = buttonState.right;
   buttonState.right = true;
   updateIndicators();
-  logEvent('RightButtonPress', '#53d769');
+  logEvent('RightButtonPress', inconsistent ? 'orange' : 'green');
 });
 interactor.onRightButtonRelease(() => {
+  const inconsistent = !buttonState.right;
   buttonState.right = false;
   updateIndicators();
-  logEvent('RightButtonRelease', '#fc3d39');
+  logEvent('RightButtonRelease', inconsistent ? 'orange' : 'red');
 });
 
 interactor.onMouseMove(() => {

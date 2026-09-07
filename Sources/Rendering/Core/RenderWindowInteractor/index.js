@@ -17,6 +17,14 @@ const EMPTY_MOUSE_EVENT = {
   shiftKey: false,
 };
 
+// Bitmask values used in PointerEvent.buttons.
+const MOUSE_BUTTON_BITMASK = {
+  NONE: 0,
+  LEFT: 1,
+  RIGHT: 2,
+  MIDDLE: 4,
+};
+
 const deviceInputMap = {
   'xr-standard': [
     Input.Trigger,
@@ -115,6 +123,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
   // first press / last release. Chorded (additional) button changes while
   // another button is held are signaled via pointermove with updated `buttons`.
   let previousMouseButtons = 0;
+  let externalButtons = 0;
 
   // Tap / LongTap gesture tracking for touch and pen pointers.
   let tapInformation = { timer: null, pointerId: null };
@@ -451,25 +460,35 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     }
   };
 
-  function handleChordedButtons(callData, previous, current) {
+  function handleChordedButtons(callData, previous, current, ignore = 0) {
+    const { LEFT, MIDDLE, RIGHT } = MOUSE_BUTTON_BITMASK;
     /* eslint-disable no-bitwise */
-    if ((previous & ~current & 1) !== 0)
+    if ((previous & ~current & LEFT & ~ignore) !== 0)
       publicAPI.leftButtonReleaseEvent(callData);
-    if ((previous & ~current & 4) !== 0)
+    if ((previous & ~current & MIDDLE & ~ignore) !== 0)
       publicAPI.middleButtonReleaseEvent(callData);
-    if ((previous & ~current & 2) !== 0)
+    if ((previous & ~current & RIGHT & ~ignore) !== 0)
       publicAPI.rightButtonReleaseEvent(callData);
-    if ((~previous & current & 1) !== 0)
+    if ((~previous & current & LEFT & ~ignore) !== 0)
       publicAPI.leftButtonPressEvent(callData);
-    if ((~previous & current & 4) !== 0)
+    if ((~previous & current & MIDDLE & ~ignore) !== 0)
       publicAPI.middleButtonPressEvent(callData);
-    if ((~previous & current & 2) !== 0)
+    if ((~previous & current & RIGHT & ~ignore) !== 0)
       publicAPI.rightButtonPressEvent(callData);
     /* eslint-enable no-bitwise */
   }
 
   publicAPI.handlePointerUp = (event) => {
-    if (pointerCache.has(event.pointerId)) {
+    const buttonBitMap = [
+      MOUSE_BUTTON_BITMASK.LEFT,
+      MOUSE_BUTTON_BITMASK.MIDDLE,
+      MOUSE_BUTTON_BITMASK.RIGHT,
+    ];
+    const buttonBit = buttonBitMap[event.button] ?? MOUSE_BUTTON_BITMASK.NONE;
+
+    /* eslint-disable no-bitwise */
+    if (pointerCache.has(event.pointerId) || externalButtons & buttonBit) {
+      /* eslint-enable no-bitwise */
       if (model.preventDefaultOnPointerUp) {
         preventDefault(event);
       }
@@ -484,24 +503,21 @@ function vtkRenderWindowInteractor(publicAPI, model) {
           break;
         case 'mouse':
         default: {
-          // buttons bitmask: 1=left, 4=middle, 2=right
-          const buttonBitMap = [1, 4, 2];
-          const buttonBit = buttonBitMap[event.button] ?? 0;
           const callData = {
             ...getModifierKeysFor(event),
             position: getScreenEventPositionFor(event),
             deviceType: getDeviceTypeFor(event),
           };
           // Mask out the primary button — handleMouseUp handles it below.
-          /* eslint-disable no-bitwise */
           handleChordedButtons(
             callData,
-            previousMouseButtons & ~buttonBit,
-            event.buttons & ~buttonBit
+            previousMouseButtons,
+            event.buttons,
+            buttonBit
           );
-          /* eslint-enable no-bitwise */
           publicAPI.handleMouseUp(event);
           previousMouseButtons = event.buttons;
+          externalButtons &= ~buttonBit;
           break;
         }
       }
@@ -557,8 +573,22 @@ function vtkRenderWindowInteractor(publicAPI, model) {
             position: getScreenEventPositionFor(event),
             deviceType: getDeviceTypeFor(event),
           };
-          handleChordedButtons(callData, previousMouseButtons, currentButtons);
+          const mousePressOutsideRWI =
+            previousMouseButtons === MOUSE_BUTTON_BITMASK.NONE;
+          if (mousePressOutsideRWI) {
+            // The first button(s) press event was not caught by the RWI,
+            // hence no press/release events must be fired by the chorded button handler.
+            externalButtons = currentButtons;
+          }
+          handleChordedButtons(
+            callData,
+            previousMouseButtons,
+            currentButtons,
+            externalButtons
+          );
           previousMouseButtons = currentButtons;
+          // Stop ignoring the released button(s) if it was released
+          externalButtons &= currentButtons;
         }
         publicAPI.handleMouseMove(event);
         break;
