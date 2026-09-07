@@ -82,6 +82,8 @@ function vtkCutter(publicAPI, model) {
     const newLinesData = [];
     const newPolysData = [];
     const newPointData = {}; // TODO: cell data must also be processed
+    const sign = (x) =>
+      x - model.cutValue === 0 ? 0 : x < model.cutValue ? -1 : 1;
 
     // Initialize arrays
     const numberOfArrays = pointData.getNumberOfArrays();
@@ -121,16 +123,24 @@ function vtkCutter(publicAPI, model) {
       }
 
       // Get associated scalar of points that constitute the current cell
-      for (let i = 0; i < it.cellSize; ) {
-        cellPointsScalars[i] = model.cutScalars[it.cell[i++]];
+      let sideFirstPoint = null;
+      let firstPointIdx = null;
+      for (let i = 0; i < it.cellSize; i++) {
+        cellPointsScalars[i] = model.cutScalars[it.cell[i]];
+        if (sideFirstPoint === null && cellPointsScalars[i] !== 0) {
+          sideFirstPoint = sign(cellPointsScalars[i]);
+          firstPointIdx = i;
+        }
       }
 
       // Check if all cell points are on same side (same side == cell not crossed by cut function)
       // TODO: won't work if one point scalar is = 0 ?
-      const sideFirstPoint = cellPointsScalars[0] > 0;
       let allPointsSameSide = true;
-      for (let i = 1; i < it.cell.length; i++) {
-        const sideCurrentPoint = cellPointsScalars[i] > 0;
+      for (let i = 0; i < it.cell.length; i++) {
+        if (i === firstPointIdx) {
+          continue;
+        }
+        const sideCurrentPoint = sign(cellPointsScalars[i]);
         if (sideCurrentPoint !== sideFirstPoint) {
           allPointsSameSide = false;
           break;
@@ -143,7 +153,7 @@ function vtkCutter(publicAPI, model) {
       }
 
       // Find and compute edges which intersect cells
-      const intersectedEdgesList = [];
+      let intersectedEdgesList = [];
       for (let i = 0; i < it.cellSize; i++) {
         const idNext = i + 1 === it.cellSize ? 0 : i + 1;
 
@@ -151,26 +161,32 @@ function vtkCutter(publicAPI, model) {
         // TODO: in most come cases, (numberOfPointsInCell - 1) or 0 edges of the cell
         // will be crossed, but if it crosses right at a point, it could be intersecting
         // with (numberOfPoints) or 1 edge(s). Do we account for that?
-        const signPoint0 = cellPointsScalars[i] > 0;
-        const signPoint1 = cellPointsScalars[idNext] > 0;
+
+        const signPoint0 = sign(cellPointsScalars[i]);
+        const signPoint1 = sign(cellPointsScalars[idNext]);
         if (signPoint1 === signPoint0) {
           continue;
         }
 
         // Compute preferred interpolation direction
+        let t = 0.0;
         let e1 = i;
         let e2 = idNext;
-        let deltaScalar = cellPointsScalars[e2] - cellPointsScalars[e1];
-        if (deltaScalar <= 0) {
+        if (cellPointsScalars[e2] === 0) {
           e1 = idNext;
           e2 = i;
-          deltaScalar *= -1;
-        }
+        } else if (cellPointsScalars[e1] !== 0) {
+          let deltaScalar = cellPointsScalars[e2] - cellPointsScalars[e1];
+          if (deltaScalar <= 0) {
+            e1 = idNext;
+            e2 = i;
+            deltaScalar *= -1;
+          }
 
-        // linear interpolation
-        let t = 0.0;
-        if (deltaScalar !== 0.0) {
-          t = (model.cutValue - cellPointsScalars[e1]) / deltaScalar;
+          // linear interpolation
+          if (deltaScalar !== 0.0) {
+            t = (model.cutValue - cellPointsScalars[e1]) / deltaScalar;
+          }
         }
 
         // points position
@@ -200,7 +216,7 @@ function vtkCutter(publicAPI, model) {
           for (let j = 0; j < n; j++) {
             const scalar1 = data[n * pointID1 + j];
             const scalar2 = data[n * pointID2 + j];
-            computedIntersectedArray.push(scalar1 + t * (scalar2 - scalar1)); // FIXME: won't work when the array contains "normals" or "IDs"
+            computedIntersectedArray[j] = scalar1 + t * (scalar2 - scalar1); // FIXME: won't work when the array contains "normals" or "IDs"
           }
           computedIntersectedArrays[name] = computedIntersectedArray;
         }
@@ -216,6 +232,8 @@ function vtkCutter(publicAPI, model) {
       }
 
       // Add points into newPointList
+      const ids = new Set();
+      const dedupedIntersectedEdgesList = [];
       for (let i = 0; i < intersectedEdgesList.length; i++) {
         const intersectedEdge = intersectedEdgesList[i];
         let alreadyAdded = false;
@@ -234,7 +252,7 @@ function vtkCutter(publicAPI, model) {
               crossedEdge.intersectedPoint[2];
           if (sameEdge || samePoint) {
             alreadyAdded = true;
-            intersectedEdgesList[i].newPointID = crossedEdges[j].newPointID;
+            intersectedEdgesList[i].newPointID = crossedEdge.newPointID;
             break;
           }
         }
@@ -248,19 +266,24 @@ function vtkCutter(publicAPI, model) {
           intersectedEdgesList[i].newPointID = newPointsData.length / 3 - 1;
           crossedEdges.push(intersectedEdgesList[i]);
         }
+        const newPointID = intersectedEdgesList[i].newPointID;
+        if (!ids.has(newPointID)) {
+          dedupedIntersectedEdgesList.push(intersectedEdgesList[i]);
+          ids.add(newPointID);
+        }
       }
 
       // Store cells
-      const cellSize = intersectedEdgesList.length;
+      const cellSize = dedupedIntersectedEdgesList.length;
       if (cellSize === 2) {
         newLinesData.push(
           cellSize,
-          intersectedEdgesList[0].newPointID,
-          intersectedEdgesList[1].newPointID
+          dedupedIntersectedEdgesList[0].newPointID,
+          dedupedIntersectedEdgesList[1].newPointID
         );
       } else if (cellSize > 2) {
         newPolysData.push(cellSize);
-        intersectedEdgesList.forEach((edge) => {
+        dedupedIntersectedEdgesList.forEach((edge) => {
           newPolysData.push(edge.newPointID);
         });
       }
