@@ -243,3 +243,117 @@ it('Test RenderWindowInteractor pointercancel releases all held buttons', () => 
   subs.forEach((s) => s.unsubscribe());
   teardown(env);
 });
+
+it('Test no chorded button press for first button', () => {
+  // This use-case happens when a user presses a button outside the render window
+  // and moves the pointer into the render window. The button press should not be triggered.
+  const env = setupInteractor();
+  const { container, interactor } = env;
+
+  const events = [];
+  const sub1 = interactor.onLeftButtonPress(() =>
+    events.push('LeftButtonPress')
+  );
+  const sub2 = interactor.onRightButtonPress(() =>
+    events.push('RightButtonPress')
+  );
+  const sub3 = interactor.onLeftButtonRelease(() =>
+    events.push('LeftButtonRelease')
+  );
+  const sub4 = interactor.onRightButtonRelease(() =>
+    events.push('RightButtonRelease')
+  );
+
+  // A.1. Miss left button press (outside the render window)
+  // A.2. Move mouse cursor into the render window
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 1 })
+  );
+  // A.3. Release left button inside the render window (pointerup fires)
+  console.log('now');
+  container.dispatchEvent(
+    makePointerEvent('pointerup', { button: 0, buttons: 0 })
+  );
+  expect(events).toEqual(['LeftButtonRelease']);
+  events.length = 0;
+
+  // B.1. Miss left button press outside the render window
+  // B.2. Move mouse cursor into the render window
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 1 })
+  );
+  // B.3. Miss left button release outside the render window
+  // B.4. Move mouse cursor into the render window
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 0 })
+  );
+  expect(events).toEqual([]);
+  events.length = 0;
+
+  // C.1. Miss left button press (outside the render window)
+  // C.2. Move mouse cursor into the render window
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 1 })
+  );
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 1 })
+  );
+  expect(events).toEqual([]);
+
+  // C.3. Press right while left held (pointermove with button change per spec §10)
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: 2, buttons: 3 })
+  );
+  expect(events).toEqual(['RightButtonPress']);
+
+  // C.4. Release right while left held (pointermove with button change per spec §10)
+  events.length = 0;
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: 2, buttons: 1 })
+  );
+  expect(events).toEqual(['RightButtonRelease']);
+
+  // C.5. Release left
+  events.length = 0;
+  container.dispatchEvent(
+    makePointerEvent('pointerup', { button: 0, buttons: 0 })
+  );
+  expect(events).toEqual(['LeftButtonRelease']);
+
+  // C.6. Move
+  events.length = 0;
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 0 })
+  );
+  expect(events).toEqual([]);
+
+  // D.1. Miss left button press
+  // D.2. Move mouse cursor into the render window
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 1 })
+  );
+  // D.3. Press right while left held (pointermove with button change per spec §10)
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: 2, buttons: 3 })
+  );
+  expect(events).toEqual(['RightButtonPress']);
+  events.length = 0;
+  // D.4. Release right while left held (pointermove with button change per spec §10)
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: 2, buttons: 1 })
+  );
+  expect(events).toEqual(['RightButtonRelease']);
+  events.length = 0;
+  // D.5. Miss release left (outside the render window)
+  // D.6. Move back into the render window (pointermove fires)
+  container.dispatchEvent(
+    makePointerEvent('pointermove', { button: -1, buttons: 0 })
+  );
+  expect(events).toEqual([]);
+
+  sub1.unsubscribe();
+  sub2.unsubscribe();
+  sub3.unsubscribe();
+  sub4.unsubscribe();
+  teardown(env);
+});
