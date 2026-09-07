@@ -58,10 +58,13 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     }
   };
 
-  const diffuseTexture = ppty.getDiffuseTexture?.();
-
-  const diffuseSources = [diffuseTexture, actor.getTextures()[0]];
-  if (diffuseSources.some(isSampleableTexture)) {
+  // The same diffuse texture as updateTextures(): the texture of the
+  // property, else the first texture of the actor.
+  let diffuseTexture = ppty.getDiffuseTexture?.();
+  if (!diffuseTexture) {
+    diffuseTexture = actor.getTextures()[0];
+  }
+  if (isSampleableTexture(diffuseTexture)) {
     usedTextures.push(
       `_diffuseMap = textureSample(DiffuseTexture, DiffuseTextureSampler, ${uv(
         'diffuse'
