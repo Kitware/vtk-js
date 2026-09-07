@@ -64,7 +64,7 @@ renderer.addActor(dragonActor);
 const gui = new GUI();
 const state = {
   originX: 0,
-  originY: 0,
+  originY: 5,
   originZ: 0,
   normalX: 1,
   normalY: 0,
@@ -174,14 +174,14 @@ originFolder
     updatePlaneAndGenerateLoops();
   });
 originFolder
-  .add(state, 'originY', -0.5, 0.5, 0.01)
+  .add(state, 'originY', 0, 10, 0.01)
   .name('Y')
   .onChange((value) => {
     state.originY = Number(value);
     updatePlaneAndGenerateLoops();
   });
 originFolder
-  .add(state, 'originZ', -0.5, 0.5, 0.01)
+  .add(state, 'originZ', -3.5, 3.5, 0.01)
   .name('Z')
   .onChange((value) => {
     state.originZ = Number(value);
