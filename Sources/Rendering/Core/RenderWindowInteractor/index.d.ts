@@ -61,10 +61,6 @@ export interface IRenderWindowInteractorInitialValues {
   moveTimeoutID?: number;
   preventDefaultOnPointerDown?: boolean;
   preventDefaultOnPointerUp?: boolean;
-  /**
-   * @deprecated Use wheelEndDebounceDelay = 0 instead.
-   */
-  mouseScrollDebounceByPass?: boolean;
   wheelEndDebounceDelay?: number;
   mouseWheelSpinYBuffering?: boolean;
   longTapDuration?: number;

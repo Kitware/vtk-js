@@ -928,7 +928,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.mouseWheelEvent(callData);
     }
 
-    if (model.mouseScrollDebounceByPass || model.wheelEndDebounceDelay === 0) {
+    if (model.wheelEndDebounceDelay === 0) {
       publicAPI.extendAnimation(600);
       publicAPI.endMouseWheelEvent();
       wheelTimeoutID = 0;
@@ -1422,7 +1422,6 @@ const DEFAULT_VALUES = {
   lastGamepadValues: {},
   preventDefaultOnPointerDown: false,
   preventDefaultOnPointerUp: false,
-  mouseScrollDebounceByPass: false,
   wheelEndDebounceDelay: 200,
   mouseWheelSpinYBuffering: false,
   longTapDuration: 500,
@@ -1466,7 +1465,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'picker',
     'preventDefaultOnPointerDown',
     'preventDefaultOnPointerUp',
-    'mouseScrollDebounceByPass',
     'wheelEndDebounceDelay',
     'mouseWheelSpinYBuffering',
     'longTapDuration',
@@ -1474,14 +1472,16 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
   macro.moveToProtected(publicAPI, model, ['view']);
 
-  // mouseScrollDebounceByPass is deprecated; warn while preserving the
-  // original setter's boolean return value (macro.chain would return an array).
-  const setMouseScrollDebounceByPass = publicAPI.setMouseScrollDebounceByPass;
-  publicAPI.setMouseScrollDebounceByPass = (...args) => {
+  // mouseScrollDebounceByPass is deprecated; delegate to wheelEndDebounceDelay.
+  publicAPI.getMouseScrollDebounceByPass = () =>
+    model.wheelEndDebounceDelay === 0;
+  publicAPI.setMouseScrollDebounceByPass = (byPass) => {
     vtkWarningMacro(
       'mouseScrollDebounceByPass is deprecated. Use wheelEndDebounceDelay instead.'
     );
-    return setMouseScrollDebounceByPass(...args);
+    return publicAPI.setWheelEndDebounceDelay(
+      byPass ? 0 : DEFAULT_VALUES.wheelEndDebounceDelay
+    );
   };
 
   // For more macro methods, see "Sources/macros.js"
