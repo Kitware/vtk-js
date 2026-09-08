@@ -87,7 +87,7 @@ function vtkDiskSource(publicAPI, model) {
 
     // Generate cell connectivity (quads)
     const cellCount = radialResolution * circumferentialResolution;
-    const cellData = new Uint8Array(cellCount * 5);
+    const cellData = new Uint32Array(cellCount * 5);
     let offset = 0;
     for (let i = 0; i < model.circumferentialResolution; i++) {
       for (let j = 0; j < model.radialResolution; j++) {
