@@ -45,10 +45,20 @@ mapper.setInputConnection(mCubes.getOutputPort());
 // ----------------------------------------------------------------------------
 // UI control handling
 // ----------------------------------------------------------------------------
+function updateSampleBounds() {
+  const radius = sphere.getRadius();
+  const iso = mCubes.getContourValue();
+
+  const margin = 0.1;
+  const extent = radius + iso + margin;
+
+  sample.setModelBounds(-extent, extent, -extent, extent, -extent, extent);
+}
+
 const gui = new GUI();
 const params = {
   VolumeResolution: 50,
-  Radius: 0.025,
+  Radius: 0.5,
   IsoValue: 0.0,
   ComputeNormals: false,
   MergePoints: false,
@@ -66,6 +76,7 @@ gui
   .name('Radius')
   .onChange((v) => {
     sphere.setRadius(Number(v));
+    updateSampleBounds();
     renderWindow.render();
   });
 gui
@@ -73,6 +84,7 @@ gui
   .name('Iso value')
   .onChange((v) => {
     mCubes.setContourValue(Number(v));
+    updateSampleBounds();
     renderWindow.render();
   });
 gui
