@@ -1,4 +1,4 @@
-import { it, expect } from 'vitest';
+import { it, expect, describe, beforeEach, afterAll, afterEach } from 'vitest';
 
 import vtkRenderWindowInteractor from 'vtk.js/Sources/Rendering/Core/RenderWindowInteractor';
 
@@ -54,306 +54,243 @@ function teardown({ container, interactor }) {
 }
 
 // Tests ------------------------------------------------------------------
-
-it('Test RenderWindowInteractor chorded button press', () => {
+describe('Chorded buttons events', () => {
   const env = setupInteractor();
   const { container, interactor } = env;
 
   const events = [];
-  const sub1 = interactor.onLeftButtonPress(() =>
-    events.push('LeftButtonPress')
-  );
-  const sub2 = interactor.onRightButtonPress(() =>
-    events.push('RightButtonPress')
-  );
-  const sub3 = interactor.onLeftButtonRelease(() =>
-    events.push('LeftButtonRelease')
-  );
-  const sub4 = interactor.onRightButtonRelease(() =>
-    events.push('RightButtonRelease')
-  );
+  let subs;
 
-  // 1. Press left button (pointerdown fires for first button)
-  container.dispatchEvent(
-    makePointerEvent('pointerdown', { button: 0, buttons: 1 })
-  );
-  expect(events).toEqual(['LeftButtonPress']);
+  beforeEach(() => {
+    events.length = 0;
+    subs = [
+      interactor.onLeftButtonPress(() => events.push('LeftButtonPress')),
+      interactor.onMiddleButtonPress(() => events.push('MiddleButtonPress')),
+      interactor.onRightButtonPress(() => events.push('RightButtonPress')),
+      interactor.onLeftButtonRelease(() => events.push('LeftButtonRelease')),
+      interactor.onMiddleButtonRelease(() =>
+        events.push('MiddleButtonRelease')
+      ),
+      interactor.onRightButtonRelease(() => events.push('RightButtonRelease')),
+    ];
+  });
+  afterEach(() => {
+    subs.forEach((s) => s.unsubscribe());
+    interactor.unbindEvents(); // clear timeouts
+    interactor.setContainer(container);
+    interactor.initialize();
+  });
 
-  // 2. Press right while left held (pointermove with button change per spec §10)
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: 2, buttons: 3 })
-  );
-  expect(events.includes('RightButtonPress')).toBeTruthy();
+  it('Test RenderWindowInteractor chorded button press', () => {
+    // 1. Press left button (pointerdown fires for first button)
+    container.dispatchEvent(
+      makePointerEvent('pointerdown', { button: 0, buttons: 1 })
+    );
+    expect(events).toEqual(['LeftButtonPress']);
 
-  // 3. Release left while right held (pointermove with button change)
-  events.length = 0;
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: 0, buttons: 2 })
-  );
-  expect(events).toEqual(['LeftButtonRelease']);
+    // 2. Press right while left held (pointermove with button change per spec §10)
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: 2, buttons: 3 })
+    );
+    expect(events.includes('RightButtonPress')).toBeTruthy();
 
-  // 4. Release right - last button (pointerup fires)
-  events.length = 0;
-  container.dispatchEvent(
-    makePointerEvent('pointerup', { button: 2, buttons: 0 })
-  );
-  expect(events).toEqual(['RightButtonRelease']);
+    // 3. Release left while right held (pointermove with button change)
+    events.length = 0;
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: 0, buttons: 2 })
+    );
+    expect(events).toEqual(['LeftButtonRelease']);
 
-  sub1.unsubscribe();
-  sub2.unsubscribe();
-  sub3.unsubscribe();
-  sub4.unsubscribe();
-  teardown(env);
-});
+    // 4. Release right - last button (pointerup fires)
+    events.length = 0;
+    container.dispatchEvent(
+      makePointerEvent('pointerup', { button: 2, buttons: 0 })
+    );
+    expect(events).toEqual(['RightButtonRelease']);
+  });
 
-it('Test RenderWindowInteractor single button (no false chorded events)', () => {
-  const env = setupInteractor();
-  const { container, interactor } = env;
+  it('Test RenderWindowInteractor single button (no false chorded events)', () => {
+    // Normal left click cycle
+    container.dispatchEvent(
+      makePointerEvent('pointerdown', { button: 0, buttons: 1 })
+    );
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 1 })
+    );
+    container.dispatchEvent(
+      makePointerEvent('pointerup', { button: 0, buttons: 0 })
+    );
 
-  const events = [];
-  const sub1 = interactor.onLeftButtonPress(() =>
-    events.push('LeftButtonPress')
-  );
-  const sub2 = interactor.onLeftButtonRelease(() =>
-    events.push('LeftButtonRelease')
-  );
-  const sub3 = interactor.onRightButtonPress(() =>
-    events.push('RightButtonPress')
-  );
-  const sub4 = interactor.onRightButtonRelease(() =>
-    events.push('RightButtonRelease')
-  );
+    expect(events).toEqual(['LeftButtonPress', 'LeftButtonRelease']);
+  });
 
-  // Normal left click cycle
-  container.dispatchEvent(
-    makePointerEvent('pointerdown', { button: 0, buttons: 1 })
-  );
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 1 })
-  );
-  container.dispatchEvent(
-    makePointerEvent('pointerup', { button: 0, buttons: 0 })
-  );
+  it('Test RenderWindowInteractor reports the first move of a burst', () => {
+    const moveEvents = [];
+    const subs2 = [
+      interactor.onStartMouseMove(() => moveEvents.push('StartMouseMove')),
+      interactor.onMouseMove(() => moveEvents.push('MouseMove')),
+    ];
 
-  expect(events).toEqual(['LeftButtonPress', 'LeftButtonRelease']);
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 0 })
+    );
+    expect(moveEvents).toEqual(['StartMouseMove', 'MouseMove']);
 
-  sub1.unsubscribe();
-  sub2.unsubscribe();
-  sub3.unsubscribe();
-  sub4.unsubscribe();
-  teardown(env);
-});
+    moveEvents.length = 0;
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 0 })
+    );
+    expect(moveEvents).toEqual(['MouseMove']);
 
-it('Test RenderWindowInteractor reports the first move of a burst', () => {
-  const env = setupInteractor();
-  const { container, interactor } = env;
+    subs2.forEach((subscription) => subscription.unsubscribe());
+  });
 
-  const events = [];
-  const subs = [
-    interactor.onStartMouseMove(() => events.push('StartMouseMove')),
-    interactor.onMouseMove(() => events.push('MouseMove')),
-  ];
+  it('Test RenderWindowInteractor three-button chord', () => {
+    // Press left
+    container.dispatchEvent(
+      makePointerEvent('pointerdown', { button: 0, buttons: 1 })
+    );
+    // Press middle (chorded)
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: 1, buttons: 5 })
+    );
+    // Press right (chorded)
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: 2, buttons: 7 })
+    );
+    // Release all three simultaneously (only pointerup fires with buttons=0)
+    container.dispatchEvent(
+      makePointerEvent('pointerup', { button: 0, buttons: 0 })
+    );
 
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 0 })
-  );
-  expect(events).toEqual(['StartMouseMove', 'MouseMove']);
+    // Chorded releases (middle, right) fire before the primary button release
+    // (left) which is handled by handleMouseUp.
+    expect(events).toEqual([
+      'LeftButtonPress',
+      'MiddleButtonPress',
+      'RightButtonPress',
+      'MiddleButtonRelease',
+      'RightButtonRelease',
+      'LeftButtonRelease',
+    ]);
+  });
 
-  events.length = 0;
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 0 })
-  );
-  expect(events).toEqual(['MouseMove']);
+  it('Test RenderWindowInteractor pointercancel releases all held buttons', () => {
+    // Press left
+    container.dispatchEvent(
+      makePointerEvent('pointerdown', { button: 0, buttons: 1 })
+    );
+    // Press middle (chorded)
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: 1, buttons: 5 })
+    );
 
-  subs.forEach((subscription) => subscription.unsubscribe());
-  teardown(env);
-});
+    events.length = 0;
 
-it('Test RenderWindowInteractor three-button chord', () => {
-  const env = setupInteractor();
-  const { container, interactor } = env;
+    // Cancel the interaction — all held buttons should be released
+    container.dispatchEvent(
+      makePointerEvent('pointercancel', { button: 0, buttons: 0 })
+    );
 
-  const events = [];
-  const subs = [
-    interactor.onLeftButtonPress(() => events.push('LP')),
-    interactor.onMiddleButtonPress(() => events.push('MP')),
-    interactor.onRightButtonPress(() => events.push('RP')),
-    interactor.onLeftButtonRelease(() => events.push('LR')),
-    interactor.onMiddleButtonRelease(() => events.push('MR')),
-    interactor.onRightButtonRelease(() => events.push('RR')),
-  ];
+    expect(events).toEqual(['LeftButtonRelease', 'MiddleButtonRelease']);
+  });
 
-  // Press left
-  container.dispatchEvent(
-    makePointerEvent('pointerdown', { button: 0, buttons: 1 })
-  );
-  // Press middle (chorded)
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: 1, buttons: 5 })
-  );
-  // Press right (chorded)
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: 2, buttons: 7 })
-  );
-  // Release all three simultaneously (only pointerup fires with buttons=0)
-  container.dispatchEvent(
-    makePointerEvent('pointerup', { button: 0, buttons: 0 })
-  );
+  it('Test no button press when clicked outside the render window', () => {
+    // This use-case happens when a user presses a button outside the render window
+    // and moves the pointer into the render window. The button press should not be triggered.
 
-  // Chorded releases (middle, right) fire before the primary button release
-  // (left) which is handled by handleMouseUp.
-  expect(events).toEqual(['LP', 'MP', 'RP', 'MR', 'RR', 'LR']);
+    // 1. Miss left button press (outside the render window)
+    // 2. Move mouse cursor into the render window
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 1 })
+    );
+    // 3. Release left button inside the render window (pointerup fires)
+    container.dispatchEvent(
+      makePointerEvent('pointerup', { button: 0, buttons: 0 })
+    );
+    expect(events).toEqual(['LeftButtonRelease']);
+  });
 
-  subs.forEach((s) => s.unsubscribe());
-  teardown(env);
-});
+  it('Test no button release when first clicked outside the render window', () => {
+    // 1. Miss left button press outside the render window
+    // 2. Move mouse cursor into the render window
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 1 })
+    );
+    // 3. Miss left button release outside the render window
+    // 4. Move mouse cursor into the render window
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 0 })
+    );
+    expect(events).toEqual([]);
+  });
 
-it('Test RenderWindowInteractor pointercancel releases all held buttons', () => {
-  const env = setupInteractor();
-  const { container, interactor } = env;
+  it('Test release button with chorded events when first clicked outside the render window', () => {
+    // 1. Miss left button press (outside the render window)
+    // 2. Move mouse cursor into the render window
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 1 })
+    );
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 1 })
+    );
+    expect(events).toEqual([]);
 
-  const events = [];
-  const subs = [
-    interactor.onLeftButtonPress(() => events.push('LP')),
-    interactor.onMiddleButtonPress(() => events.push('MP')),
-    interactor.onRightButtonPress(() => events.push('RP')),
-    interactor.onLeftButtonRelease(() => events.push('LR')),
-    interactor.onMiddleButtonRelease(() => events.push('MR')),
-    interactor.onRightButtonRelease(() => events.push('RR')),
-  ];
+    // 3. Press right while left held (pointermove with button change per spec §10)
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: 2, buttons: 3 })
+    );
+    expect(events).toEqual(['RightButtonPress']);
 
-  // Press left
-  container.dispatchEvent(
-    makePointerEvent('pointerdown', { button: 0, buttons: 1 })
-  );
-  // Press middle (chorded)
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: 1, buttons: 5 })
-  );
+    // 4. Release right while left held (pointermove with button change per spec §10)
+    events.length = 0;
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: 2, buttons: 1 })
+    );
+    expect(events).toEqual(['RightButtonRelease']);
 
-  events.length = 0;
+    // 5. Release left
+    events.length = 0;
+    container.dispatchEvent(
+      makePointerEvent('pointerup', { button: 0, buttons: 0 })
+    );
+    expect(events).toEqual(['LeftButtonRelease']);
 
-  // Cancel the interaction — all held buttons should be released
-  container.dispatchEvent(
-    makePointerEvent('pointercancel', { button: 0, buttons: 0 })
-  );
+    // 6. Move
+    events.length = 0;
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 0 })
+    );
+    expect(events).toEqual([]);
+  });
 
-  expect(events).toEqual(['LR', 'MR']);
+  it('Test release button with chorded events when pressed and released outside the render window', () => {
+    // 1. Miss left button press
+    // 2. Move mouse cursor into the render window
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 1 })
+    );
+    // 3. Press right while left held (pointermove with button change per spec §10)
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: 2, buttons: 3 })
+    );
+    expect(events).toEqual(['RightButtonPress']);
+    events.length = 0;
+    // 4. Release right while left held (pointermove with button change per spec §10)
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: 2, buttons: 1 })
+    );
+    expect(events).toEqual(['RightButtonRelease']);
+    events.length = 0;
+    // 5. Miss release left (outside the render window)
+    // 6. Move back into the render window (pointermove fires)
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { button: -1, buttons: 0 })
+    );
+    expect(events).toEqual([]);
+  });
 
-  subs.forEach((s) => s.unsubscribe());
-  teardown(env);
-});
-
-it('Test no chorded button press for first button', () => {
-  // This use-case happens when a user presses a button outside the render window
-  // and moves the pointer into the render window. The button press should not be triggered.
-  const env = setupInteractor();
-  const { container, interactor } = env;
-
-  const events = [];
-  const sub1 = interactor.onLeftButtonPress(() =>
-    events.push('LeftButtonPress')
-  );
-  const sub2 = interactor.onRightButtonPress(() =>
-    events.push('RightButtonPress')
-  );
-  const sub3 = interactor.onLeftButtonRelease(() =>
-    events.push('LeftButtonRelease')
-  );
-  const sub4 = interactor.onRightButtonRelease(() =>
-    events.push('RightButtonRelease')
-  );
-
-  // A.1. Miss left button press (outside the render window)
-  // A.2. Move mouse cursor into the render window
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 1 })
-  );
-  // A.3. Release left button inside the render window (pointerup fires)
-  console.log('now');
-  container.dispatchEvent(
-    makePointerEvent('pointerup', { button: 0, buttons: 0 })
-  );
-  expect(events).toEqual(['LeftButtonRelease']);
-  events.length = 0;
-
-  // B.1. Miss left button press outside the render window
-  // B.2. Move mouse cursor into the render window
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 1 })
-  );
-  // B.3. Miss left button release outside the render window
-  // B.4. Move mouse cursor into the render window
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 0 })
-  );
-  expect(events).toEqual([]);
-  events.length = 0;
-
-  // C.1. Miss left button press (outside the render window)
-  // C.2. Move mouse cursor into the render window
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 1 })
-  );
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 1 })
-  );
-  expect(events).toEqual([]);
-
-  // C.3. Press right while left held (pointermove with button change per spec §10)
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: 2, buttons: 3 })
-  );
-  expect(events).toEqual(['RightButtonPress']);
-
-  // C.4. Release right while left held (pointermove with button change per spec §10)
-  events.length = 0;
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: 2, buttons: 1 })
-  );
-  expect(events).toEqual(['RightButtonRelease']);
-
-  // C.5. Release left
-  events.length = 0;
-  container.dispatchEvent(
-    makePointerEvent('pointerup', { button: 0, buttons: 0 })
-  );
-  expect(events).toEqual(['LeftButtonRelease']);
-
-  // C.6. Move
-  events.length = 0;
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 0 })
-  );
-  expect(events).toEqual([]);
-
-  // D.1. Miss left button press
-  // D.2. Move mouse cursor into the render window
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 1 })
-  );
-  // D.3. Press right while left held (pointermove with button change per spec §10)
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: 2, buttons: 3 })
-  );
-  expect(events).toEqual(['RightButtonPress']);
-  events.length = 0;
-  // D.4. Release right while left held (pointermove with button change per spec §10)
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: 2, buttons: 1 })
-  );
-  expect(events).toEqual(['RightButtonRelease']);
-  events.length = 0;
-  // D.5. Miss release left (outside the render window)
-  // D.6. Move back into the render window (pointermove fires)
-  container.dispatchEvent(
-    makePointerEvent('pointermove', { button: -1, buttons: 0 })
-  );
-  expect(events).toEqual([]);
-
-  sub1.unsubscribe();
-  sub2.unsubscribe();
-  sub3.unsubscribe();
-  sub4.unsubscribe();
-  teardown(env);
+  afterAll(() => {
+    teardown(env);
+  });
 });
