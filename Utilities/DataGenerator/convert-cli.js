@@ -60,7 +60,7 @@ if(pvPythonExecs.length < 1) {
     pvPythonExecs[0], '-dr',
     path.normalize(path.join(__dirname, 'vtk-data-converter.py')),
     '--sample-data', options.sampleData,
-    '--output', path.normalize(path.join(__dirname, '../../Data')),,
+    '--output', path.normalize(path.join(__dirname, '../../Data')),
   ];
   console.log('\n===============================================================================');
   console.log('| Execute:');
