@@ -23,26 +23,54 @@ import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkVolumeProperty from '@kitware/vtk.js/Rendering/Core/VolumeProperty';
 import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
 import vtkLight from '@kitware/vtk.js/Rendering/Core/Light';
+import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
 // Show loading progress bar
 // ----------------------------------------------------------------------------
 const rootBody = document.querySelector('body');
 const rootContainer = rootBody;
-rootContainer.style.width = '100%';
-rootContainer.style.height = '100%';
-rootContainer.style.position = 'fixed';
-rootContainer.style.zIndex = -1;
-rootContainer.style.left = 0;
-rootContainer.style.top = 0;
+rootContainer.style.width = '100vw';
+rootContainer.style.height = '100vh';
+rootContainer.style.margin = 0;
+rootContainer.style.display = 'grid';
+rootContainer.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+rootContainer.style.gridTemplateRows = 'repeat(2, minmax(0, 1fr))';
+rootContainer.style.gridTemplateAreas = `
+  "upperLeft upperRight"
+  "lowerLeft lowerRight"
+`;
 
 const RENDERERS = [];
-const CONTAINERS = [];
+const VIEW_AREAS = ['lowerLeft', 'upperLeft', 'lowerRight', 'upperRight'];
 const renderWindow = vtkRenderWindow.newInstance();
-const renderWindowView = renderWindow.newAPISpecificView();
+const params = {
+  viewAPI:
+    new URLSearchParams(window.location.search).get('viewAPI') || 'WebGL',
+};
+const renderWindowView = renderWindow.newAPISpecificView(params.viewAPI);
+
+const gui = new GUI();
+gui
+  .add(params, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    const query = new URLSearchParams(window.location.search);
+    query.set('viewAPI', api);
+    window.location.search = query.toString();
+  });
+gui
+  .add(
+    { releaseGraphics: () => renderWindowView.releaseGraphicsResources() },
+    'releaseGraphics'
+  )
+  .name('Release Graphics');
 
 const fpsMonitor = vtkFPSMonitor.newInstance();
 const progressContainer = document.createElement('div');
+progressContainer.style.gridColumn = '1 / -1';
+progressContainer.style.gridRow = '1 / -1';
+progressContainer.style.placeSelf = 'center';
 rootContainer.appendChild(progressContainer);
 
 const iStyle = vtkInteractorStyleImage.newInstance();
@@ -62,24 +90,7 @@ const progressCallback = (progressEvent) => {
   }
 };
 
-function resizeViewportContainer(view, ren, element) {
-  const rect = view.getBoundingClientRect();
-  const vp = ren.getViewport();
-  // Compensate for the border size
-  const border = 5;
-  const width = (vp[2] - vp[0]) * rect.width - border;
-  const height = (vp[3] - vp[1]) * rect.height - border;
-  const x = vp[0] * rect.width;
-  const y = vp[1] * rect.height;
-  element.style.position = 'absolute';
-  element.style.width = `${width}px`;
-  element.style.height = `${height}px`;
-  element.style.left = `${x}px`;
-  element.style.bottom = `${y}px`;
-  element.style.border = `solid ${border}px darkcyan`;
-}
-
-function applyStyle(view, ren, element) {
+function applyStyle(area, element) {
   element.classList.add('renderer');
   element.style.margin = '0px';
   element.style.display = 'block';
@@ -87,7 +98,10 @@ function applyStyle(view, ren, element) {
   element.style.textAlign = 'center';
   element.style.color = 'gray';
   element.style.borderRadius = '5px';
-  resizeViewportContainer(view, ren, element);
+  element.style.border = 'solid 1px gray';
+  element.style.gridArea = area;
+  element.style.minWidth = 0;
+  element.style.minHeight = 0;
   return element;
 }
 
@@ -110,14 +124,8 @@ function bindInteractor(interactor, el) {
 }
 
 function resize() {
-  // Resize the VTK render window first
   const rect = rootContainer.getBoundingClientRect();
   renderWindowView.setSize(rect.width, rect.height);
-  // Resize the viewport containers next
-  CONTAINERS.forEach((c) => {
-    const { id } = c;
-    resizeViewportContainer(rootContainer, RENDERERS[id], c);
-  });
   renderWindow.render();
 }
 
@@ -206,6 +214,12 @@ function createQuadView(myContainer, fileContents) {
   renderWindowView.setSize(rect.width, rect.height);
   renderWindow.addView(renderWindowView);
   renderWindowView.setContainer(myContainer);
+  const canvas = renderWindowView.getCanvas();
+  canvas.style.gridColumn = '1 / -1';
+  canvas.style.gridRow = '1 / -1';
+  canvas.style.height = '100%';
+  canvas.style.minWidth = 0;
+  canvas.style.minHeight = 0;
 
   const interactor = vtkRenderWindowInteractor.newInstance();
   interactor.setView(renderWindowView);
@@ -216,17 +230,11 @@ function createQuadView(myContainer, fileContents) {
   for (let i = 0; i < 2; ++i) {
     for (let j = 0; j < 2; ++j) {
       const ren = vtkRenderer.newInstance();
-      ren.setViewport(
-        (i % 2) * 0.51 + 0.01,
-        (j % 2) * 0.51 + 0.01,
-        (i % 2) * 0.5 + 0.48,
-        (j % 2) * 0.5 + 0.48
-      );
+      ren.setViewport(i * 0.5, j * 0.5, (i + 1) * 0.5, (j + 1) * 0.5);
       // ren.setBackground(i % 2, j % 2, (i % 2) + 0.5);
       // ren.setBackground(1, 1, 1);
       const container = applyStyle(
-        myContainer,
-        ren,
+        VIEW_AREAS[RENDERERS.length],
         document.createElement('div')
       );
       container.id = RENDERERS.length;
@@ -240,15 +248,14 @@ function createQuadView(myContainer, fileContents) {
 
       renderWindow.addRenderer(ren);
       RENDERERS.push(ren);
-      CONTAINERS.push(container);
     }
   }
 
   // FPS monitor
   const fpsElm = fpsMonitor.getFpsMonitorContainer();
-  fpsElm.style.position = 'absolute';
-  fpsElm.style.left = '10px';
-  fpsElm.style.bottom = '10px';
+  fpsElm.style.gridArea = 'lowerLeft';
+  fpsElm.style.alignSelf = 'end';
+  fpsElm.style.justifySelf = 'start';
   fpsElm.style.background = 'rgba(255,255,255,0.5)';
   fpsElm.style.borderRadius = '5px';
   fpsMonitor.setContainer(myContainer);
@@ -330,22 +337,6 @@ function createQuadView(myContainer, fileContents) {
 }
 
 // ----------------------------------------------------------------------------
-// Main function that creates the quadview
-// ----------------------------------------------------------------------------
-function createReleaseButton(myContainer) {
-  const button = document.createElement('button');
-  button.innerText = 'Release Graphics';
-  button.style.position = 'absolute';
-  button.style.left = '1px';
-  button.style.top = '1px';
-  button.style.zIndex = 2;
-  button.addEventListener('click', () => {
-    renderWindowView.releaseGraphicsResources();
-  });
-  myContainer.appendChild(button);
-}
-
-// ----------------------------------------------------------------------------
 // Read volume and render
 // ----------------------------------------------------------------------------
 HttpDataAccessHelper.fetchBinary(
@@ -356,5 +347,4 @@ HttpDataAccessHelper.fetchBinary(
 ).then((binary) => {
   rootContainer.removeChild(progressContainer);
   createQuadView(rootContainer, binary);
-  createReleaseButton(rootContainer);
 });
