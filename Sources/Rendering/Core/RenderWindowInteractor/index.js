@@ -1413,6 +1413,18 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     superClass.delete();
   };
 
+  // mouseScrollDebounceByPass is deprecated; delegate to wheelEndDebounceDelay.
+  publicAPI.getMouseScrollDebounceByPass = () =>
+    model.wheelEndDebounceDelay === 0;
+  publicAPI.setMouseScrollDebounceByPass = (byPass) => {
+    vtkWarningMacro(
+      'mouseScrollDebounceByPass is deprecated. Use wheelEndDebounceDelay instead.'
+    );
+    return publicAPI.setWheelEndDebounceDelay(
+      byPass ? 0 : DEFAULT_VALUES.wheelEndDebounceDelay
+    );
+  };
+
   // Use the Page Visibility API to detect when we switch away from or back to
   // this tab, and reset the animationFrameStart. When tabs are not active, browsers
   // will stop calling requestAnimationFrame callbacks.
@@ -1501,18 +1513,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'longTapMaximumDistance',
   ]);
   macro.moveToProtected(publicAPI, model, ['view']);
-
-  // mouseScrollDebounceByPass is deprecated; delegate to wheelEndDebounceDelay.
-  publicAPI.getMouseScrollDebounceByPass = () =>
-    model.wheelEndDebounceDelay === 0;
-  publicAPI.setMouseScrollDebounceByPass = (byPass) => {
-    vtkWarningMacro(
-      'mouseScrollDebounceByPass is deprecated. Use wheelEndDebounceDelay instead.'
-    );
-    return publicAPI.setWheelEndDebounceDelay(
-      byPass ? 0 : DEFAULT_VALUES.wheelEndDebounceDelay
-    );
-  };
 
   // For more macro methods, see "Sources/macros.js"
 
