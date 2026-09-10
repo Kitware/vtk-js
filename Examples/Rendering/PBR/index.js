@@ -10,10 +10,11 @@ import vtkOBJReader from '@kitware/vtk.js/IO/Misc/OBJReader';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkTexture from '@kitware/vtk.js/Rendering/Core/Texture';
 import vtkPolyDataNormals from '@kitware/vtk.js/Filters/Core/PolyDataNormals';
-
+import vtkProperty from '@kitware/vtk.js/Rendering/Core/Property';
 import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
-
 import GUI from 'lil-gui';
+
+const { Shading } = vtkProperty;
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -23,7 +24,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0.08, 0.08, 0.08],
 });
 const renderer = fullScreenRenderer.getRenderer();
-renderer.setUseEnvironmentTextureAsBackground(true);
+renderer.setUseEnvironmentTextureAsBackground(false);
 const renderWindow = fullScreenRenderer.getRenderWindow();
 
 const fpsMonitor = vtkFPSMonitor.newInstance();
@@ -105,6 +106,7 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(async () => {
 
   // Setting default values
   actor.setPosition(0.0, 0.0, 0.0);
+  actor.getProperty().setInterpolation(Shading.PBR);
   actor.getProperty().setRoughness(1.0);
   actor.getProperty().setEmission(0.6);
   actor.getProperty().setMetallic(1.0);
@@ -140,9 +142,10 @@ reader.setUrl(`${__BASE_PATH__}/data/pbr/helmet.obj`).then(async () => {
   renderer.setEnvironmentTexture(environmentTex);
   renderer.setEnvironmentTextureDiffuseStrength(1);
   renderer.setEnvironmentTextureSpecularStrength(1);
+  renderer.setUseEnvironmentTextureAsBackground(true);
 
   actor.setMapper(mapper);
-  mapper.setInputData(polydata);
+  mapper.setInputConnection(normals.getOutputPort());
 
   renderer.addActor(actor);
   renderer.resetCamera();
@@ -161,8 +164,6 @@ const redLight = vtkLight.newInstance({
 });
 redLight.setDirection([0.8, 1, -1]); // setDirection allows for direct setting instead of through a focal point
 renderer.addLight(redLight);
-
-renderer.resetCamera();
 renderWindow.render();
 fpsMonitor.update();
 
