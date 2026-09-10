@@ -17,8 +17,8 @@ function notImplemented(method) {
 // Append array elements individually; append other values as one element.
 function collectFromProps(props, getFromProp) {
   const collected = [];
-  props.forEach((prop) => {
-    const items = getFromProp(prop);
+  for (let i = 0; i < props.length; i++) {
+    const items = getFromProp(props[i]);
     if (Array.isArray(items)) {
       for (let j = 0; j < items.length; j++) {
         collected.push(items[j]);
@@ -26,7 +26,7 @@ function collectFromProps(props, getFromProp) {
     } else {
       collected.push(items);
     }
-  });
+  }
   return collected;
 }
 
