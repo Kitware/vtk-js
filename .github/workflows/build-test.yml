@@ -69,3 +69,38 @@ jobs:
           name: test-results-${{ matrix.os }}-node_${{ matrix.node }}-${{ matrix.browser }}
           path: Utilities/TestResults/
           retention-days: 15
+
+  webgpu-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    name: ubuntu-24.04 / node 22 / chromium / WebGPU
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup project
+        uses: ./.github/actions/setup-node-project
+        with:
+          node-version: '22'
+      - name: Resolve Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browser
+        id: playwright-cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-ubuntu-24.04-chromium-${{ steps.playwright.outputs.version }}
+      - name: Install Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+      - name: Install Playwright system deps
+        run: sudo npx playwright install-deps chromium
+      - name: Tests
+        run: xvfb-run --auto-servernum npm run test:webgpu
+      - name: Archive test results
+        if: github.event_name != 'merge_group' && (success() || failure())
+        uses: actions/upload-artifact@v7
+        continue-on-error: true
+        with:
+          name: test-results-ubuntu-24.04-node_22-chromium-webgpu
+          path: Utilities/TestResults/
+          retention-days: 15

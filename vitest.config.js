@@ -23,8 +23,10 @@ if (webGPU) {
   // Headless Chromium does not expose a WebGPU adapter by default.
   chromiumArgs.push('--enable-unsafe-webgpu');
   if (ci) {
-    // No real GPU on CI: use Dawn's software (SwiftShader) WebGPU adapter.
-    chromiumArgs.push('--use-webgpu-adapter=swiftshader');
+    chromiumArgs.push(
+      '--enable-features=Vulkan', // Use Vulkan for the compositor.
+      '--use-vulkan=swiftshader' // Back Vulkan with SwiftShader on GPU-less CI.
+    );
   }
 }
 
