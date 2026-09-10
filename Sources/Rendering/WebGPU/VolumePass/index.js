@@ -76,9 +76,17 @@ fn main(
 
   //VTK::VolumePass::Impl
 
+  // The bounds are rasterized over the full texture, while opaque geometry is
+  // rasterized in the renderer viewport. Map this fragment to that viewport
+  // before reading the opaque depth.
+  let depthTextureSize = vec2<f32>(textureDimensions(opaquePassDepthTexture));
+  let opaqueDepthCoord = vec2<i32>(rendererUBO.viewportOrigin +
+    input.fragPos.xy * rendererUBO.viewportSize / depthTextureSize);
+
   // use the maximum (closest) of the current value and the zbuffer
   // the blend func will then take the min to find the farthest stop value
-  var stopval: f32 = max(input.fragPos.z, textureLoad(opaquePassDepthTexture, vec2<i32>(i32(input.fragPos.x), i32(input.fragPos.y)), 0));
+  var stopval: f32 = max(input.fragPos.z,
+    textureLoad(opaquePassDepthTexture, opaqueDepthCoord, 0));
 
   //VTK::RenderEncoder::Impl
   return output;

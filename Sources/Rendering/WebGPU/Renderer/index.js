@@ -159,6 +159,10 @@ function vtkWebGPURenderer(publicAPI, model) {
 
       const tsize = publicAPI.getYInvertedTiledSizeAndOrigin();
       model.UBO.setArray('viewportSize', [tsize.usize, tsize.vsize]);
+      model.UBO.setArray('viewportOrigin', [
+        tsize.lowerLeftU,
+        tsize.lowerLeftV,
+      ]);
       model.UBO.setValue(
         'cameraParallel',
         model.camera.getParallelProjection()
@@ -334,7 +338,14 @@ function vtkWebGPURenderer(publicAPI, model) {
     if (prepass) {
       model.renderEncoder.begin(model._parent.getCommandEncoder());
     } else {
-      publicAPI.scissorAndViewport(model.renderEncoder);
+      // The ray cast uses a normalized full canvas target before compositing into
+      // the renderer viewport, so its depth bounds must use the same coordinates.
+      // The bounds shader maps opaque depth reads back into the renderer viewport.
+      const size = model._parent.getSizeByReference();
+      model.renderEncoder
+        .getHandle()
+        .setViewport(0, 0, size[0], size[1], 0.0, 1.0);
+      model.renderEncoder.getHandle().setScissorRect(0, 0, size[0], size[1]);
       model.renderEncoder.end();
     }
   };
@@ -453,6 +464,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('VCPCMatrix', 'mat4x4<f32>');
   model.UBO.addEntry('WCVCNormals', 'mat4x4<f32>');
   model.UBO.addEntry('viewportSize', 'vec2<f32>');
+  model.UBO.addEntry('viewportOrigin', 'vec2<f32>');
   model.UBO.addEntry('LightCount', 'i32');
   model.UBO.addEntry('MaxEnvironmentMipLevel', 'f32');
   model.UBO.addEntry('BackgroundDiffuseStrength', 'f32');
