@@ -347,6 +347,12 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     model.zBuffer = null;
   };
 
+  publicAPI.releaseGraphicsResources = () => {
+    publicAPI.releasePixBuffers();
+    model.framebuffer?.delete();
+    model.framebuffer = null;
+  };
+
   //----------------------------------------------------------------------------
   publicAPI.beginSelection = () => {
     model._openGLRenderer = model._openGLRenderWindow.getViewNodeFor(
@@ -666,6 +672,11 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     model.propColorValue[1] = (Math.floor(val / 256) % 256) / 255.0;
     model.propColorValue[2] = (Math.floor(val / 65536) % 256) / 255.0;
   };
+
+  publicAPI.delete = macro.chain(
+    publicAPI.releaseGraphicsResources,
+    publicAPI.delete
+  );
 
   // info has
   //   valid

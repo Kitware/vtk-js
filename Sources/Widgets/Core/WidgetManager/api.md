@@ -1,5 +1,9 @@
 vtkWidgetManager manages view widgets for a given renderer.
 
+Deleting a widget manager removes and deletes its per-view widgets and deletes
+its hardware selector. If a selection capture is in progress, selector deletion
+is deferred until that capture settles.
+
 ## enablePicking()
 
 Enable widget picking in the renderer.

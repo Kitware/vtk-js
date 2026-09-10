@@ -54,6 +54,11 @@ export interface vtkOpenGLHardwareSelector extends vtkHardwareSelector {
   releasePixBuffers(): void;
 
   /**
+   * Releases the pixel buffers and GPU resources owned by this selector.
+   */
+  releaseGraphicsResources(): void;
+
+  /**
    * Preps for picking the scene.
    *
    * Call endSelection() afterwards.
