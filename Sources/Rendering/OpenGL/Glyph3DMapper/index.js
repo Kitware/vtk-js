@@ -546,6 +546,28 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
         );
     }
   };
+
+  const glyphBuffers = () =>
+    [
+      model.matrixBuffer,
+      model.normalBuffer,
+      model.colorBuffer,
+      model.pickBuffer,
+    ].filter(Boolean);
+
+  publicAPI.getAllocatedGPUMemoryInBytes = () =>
+    superClass.getAllocatedGPUMemoryInBytes() +
+    glyphBuffers().reduce(
+      (memUsed, buffer) => memUsed + buffer.getAllocatedGPUMemoryInBytes(),
+      0
+    );
+
+  publicAPI.releaseGraphicsResources = (renderWindow) => {
+    glyphBuffers().forEach((buffer) => buffer.releaseGraphicsResources());
+    // glyph buffers re-upload only when the renderable is newer than this
+    model.glyphBOBuildTime.set({ mtime: 0 });
+    superClass.releaseGraphicsResources(renderWindow);
+  };
 }
 
 // ----------------------------------------------------------------------------
