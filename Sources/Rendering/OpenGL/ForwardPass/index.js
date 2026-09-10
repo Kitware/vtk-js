@@ -104,6 +104,14 @@ function vtkForwardPass(publicAPI, model) {
     }
   };
 
+  publicAPI.releaseGraphicsResources = macro.chain((viewNode) => {
+    if (model.framebuffer) {
+      model.framebuffer.releaseGraphicsResources();
+      model.framebuffer = null;
+    }
+    model.translucentPass?.releaseGraphicsResources(viewNode);
+  }, publicAPI.releaseGraphicsResources);
+
   publicAPI.getZBufferTexture = () => {
     if (model.framebuffer) {
       return model.framebuffer.getColorTexture();

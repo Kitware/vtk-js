@@ -1203,8 +1203,23 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     }
   };
 
-  // unsubscribe from our listeners
+  publicAPI.releaseGraphicsResources = (renderWindow) => {
+    const openGLRenderWindow = renderWindow ?? model._openGLRenderWindow;
+    model.framebuffer.releaseGraphicsResources();
+    model.jitterTexture.releaseGraphicsResources(openGLRenderWindow);
+    model.tris.releaseGraphicsResources(openGLRenderWindow);
+    if (model.copyVAO) {
+      model.copyVAO.releaseGraphicsResources();
+      model.copyVAO = null;
+    }
+    // The shader cache owns the programs it hands out, so only drop the
+    // reference. A null shader is also what makes the next render rebuild the
+    // vertex array that reads from it.
+    model.copyShader = null;
+  };
+
   publicAPI.delete = macro.chain(
+    () => publicAPI.releaseGraphicsResources(),
     () => {
       if (model._animationRateSubscription) {
         model._animationRateSubscription.unsubscribe();
