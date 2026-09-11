@@ -1,3 +1,4 @@
+import { mat4 } from 'gl-matrix';
 import { Bounds, Nullable } from '../../../types';
 
 import vtkCamera from '../Camera';
@@ -602,6 +603,13 @@ export interface vtkRenderer extends vtkViewport {
   viewToProjection(x: number, y: number, z: number, aspect: number): number[];
 
   /**
+   * Expand the given bounds in place using the provided transform matrix.
+   * @param {Bounds} bounds Bounds to expand.
+   * @param {mat4} [matrix] Transform matrix.
+   */
+  expandBounds(bounds: Bounds, matrix?: Nullable<mat4>): Bounds;
+
+  /**
    * Automatically set up the camera based on the visible actors.
    *
    * The camera will reposition itself to view the center point of the actors,
@@ -610,6 +618,45 @@ export interface vtkRenderer extends vtkViewport {
    * @param {Bounds} [bounds]
    */
   resetCamera(bounds?: Bounds): boolean;
+
+  /**
+   * Zoom the camera so the given screen-space box fills the viewport.
+   *
+   * Matches the VTK C++ vtkRenderer::ZoomToBoxUsingViewAngle behavior.
+   *
+   * @param {Object} box Screen-space rectangle with x, y, width, height
+   *   in display (pixel) coordinates.
+   * @param {Number} [offsetRatio=1.0] Scale factor applied to the zoom
+   *   (values < 1 leave a margin around the box).
+   */
+  zoomToBoxUsingViewAngle(
+    box: { x: number; y: number; width: number; height: number },
+    offsetRatio?: number
+  ): void;
+
+  /**
+   * Automatically set up the camera based on the visible actors, using a
+   * screen-space bounding box to zoom closer to the data.
+   *
+   * This method first calls resetCamera to ensure all bounds are visible, then
+   * projects the bounding box corners to screen space and zooms so the actors
+   * fill the specified fraction of the viewport. This correctly accounts for
+   * viewport aspect ratio for both perspective and parallel projection.
+   *
+   * Matches the VTK C++ vtkRenderer::ResetCameraScreenSpace behavior.
+   *
+   * @param {Bounds} [bounds] Optional bounding box to use. If not provided,
+   *   the visible prop bounds are computed automatically.
+   * @param {Number} [offsetRatio=0.9] Fraction of screen space to fill
+   *   (0.9 = 90%, leaving 10% margin at the edges).
+   */
+  resetCameraScreenSpace(bounds?: Bounds | null, offsetRatio?: number): boolean;
+
+  /**
+   * Overload that accepts only offsetRatio (bounds are computed automatically).
+   * @param {Number} offsetRatio Fraction of screen space to fill.
+   */
+  resetCameraScreenSpace(offsetRatio?: number): boolean;
 
   /**
    * Reset the camera clipping range based on a bounding box.
