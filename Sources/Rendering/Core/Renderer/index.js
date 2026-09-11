@@ -55,6 +55,15 @@ function vtkRenderer(publicAPI, model) {
     renderer: publicAPI,
   };
 
+  // Counterpart of vtkRenderer::ExpandBounds: the axis-aligned bounds of the 8
+  // corners of `bounds` transformed by `matrix`. A null matrix is a no-op.
+  function expandBounds(bounds, matrix) {
+    if (!matrix) {
+      return bounds;
+    }
+    return vtkBoundingBox.transformBounds(bounds, matrix, []);
+  }
+
   publicAPI.updateCamera = () => {
     if (!model.activeCamera) {
       vtkDebugMacro('No cameras are on, creating one.');
@@ -386,7 +395,6 @@ function vtkRenderer(publicAPI, model) {
 
   publicAPI.resetCamera = (bounds = null) => {
     const boundsToUse = bounds || publicAPI.computeVisiblePropBounds();
-    const center = [0, 0, 0];
 
     if (!vtkMath.areBoundsInitialized(boundsToUse)) {
       vtkDebugMacro('Cannot reset camera!');
@@ -406,13 +414,20 @@ function vtkRenderer(publicAPI, model) {
     // the view angle to become very small and cause bad depth sorting.
     model.activeCamera.setViewAngle(30.0);
 
-    center[0] = (boundsToUse[0] + boundsToUse[1]) / 2.0;
-    center[1] = (boundsToUse[2] + boundsToUse[3]) / 2.0;
-    center[2] = (boundsToUse[4] + boundsToUse[5]) / 2.0;
+    // The camera pose is consumed after the model transform (the view matrix is
+    // lookAt(position, focalPoint, viewUp) * modelTransformMatrix), so it lives
+    // in transformed space while prop bounds are in world space. Push the
+    // bounds through the transform before deriving the pose from them.
+    const expandedBounds = expandBounds(
+      boundsToUse,
+      model.activeCamera.getModelTransformMatrix()
+    );
 
-    let w1 = boundsToUse[1] - boundsToUse[0];
-    let w2 = boundsToUse[3] - boundsToUse[2];
-    let w3 = boundsToUse[5] - boundsToUse[4];
+    const center = vtkBoundingBox.getCenter(expandedBounds);
+
+    let w1 = vtkBoundingBox.getLength(expandedBounds, 0);
+    let w2 = vtkBoundingBox.getLength(expandedBounds, 1);
+    let w3 = vtkBoundingBox.getLength(expandedBounds, 2);
     w1 *= w1;
     w2 *= w2;
     w3 *= w3;
@@ -458,6 +473,8 @@ function vtkRenderer(publicAPI, model) {
       center[2] + distance * vn[2]
     );
 
+    // Pass the untransformed bounds: resetCameraClippingRange applies the model
+    // transform itself, so handing it expandedBounds would apply it twice.
     publicAPI.resetCameraClippingRange(boundsToUse);
 
     // setup default parallel scale
@@ -493,8 +510,12 @@ function vtkRenderer(publicAPI, model) {
       return false;
     }
 
-    // Get the exact range for the bounds
-    const range = model.activeCamera.computeClippingRange(boundsToUse);
+    // computeClippingRange measures along the camera's direction of projection,
+    // which is expressed in transformed space, so the world-space bounds have to
+    // be pushed through the model transform first.
+    const range = model.activeCamera.computeClippingRange(
+      expandBounds(boundsToUse, model.activeCamera.getModelTransformMatrix())
+    );
 
     // do not let far - near be less than 0.1 of the window height
     // this is for cases such as 2D images which may have zero range
