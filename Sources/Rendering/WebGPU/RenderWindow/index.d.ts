@@ -1,16 +1,19 @@
 import { vtkObject, vtkSubscription } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import { vtkViewNode } from '../../SceneGraph/ViewNode';
+import { vtkWebGPUConfiguration } from '../Configuration';
 
 export interface IWebGPURenderWindowInitialValues {
   initialized?: boolean;
   context?: any;
+  webGPUConfiguration?: vtkWebGPUConfiguration;
   canvas?: HTMLCanvasElement;
   cursor?: string;
   useOffScreen?: boolean;
   imageFormat?: string;
   useBackgroundImage?: boolean;
   xrSupported?: boolean;
-  presentationFormat?: string | null;
+  presentationFormat?: Nullable<string>;
   multiSample?: 1 | 4;
   size?: [number, number];
 }
@@ -56,12 +59,12 @@ export interface vtkWebGPURenderWindow extends vtkViewNode {
    * Set the container element for the render window.
    * @param el The HTML element to use as the container, or `null` to detach.
    */
-  setContainer(el: HTMLElement | null): void;
+  setContainer(el: Nullable<HTMLElement>): void;
 
   /**
    * Get the current container element.
    */
-  getContainer(): HTMLElement | null;
+  getContainer(): Nullable<HTMLElement>;
 
   /**
    * Get the size of the container element in pixels.
@@ -76,10 +79,11 @@ export interface vtkWebGPURenderWindow extends vtkViewNode {
   getFramebufferSize(): [number, number];
 
   /**
-   * Create the WebGPU 3D context asynchronously. Requests the GPU adapter
-   * and device, then configures the canvas context.
+   * Create the WebGPU 3D context asynchronously. Initializes the
+   * configuration, which supplies the adapter and device, then configures the
+   * canvas context.
    */
-  create3DContextAsync(): Promise<void>;
+  create3DContextAsync(): Promise<boolean>;
 
   /**
    * Release all GPU resources and clean up the rendering context.
@@ -228,15 +232,36 @@ export interface vtkWebGPURenderWindow extends vtkViewNode {
   setCanvas(canvas: HTMLCanvasElement): boolean;
 
   /**
-   * Get the WebGPU device wrapper.
+   * Get the vtkWebGPUDevice that holds resource caches for this
+   * render window, or null before initialization.
+   *
+   * One instance of this wrapper exists for each native device. Thus, render
+   * windows that share a configuration also share this object. Use
+   * `getWebGPUConfiguration().getDevice()` to get the native `GPUDevice`.
    */
   getDevice(): any;
 
   /**
-   * Set the WebGPU device wrapper.
-   * @param device The device wrapper instance.
+   * Set the configuration that supplies the adapter and the device.
+   *
+   * Set this before initialization. Render windows that share a configuration
+   * share one device, and thus one set of vtk.js resource caches. Set null to
+   * go back to a configuration that this render window creates and owns.
+   *
+   * @param configuration the configuration to use, or null
+   * @returns true if the value changed
    */
-  setDevice(device: any): boolean;
+  setWebGPUConfiguration(
+    configuration: Nullable<vtkWebGPUConfiguration>
+  ): boolean;
+
+  /**
+   * Get the configuration that supplies the adapter and the device.
+   *
+   * A render window always has a configuration. Unless the application gives
+   * one, the render window creates and owns it, and deletes it with itself.
+   */
+  getWebGPUConfiguration(): vtkWebGPUConfiguration;
 
   /**
    * Get the render passes.

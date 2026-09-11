@@ -51,7 +51,17 @@ function vtkWebGPUDevice(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUDevice');
   publicAPI.initialize = (handle) => {
+    if (model.handle === handle) {
+      return;
+    }
     model.handle = handle;
+    model.generation += 1;
+    const generation = model.generation;
+    handle?.lost?.then((info) => {
+      if (model.handle === handle && model.generation === generation) {
+        publicAPI.invokeDeviceLost({ info, generation });
+      }
+    });
   };
 
   publicAPI.hasFeature = (name) => !!model.handle?.features?.has(name);
@@ -154,6 +164,7 @@ function vtkWebGPUDevice(publicAPI, model) {
 // ----------------------------------------------------------------------------
 const DEFAULT_VALUES = {
   handle: null,
+  generation: 0,
   pipelines: null,
   shaderCache: null,
   bindGroupLayouts: null,
@@ -168,8 +179,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   // Build VTK API
   macro.obj(publicAPI, model);
 
+  macro.event(publicAPI, model, 'deviceLost');
+
   macro.setGet(publicAPI, model, ['handle']);
   macro.get(publicAPI, model, [
+    'generation',
     'bufferManager',
     'shaderCache',
     'textureManager',

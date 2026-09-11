@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import { registerViewConstructor } from 'vtk.js/Sources/Rendering/Core/RenderWindow';
 import vtkForwardPass from 'vtk.js/Sources/Rendering/WebGPU/ForwardPass';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
+import vtkWebGPUConfiguration from 'vtk.js/Sources/Rendering/WebGPU/Configuration';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
 import vtkWebGPUHardwareSelector from 'vtk.js/Sources/Rendering/WebGPU/HardwareSelector';
 import vtkWebGPUViewNodeFactory, {
@@ -12,6 +13,21 @@ import vtkRenderWindowViewNode from 'vtk.js/Sources/Rendering/SceneGraph/RenderW
 import HalfFloat from 'vtk.js/Sources/Common/Core/HalfFloat';
 
 const { vtkErrorMacro, vtkWarningMacro } = macro;
+
+// One vtkWebGPUDevice owns the caches for each native GPUDevice. Keeping this
+// mapping here lets independently created render windows share those caches.
+const sharedDevices = new WeakMap();
+
+function getSharedDevice(deviceHandle) {
+  let device = sharedDevices.get(deviceHandle);
+  if (!device) {
+    device = vtkWebGPUDevice.newInstance();
+    device.initialize(deviceHandle);
+    sharedDevices.set(deviceHandle, device);
+  }
+  return device;
+}
+
 // const IS_CHROME = navigator.userAgent.indexOf('Chrome') !== -1;
 const SCREENSHOT_PLACEHOLDER = {
   position: 'absolute',
@@ -77,6 +93,9 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       recoverable: reason !== 'destroyed',
     });
 
+    // The configuration releases a device that it loses. Thus a new
+    // initialization requests a replacement. A destroyed device is deliberate
+    // and stays gone.
     if (reason !== 'destroyed') {
       queueRenderAfterInitialization();
       publicAPI.initialize();
@@ -85,8 +104,9 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     model.handlingDeviceLost = false;
   }
 
-  function watchForDeviceLoss(deviceHandle, deviceGeneration) {
-    deviceHandle.lost.then((info) => {
+  function watchForDeviceLoss(device, deviceGeneration) {
+    model.deviceLostSubscription?.unsubscribe();
+    model.deviceLostSubscription = device.onDeviceLost(({ info }) => {
       handleDeviceLost(info, deviceGeneration);
     });
   }
@@ -191,16 +211,26 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       model.deviceLostInfo = null;
       if (!navigator.gpu) {
         vtkErrorMacro('WebGPU is not enabled.');
+        model.initializing = false;
         return;
       }
 
-      publicAPI.create3DContextAsync().then(() => {
-        model.initialized = true;
-        if (model.deleted) {
-          return;
-        }
-        publicAPI.invokeInitialized();
-      });
+      publicAPI
+        .create3DContextAsync()
+        .then((ready) => {
+          if (!ready || model.deleted) {
+            return;
+          }
+          model.initialized = true;
+          publicAPI.invokeInitialized();
+        })
+        .catch((error) => {
+          model.initialized = false;
+          vtkErrorMacro(`WebGPU initialization failed: ${error.message}`);
+        })
+        .finally(() => {
+          model.initializing = false;
+        });
     }
   };
 
@@ -250,42 +280,60 @@ function vtkWebGPURenderWindow(publicAPI, model) {
   publicAPI.getFramebufferSize = () => model.size;
 
   publicAPI.create3DContextAsync = async () => {
-    // Get a GPU device to render with
-    model.adapter = await navigator.gpu.requestAdapter({
-      powerPreference: 'high-performance',
-    });
-    if (model.deleted) {
-      return;
+    if (!(await model.webGPUConfiguration.initialize())) {
+      throw new Error('Failed to create a WebGPU device.');
     }
-    // Exact storage of 16 bit integers uses r32float. Request filter support
-    // so that these textures can use linear interpolation.
-    const optionalFeatures = ['float32-filterable'];
-    const requiredFeatures = optionalFeatures.filter((feature) =>
-      model.adapter.features.has(feature)
-    );
-    model.device = vtkWebGPUDevice.newInstance();
-    model.device.initialize(
-      await model.adapter.requestDevice({
-        requiredFeatures,
-        requiredLimits: {
-          maxBufferSize: model.adapter.limits.maxBufferSize,
-          maxStorageBufferBindingSize:
-            model.adapter.limits.maxStorageBufferBindingSize,
-          maxUniformBufferBindingSize:
-            model.adapter.limits.maxUniformBufferBindingSize,
-        },
-      })
-    );
     if (model.deleted) {
-      model.device = null;
-      return;
+      return false;
     }
+    model.adapter = model.webGPUConfiguration.getAdapter();
+    model.device = getSharedDevice(model.webGPUConfiguration.getDevice());
     model.deviceGeneration += 1;
-    watchForDeviceLoss(model.device.getHandle(), model.deviceGeneration);
+    watchForDeviceLoss(model.device, model.deviceGeneration);
     model.context = model.canvas.getContext('webgpu');
+    return true;
+  };
+
+  /**
+   * Supply the configuration that provides this render window's device. Render
+   * windows sharing a configuration share one device and therefore one set of
+   * resource caches. Passing null restores an internally created
+   * configuration. This must be done before initialization.
+   */
+  publicAPI.setWebGPUConfiguration = (configuration) => {
+    if (model.initialized || model.initializing) {
+      vtkErrorMacro(
+        'setWebGPUConfiguration() must be called before WebGPU initialization.'
+      );
+      return false;
+    }
+    if (
+      configuration != null &&
+      !configuration.isA?.('vtkWebGPUConfiguration')
+    ) {
+      vtkErrorMacro(
+        'setWebGPUConfiguration() expects a vtkWebGPUConfiguration or null.'
+      );
+      return false;
+    }
+    if (configuration === model.webGPUConfiguration) {
+      return false;
+    }
+    if (model.ownsWebGPUConfiguration) {
+      model.webGPUConfiguration.finalize();
+      model.webGPUConfiguration.delete();
+    }
+    model.ownsWebGPUConfiguration = configuration == null;
+    model.webGPUConfiguration =
+      configuration ?? vtkWebGPUConfiguration.newInstance();
+    model.device = null;
+    publicAPI.modified();
+    return true;
   };
 
   publicAPI.releaseGraphicsResources = () => {
+    model.deviceLostSubscription?.unsubscribe();
+    model.deviceLostSubscription = null;
     if (model.renderPasses) {
       for (let i = 0; i < model.renderPasses.length; i++) {
         model.renderPasses[i]?.releaseGraphicsResources?.();
@@ -299,6 +347,9 @@ function vtkWebGPURenderWindow(publicAPI, model) {
       model.context.unconfigure();
     }
     model.adapter = null;
+    if (model.ownsWebGPUConfiguration) {
+      model.webGPUConfiguration.finalize();
+    }
     model.device = null;
     model.context = null;
     model.commandEncoder = null;
@@ -659,7 +710,20 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     return superSetMultiSample(count);
   };
 
-  publicAPI.delete = macro.chain(publicAPI.delete, publicAPI.setViewStream);
+  function deleteOwnedConfiguration() {
+    if (model.ownsWebGPUConfiguration) {
+      model.webGPUConfiguration.finalize();
+      model.webGPUConfiguration.delete();
+      model.ownsWebGPUConfiguration = false;
+    }
+    model.webGPUConfiguration = null;
+  }
+
+  publicAPI.delete = macro.chain(
+    publicAPI.delete,
+    publicAPI.setViewStream,
+    deleteOwnedConfiguration
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -672,8 +736,11 @@ const DEFAULT_VALUES = {
   handlingDeviceLost: false,
   deviceGeneration: 0,
   deviceLostInfo: null,
+  deviceLostSubscription: null,
   context: null,
   adapter: null,
+  webGPUConfiguration: null,
+  ownsWebGPUConfiguration: true,
   device: null,
   canvas: null,
   cursorVisibility: true,
@@ -694,6 +761,13 @@ const DEFAULT_VALUES = {
 
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
+  // A render window always holds a configuration, owning one of its own until
+  // an application supplies it. Initialization therefore never has to decide
+  // where its device comes from. The device belongs to the configuration.
+  model.device = null;
+  model.ownsWebGPUConfiguration = model.webGPUConfiguration == null;
+  model.webGPUConfiguration =
+    model.webGPUConfiguration ?? vtkWebGPUConfiguration.newInstance();
 
   // Create internal instances
   model.canvas = document.createElement('canvas');
@@ -730,6 +804,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'commandEncoder',
     'deviceLostInfo',
     'device',
+    'webGPUConfiguration',
     'presentationFormat',
     'useBackgroundImage',
     'xrSupported',
@@ -740,7 +815,6 @@ export function extend(publicAPI, model, initialValues = {}) {
     'initialized',
     'context',
     'canvas',
-    'device',
     'renderPasses',
     'notifyStartCaptureImage',
     'cursor',
