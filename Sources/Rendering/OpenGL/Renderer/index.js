@@ -21,6 +21,7 @@ function vtkOpenGLRenderer(publicAPI, model) {
         return;
       }
 
+      model.renderable.updateLightGeometry();
       publicAPI.updateLights();
       publicAPI.prepareNodes();
       publicAPI.addMissingNode(model.renderable.getActiveCamera());
