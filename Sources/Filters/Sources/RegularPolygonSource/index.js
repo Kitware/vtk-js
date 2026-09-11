@@ -113,7 +113,7 @@ function vtkRegularPolygonSource(publicAPI, model) {
       points.push(x[0], x[1], x[2]);
     }
 
-    newPoints.setData(points);
+    newPoints.setData(Float32Array.from(points));
     output.setPoints(newPoints);
 
     outData[0] = output;

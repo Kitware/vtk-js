@@ -10,7 +10,7 @@ it('Test vtkCell instance', () => {
 
 it('Test vtkCell initialize without pointsIds', () => {
   const points = vtkPoints.newInstance();
-  points.setData([0, 0, 0, 2, 0, 0, 2, 2, 0]);
+  points.setData(Float32Array.from([0, 0, 0, 2, 0, 0, 2, 2, 0]));
 
   const cell = vtkCell.newInstance();
   cell.initialize(points);
@@ -42,7 +42,7 @@ it('Test vtkCell initialize with pointsIds', () => {
 
 it('Test vtkCell deepCopy', () => {
   const points = vtkPoints.newInstance();
-  points.setData([0, 0, 0, 2, 0, 0, 2, 2, 0]);
+  points.setData(Float32Array.from([0, 0, 0, 2, 0, 0, 2, 2, 0]));
 
   const cell = vtkCell.newInstance();
   cell.initialize(points);

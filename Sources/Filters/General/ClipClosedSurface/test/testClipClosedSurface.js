@@ -1,5 +1,9 @@
 import { it, expect } from 'vitest';
 import vtkClipClosedSurface from 'vtk.js/Sources/Filters/General/ClipClosedSurface';
+import { ScalarMode } from 'vtk.js/Sources/Filters/General/ClipClosedSurface/Constants';
+import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkLineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
 import vtkPlane from 'vtk.js/Sources/Common/DataModel/Plane';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -63,4 +67,25 @@ it('Test clip a vtkLineSource', () => {
     ),
     'Compare points with halfLine'
   ).toBeTruthy();
+});
+
+it('Test clipping strips with an empty polygon array', () => {
+  const points = vtkPoints.newInstance({
+    values: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+    numberOfComponents: 3,
+  });
+  const strips = vtkCellArray.newInstance();
+  strips.insertNextCell([0, 1, 2]);
+
+  const input = vtkPolyData.newInstance();
+  input.setPoints(points);
+  input.setStrips(strips);
+
+  const clipper = vtkClipClosedSurface.newInstance({
+    clippingPlanes: [],
+    scalarMode: ScalarMode.COLORS,
+  });
+  clipper.setInputData(input);
+
+  expect(() => clipper.update()).not.toThrow();
 });

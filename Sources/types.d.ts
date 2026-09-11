@@ -7,19 +7,25 @@ declare type Nullable<T> = T | null;
  * Alias type for number that are floats
  * @ignorenaming
  */
-declare type float = number;
+export type Float = number;
 
 /**
  * Alias type for number that are doubles.
  * @ignorenaming
  */
-declare type double = number;
+export type Double = number;
 
 /**
  * Alias type for number that are integer
  * @ignorenaming
  */
-declare type int = number;
+export type Integer = number;
+
+/**
+ * Alias type for numbers that are nonnegative integers.
+ * @ignorenaming
+ */
+export type NonNegativeInteger = number;
 
 declare type TypedArray =
   | Uint32Array

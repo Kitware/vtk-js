@@ -125,7 +125,7 @@ function vtkSplineContextRepresentation(publicAPI, model) {
 
     model.internalPolyData
       .getLines()
-      .setData(model.outputBorder ? outCells : []);
+      .setData(model.outputBorder ? outCells : new Uint32Array());
 
     model.internalPolyData.modified();
 
