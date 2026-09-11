@@ -3,6 +3,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/VolumeMapper/Constants';
 import vtkAbstractMapper3D from 'vtk.js/Sources/Rendering/Core/AbstractMapper3D';
 import vtkBoundingBox from 'vtk.js/Sources/Common/DataModel/BoundingBox';
 import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
+import AutoAdjustSampleDistancesHelper from 'vtk.js/Sources/Rendering/Core/VolumeMapper/AutoAdjustSampleDistancesHelper';
 
 const { BlendMode } = Constants;
 
@@ -148,6 +149,7 @@ const defaultValues = (initialValues) => ({
   imageSampleDistance: 1.0,
   maximumSamplesPerRay: 1000,
   autoAdjustSampleDistances: true,
+  autoAdjustSampleDistancesSource: null,
   initialInteractionScale: 1.0,
   interactionSampleDistanceFactor: 1.0,
   blendMode: BlendMode.COMPOSITE_BLEND,
@@ -180,6 +182,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   ]);
 
   macro.event(publicAPI, model, 'lightingActivated');
+
+  AutoAdjustSampleDistancesHelper.implementAutoAdjustSampleDistances(
+    publicAPI,
+    model
+  );
 
   // Object methods
   vtkVolumeMapper(publicAPI, model);
