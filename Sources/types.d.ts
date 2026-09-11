@@ -1,3 +1,5 @@
+/// <reference types="@webgpu/types" />
+
 import { vtkOutputPort } from './interfaces';
 
 /** Alias type for value that can be null */
