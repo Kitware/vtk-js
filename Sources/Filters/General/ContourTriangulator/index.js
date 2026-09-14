@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkPolygon from 'vtk.js/Sources/Common/DataModel/Polygon';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
 import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 
 import {
@@ -233,7 +234,12 @@ function vtkContourTriangulator(publicAPI, model) {
       empty: true,
     });
     output.setPolys(polysArray);
-    output.setPoints(input.getPoints());
+
+    const inputPoints = input.getPoints();
+    const outputPoints = output.getPoints() || vtkPoints.newInstance();
+    outputPoints.deepCopy(inputPoints);
+    output.setPoints(outputPoints);
+
     output.getPointData().passData(input.getPointData());
 
     triangulationError = !triangulateContours(
