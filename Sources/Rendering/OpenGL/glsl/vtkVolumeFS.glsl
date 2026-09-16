@@ -214,15 +214,15 @@ vec4 rawSampleTexture(vec3 pos) {
   #ifdef EnabledMultiTexturePerVolume
     vec4 rawSample;
     rawSample[0] = texture(volumeTexture[0], pos)[0];
-  #if vtkNumberOfComponents > 1
-    rawSample[1] = texture(volumeTexture[1], pos)[0];
-  #endif
-  #if vtkNumberOfComponents > 2
-    rawSample[2] = texture(volumeTexture[2], pos)[0];
-  #endif
-  #if vtkNumberOfComponents > 3
-    rawSample[3] = texture(volumeTexture[3], pos)[0];
-  #endif
+    #if vtkNumberOfComponents > 1
+      rawSample[1] = texture(volumeTexture[1], pos)[0];
+    #endif
+    #if vtkNumberOfComponents > 2
+      rawSample[2] = texture(volumeTexture[2], pos)[0];
+    #endif
+    #if vtkNumberOfComponents > 3
+      rawSample[3] = texture(volumeTexture[3], pos)[0];
+    #endif
     return rawSample;
   #else
     return texture(volumeTexture[0], pos);
@@ -1521,7 +1521,10 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
     vec4 value = getTextureValue(posIS);
 
     if (raySteps <= 1.0) {
-      gl_FragData[0] = getColorForValue(value, posVC, posIS);
+      gl_FragData[0] = vec4(0.0);
+      if (valueWithinScalarRange(value)) {
+        gl_FragData[0] = getColorForValue(value, posVC, posIS);
+      }
       return;
     }
 
@@ -1573,11 +1576,14 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
       #endif
     }
 
-    #if vtkBlendMode == AVERAGE_INTENSITY_BLEND
-      sum /= vec4(totalWeight, totalWeight, totalWeight, 1.0);
-    #endif
-
-    gl_FragData[0] = getColorForValue(sum, posVC, posIS);
+    if (totalWeight > 0.0) {
+      #if vtkBlendMode == AVERAGE_INTENSITY_BLEND
+        sum /= vec4(totalWeight, totalWeight, totalWeight, 1.0);
+      #endif
+      gl_FragData[0] = getColorForValue(sum, posVC, posIS);
+    } else {
+      gl_FragData[0] = vec4(0.0);
+    }
   #endif
 
   #if vtkBlendMode == RADON_TRANSFORM_BLEND
