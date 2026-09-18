@@ -2,6 +2,7 @@ export const Shading = {
   FLAT: 0,
   GOURAUD: 1,
   PHONG: 2,
+  PBR: 3,
 };
 
 export const Representation = {
