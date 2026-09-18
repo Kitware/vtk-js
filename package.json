@@ -54,6 +54,7 @@
     "@vitest/browser": "4.1.10",
     "@vitest/browser-playwright": "4.1.10",
     "@vitest/ui": "4.1.10",
+    "@webgpu/types": "0.1.72",
     "autoprefixer": "10.4.7",
     "commitizen": "4.3.2",
     "cross-env": "7.0.3",

@@ -1,4 +1,5 @@
 import vtkRenderWindow from './RenderWindow';
+import vtkWebGPUConfiguration from './Configuration';
 import './Actor';
 import './Actor2D';
 import './Camera';
@@ -23,4 +24,5 @@ import './Volume';
 
 export default {
   vtkRenderWindow,
+  vtkWebGPUConfiguration,
 };
