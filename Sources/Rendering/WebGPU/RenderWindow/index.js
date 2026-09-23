@@ -724,9 +724,11 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     model.webGPUConfiguration = null;
   }
 
+  // The pass timer is deleted first, because the base delete removes all
+  // the fields of the model.
   publicAPI.delete = macro.chain(
+    () => model.passTimer?.delete(),
     publicAPI.delete,
-    () => model.passTimer.delete(),
     publicAPI.setViewStream,
     deleteOwnedConfiguration
   );
