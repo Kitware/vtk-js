@@ -21,9 +21,16 @@ function vtkWebGPUTexture(publicAPI, model) {
   const getMaxMipLevel = (width, height, depth) =>
     Math.floor(Math.log2(Math.max(width, height, depth)));
 
+  const isHalfFloatFormat = (format) => format.endsWith('16float');
+
   const getUploadArrayType = (tDetails, fallbackType) => {
-    if (tDetails.elementSize === 2 && tDetails.sampleType === 'float') {
+    if (isHalfFloatFormat(model.format)) {
       return 'Uint16Array';
+    }
+
+    if (model.format.endsWith('snorm')) {
+      if (tDetails.elementSize === 1) return 'Int8Array';
+      if (tDetails.elementSize === 2) return 'Int16Array';
     }
 
     if (tDetails.sampleType === 'sint') {
@@ -51,8 +58,7 @@ function vtkWebGPUTexture(publicAPI, model) {
     const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
     const expectedRowElements = width * tDetails.numComponents;
     const expectedElementCount = expectedRowElements * height * depth;
-    const halfFloat =
-      tDetails.elementSize === 2 && tDetails.sampleType === 'float';
+    const halfFloat = isHalfFloatFormat(model.format);
 
     if (!arr?.length && expectedElementCount > 0) {
       vtkErrorMacro('Texture upload failed: missing nativeArray data.');
@@ -241,6 +247,14 @@ function vtkWebGPUTexture(publicAPI, model) {
       sampleCount: model.sampleCount,
       mipLevelCount: model.mipLevel + 1,
     });
+  };
+
+  // Release the GPU memory now. The garbage collector can take a long time
+  // to free a large texture.
+  publicAPI.destroy = () => {
+    model.handle?.destroy?.();
+    model.handle = null;
+    model.ready = false;
   };
 
   publicAPI.assignFromHandle = (device, handle, options) => {
@@ -441,7 +455,14 @@ function vtkWebGPUTexture(publicAPI, model) {
   };
 
   // This scale converts a sampled texture value to the source scalar range.
+  // A 16 bit normalized format samples v / 65535 (unorm) or v / 32767 (snorm).
   publicAPI.getScale = () => {
+    if (model.format.endsWith('16unorm')) {
+      return 65535.0;
+    }
+    if (model.format.endsWith('16snorm')) {
+      return 32767.0;
+    }
     const tDetails = vtkWebGPUTypes.getDetailsFromTextureFormat(model.format);
     const isFloat =
       tDetails.sampleType === 'float' ||

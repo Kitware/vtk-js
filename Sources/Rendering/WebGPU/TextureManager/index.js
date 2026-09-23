@@ -15,6 +15,10 @@ const { VtkDataTypes } = vtkDataArray;
 
 const HALF_FLOAT_EXACT_INTEGER_LIMIT = 2048;
 
+// This feature adds the r16unorm and r16snorm formats (and their rg and rgba
+// forms), which store 16 bit integers in 2 bytes.
+const NORMALIZED_16_BIT_FEATURE = 'texture-formats-tier1';
+
 // ----------------------------------------------------------------------------
 
 function vtkWebGPUTextureManager(publicAPI, model) {
@@ -32,6 +36,30 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     }
   }
 
+  // The normalized 16 bit format for this data type, or null.
+  // r16snorm samples max(v / 32767, -1). All values are exact, but -32768
+  // reads as -32767.
+  function _normalized16BitSuffix(dataType) {
+    if (!model.device.hasFeature(NORMALIZED_16_BIT_FEATURE)) {
+      return null;
+    }
+    if (dataType === VtkDataTypes.SHORT) {
+      return '16snorm';
+    }
+    if (dataType === VtkDataTypes.UNSIGNED_SHORT) {
+      return '16unorm';
+    }
+    return null;
+  }
+
+  // The state has two parts. The first part is valid for one scalar mtime.
+  // The second part stays for the life of the data array:
+  //  - promotedFormat is the 32 bit float format that an accurate texture of
+  //    this array uses after its values stopped fitting half float. All
+  //    mappers of the array then use this format and can share one texture.
+  //  - liveTextures holds the most recent texture for each format, mip level
+  //    and usage. A full upload writes into this texture instead of a new
+  //    allocation.
   function _getScalarState(scalars) {
     const scalarMTime = scalars.getMTime();
     let state = model.scalarFormats.get(scalars);
@@ -42,13 +70,33 @@ function vtkWebGPUTextureManager(publicAPI, model) {
         halfFloatFitVersion: -1,
         formats: [],
         scalarMTime,
+        promotedFormat: state?.promotedFormat ?? null,
+        liveTextures: state?.liveTextures ?? new Map(),
       };
       model.scalarFormats.set(scalars, state);
     }
     return state;
   }
 
+  function _getPromotedFormat(scalars, preferSizeOverAccuracy) {
+    if (preferSizeOverAccuracy) {
+      return null;
+    }
+    const state = _getScalarState(scalars);
+    if (
+      state.promotedFormat &&
+      !_formatMatchesDataArray(state.promotedFormat, scalars)
+    ) {
+      state.promotedFormat = null;
+    }
+    return state.promotedFormat;
+  }
+
   function _getCachedScalarFormat(scalars, preferSizeOverAccuracy) {
+    const promotedFormat = _getPromotedFormat(scalars, preferSizeOverAccuracy);
+    if (promotedFormat) {
+      return promotedFormat;
+    }
     const state = _getScalarState(scalars);
     const formatIndex = preferSizeOverAccuracy ? 1 : 0;
     const format = state.formats[formatIndex] ?? null;
@@ -67,6 +115,9 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     const state = _getScalarState(scalars);
     const formatIndex = preferSizeOverAccuracy ? 1 : 0;
     state.formats[formatIndex] = format;
+    if (!preferSizeOverAccuracy && format.endsWith('32float')) {
+      state.promotedFormat = format;
+    }
   }
 
   function _updateContentState(scalars, contentTime) {
@@ -98,6 +149,10 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       dataType === VtkDataTypes.UNSIGNED_CHAR_CLAMPED;
     if (uses8BitNormalizedFormat) {
       return format.endsWith('8unorm');
+    }
+    const normalized16BitSuffix = _normalized16BitSuffix(dataType);
+    if (normalized16BitSuffix) {
+      return format.endsWith(normalized16BitSuffix);
     }
     return format.endsWith('16float') || format.endsWith('32float');
   }
@@ -150,6 +205,11 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       dataType === VtkDataTypes.UNSIGNED_CHAR_CLAMPED
     ) {
       return '8unorm';
+    }
+
+    const normalized16BitSuffix = _normalized16BitSuffix(dataType);
+    if (normalized16BitSuffix) {
+      return normalized16BitSuffix;
     }
 
     if (req.forceFloat32) {
@@ -348,6 +408,85 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     return true;
   }
 
+  // A texture from getTextureForImageData with an owner is counted. When the
+  // last owner changes to a different texture or releases it, the texture is
+  // destroyed after the next submit. A texture that a caller gets without an
+  // owner is never destroyed, because its use is not known.
+  function _releaseUse(texture) {
+    const count = (model.textureUseCounts.get(texture) ?? 1) - 1;
+    if (count > 0) {
+      model.textureUseCounts.set(texture, count);
+      return;
+    }
+    model.textureUseCounts.delete(texture);
+    model.device.afterNextSubmit(() => {
+      if (
+        model.textureUseCounts.has(texture) ||
+        model.unownedTextures.has(texture)
+      ) {
+        return;
+      }
+      model.device.removeCachedObject(texture);
+      texture.destroy?.();
+    });
+  }
+
+  function _acquireTexture(owner, texture) {
+    const previousTexture = model.textureOwners.get(owner);
+    if (previousTexture === texture) {
+      return;
+    }
+    model.textureOwners.set(owner, texture);
+    model.textureUseCounts.set(
+      texture,
+      (model.textureUseCounts.get(texture) ?? 0) + 1
+    );
+    if (previousTexture) {
+      _releaseUse(previousTexture);
+    }
+  }
+
+  /**
+   * Stop the use of the texture that `owner` holds. The texture is destroyed
+   * when no other owner holds it.
+   */
+  publicAPI.releaseTexture = (owner) => {
+    const texture = model.textureOwners.get(owner);
+    if (!texture) {
+      return;
+    }
+    model.textureOwners.delete(owner);
+    _releaseUse(texture);
+  };
+
+  function _liveTextureKey(req) {
+    return `${req.format}:${req.mipLevel ?? 0}:${req.usage}`;
+  }
+
+  // Write the full image into the most recent texture of the data array, if
+  // it has the requested size and format. All holders of that texture then
+  // see the new content, and no new texture is allocated.
+  function _rewriteLiveTexture(req) {
+    const state = _getScalarState(req.dataArray);
+    const texture = state.liveTextures.get(_liveTextureKey(req))?.deref();
+    if (!texture || !_canPatchTexture(texture, req)) {
+      return null;
+    }
+    texture.writeImageData(req);
+    model.device.getCachedObject(req.hash, () => texture);
+    return texture;
+  }
+
+  function _setLiveTexture(req, texture) {
+    if (texture && typeof texture === 'object') {
+      _getScalarState(req.dataArray).liveTextures.set(
+        _liveTextureKey(req),
+        // eslint-disable-next-line no-undef
+        new WeakRef(texture)
+      );
+    }
+  }
+
   // get a texture or create it if not cached.
   // this is the main entry point
   publicAPI.getTexture = (req) => {
@@ -360,16 +499,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     return _createTexture(req);
   };
 
-  /**
-   * Return a texture for an image. Patch `existingTexture` when
-   * `updatedExtents` contains all modified regions.
-   *
-   * `preferSizeOverAccuracy` permits binary16 storage when the scalar range is
-   * not exact in that format.
-   * A partial update scans only its extents and keeps the existing format when
-   * the scalar type is compatible and all updated values fit.
-   */
-  publicAPI.getTextureForImageData = (imgData, options = {}) => {
+  function _getTextureForImageData(imgData, options) {
     const treq = { time: imgData.getMTime() };
     const { updatedExtents, existingTexture } = options;
     treq.imageData = imgData;
@@ -381,7 +511,15 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     );
     if (updatedExtents?.length && existingTexture) {
       const existingFormat = existingTexture.getFormat();
-      if (_formatMatchesDataArray(existingFormat, scalars)) {
+      const promotedFormat = _getPromotedFormat(
+        scalars,
+        treq.preferSizeOverAccuracy
+      );
+      if (promotedFormat && promotedFormat !== existingFormat) {
+        // A different texture of this array already uses float32. Use the
+        // same format, so that the request can share that texture.
+        treq.forceFloat32 = true;
+      } else if (_formatMatchesDataArray(existingFormat, scalars)) {
         const dataType = scalars.getDataType();
         const canPromoteToFloat32 =
           !treq.preferSizeOverAccuracy &&
@@ -461,6 +599,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
         if (treq.fitsHalfFloat) {
           _markHalfFloatFit(treq.dataArray, version);
         }
+        _setLiveTexture(treq, patchTexture);
         return patchTexture;
       }
     }
@@ -484,7 +623,42 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       _markHalfFloatFit(treq.dataArray, version);
     }
 
-    return model.device.getTextureManager().getTexture(treq);
+    const cachedResult = model.device.hasCachedObject(treq.hash);
+    if (cachedResult) {
+      return cachedResult;
+    }
+    const rewrittenTexture = _rewriteLiveTexture(treq);
+    if (rewrittenTexture) {
+      return rewrittenTexture;
+    }
+    const newTexture = model.device.getTextureManager().getTexture(treq);
+    _setLiveTexture(treq, newTexture);
+    return newTexture;
+  }
+
+  /**
+   * Return a texture for an image. Patch `existingTexture` when
+   * `updatedExtents` contains all modified regions.
+   *
+   * `preferSizeOverAccuracy` permits binary16 storage when the scalar range is
+   * not exact in that format.
+   * A partial update scans only its extents and keeps the existing format when
+   * the scalar type is compatible and all updated values fit.
+   *
+   * `owner` is a key object for one texture binding of the caller. The
+   * manager counts the owners of each texture, and destroys a texture when
+   * its last owner changes to a different texture or calls releaseTexture.
+   */
+  publicAPI.getTextureForImageData = (imgData, options = {}) => {
+    const texture = _getTextureForImageData(imgData, options);
+    if (texture && typeof texture === 'object') {
+      if (options.owner) {
+        _acquireTexture(options.owner, texture);
+      } else {
+        model.unownedTextures.add(texture);
+      }
+    }
+    return texture;
   };
 
   publicAPI.getTextureForVTKTexture = (srcTexture, label = undefined) => {
@@ -519,7 +693,11 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     }
     treq.mipLevel = srcTexture.getMipLevel();
     treq.hash = `${treq.time}:${treq.format}:${treq.mipLevel ?? 0}:${treq.usage}`;
-    return model.device.getTextureManager().getTexture(treq);
+    const texture = model.device.getTextureManager().getTexture(treq);
+    if (texture && typeof texture === 'object') {
+      model.unownedTextures.add(texture);
+    }
+    return texture;
   };
 }
 
@@ -531,6 +709,9 @@ const DEFAULT_VALUES = {
   handle: null,
   device: null,
   scalarFormats: null,
+  textureOwners: null,
+  textureUseCounts: null,
+  unownedTextures: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -538,6 +719,9 @@ const DEFAULT_VALUES = {
 export function extend(publicAPI, model, initialValues = {}) {
   Object.assign(model, DEFAULT_VALUES, initialValues);
   model.scalarFormats = new WeakMap();
+  model.textureOwners = new WeakMap();
+  model.textureUseCounts = new Map();
+  model.unownedTextures = new WeakSet();
 
   // Object methods
   macro.obj(publicAPI, model);

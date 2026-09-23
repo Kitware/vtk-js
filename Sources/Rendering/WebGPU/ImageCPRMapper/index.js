@@ -481,6 +481,7 @@ function vtkWebGPUImageCPRMapper(publicAPI, model) {
         updatedExtents,
         existingTexture,
         preferSizeOverAccuracy,
+        owner: model.volumeTextureOwner,
       });
     if (updatedExtents.length) {
       property.setUpdatedExtents([]);
@@ -985,6 +986,17 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('UseCenterPoint', 'u32');
 
   vtkWebGPUImageCPRMapper(publicAPI, model);
+
+  // The texture manager counts the users of the volume texture by this key.
+  model.volumeTextureOwner = {};
+  const superReleaseGraphicsResources = publicAPI.releaseGraphicsResources;
+  publicAPI.releaseGraphicsResources = () => {
+    model.device?.getTextureManager().releaseTexture(model.volumeTextureOwner);
+    superReleaseGraphicsResources();
+  };
+  publicAPI.delete = macro.chain(() => {
+    model.device?.getTextureManager().releaseTexture(model.volumeTextureOwner);
+  }, publicAPI.delete);
 }
 
 export const newInstance = macro.newInstance(extend, 'vtkWebGPUImageCPRMapper');

@@ -60,6 +60,20 @@ const textureDetails = {
     elementSize: 2,
     sampleType: 'sint',
   },
+  r16unorm: {
+    numComponents: 1,
+    nativeType: Uint16Array,
+    stride: 2,
+    elementSize: 2,
+    sampleType: 'float',
+  },
+  r16snorm: {
+    numComponents: 1,
+    nativeType: Int16Array,
+    stride: 2,
+    elementSize: 2,
+    sampleType: 'float',
+  },
   r16float: {
     numComponents: 1,
     nativeType: Float32Array,
@@ -131,6 +145,20 @@ const textureDetails = {
     stride: 4,
     elementSize: 2,
     sampleType: 'sint',
+  },
+  rg16unorm: {
+    numComponents: 2,
+    nativeType: Uint16Array,
+    stride: 4,
+    elementSize: 2,
+    sampleType: 'float',
+  },
+  rg16snorm: {
+    numComponents: 2,
+    nativeType: Int16Array,
+    stride: 4,
+    elementSize: 2,
+    sampleType: 'float',
   },
   rg16float: {
     numComponents: 2,
@@ -243,6 +271,20 @@ const textureDetails = {
     stride: 8,
     elementSize: 2,
     sampleType: 'sint',
+  },
+  rgba16unorm: {
+    numComponents: 4,
+    nativeType: Uint16Array,
+    stride: 8,
+    elementSize: 2,
+    sampleType: 'float',
+  },
+  rgba16snorm: {
+    numComponents: 4,
+    nativeType: Int16Array,
+    stride: 8,
+    elementSize: 2,
+    sampleType: 'float',
   },
   rgba16float: {
     numComponents: 4,
