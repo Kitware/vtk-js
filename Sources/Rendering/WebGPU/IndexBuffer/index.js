@@ -175,6 +175,23 @@ function countCell(ptIds, cellId, state) {
   state.extraPoints++;
 }
 
+// For the primitive index path, the index values are the point ids. Each
+// primitive also records the global id of its cell.
+function countPrimitive(ptIds, cellId, state) {
+  state.iboSize += ptIds.length;
+  state.primitiveCount++;
+}
+
+function fillPrimitive(ptIds, cellId, state) {
+  for (let i = 0; i < ptIds.length; i++) {
+    state.ibo[state.iboId++] = ptIds[i];
+  }
+  if (state.primitiveToCellId) {
+    state.primitiveToCellId[state.primitiveCount] = cellId;
+  }
+  state.primitiveCount++;
+}
+
 let processCell;
 
 const _single = new Uint32Array(1);
@@ -243,11 +260,94 @@ const _indexCellBuilders = {
 // vtkWebGPUIndexBufferManager methods
 // ----------------------------------------------------------------------------
 
+function getCellBuilder(primitiveType, representation) {
+  const inRepName = getPrimitiveName(primitiveType);
+  if (
+    representation === Representation.POINTS ||
+    primitiveType === PrimitiveTypes.Points
+  ) {
+    return _indexCellBuilders.anythingToPoints;
+  }
+  if (
+    representation === Representation.WIREFRAME ||
+    primitiveType === PrimitiveTypes.Lines
+  ) {
+    return _indexCellBuilders[`${inRepName}ToWireframe`];
+  }
+  return _indexCellBuilders[`${inRepName}ToSurface`];
+}
+
 function vtkWebGPUIndexBuffer(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUIndexBuffer');
 
-  publicAPI.buildIndexBuffer = (req) => {
+  // Build an index buffer whose values are the point ids, for a device with
+  // the feature primitive-index. The shaders find the cell of a fragment from
+  // @builtin(primitive_index), so the vertex arrays stay in point order and
+  // there is no flat map. primitiveToCellId holds the global cell id of
+  // each primitive. It is null when each cell gives exactly one primitive,
+  // because the cell id is then the primitive index plus the cell offset.
+  publicAPI.buildPointIdIndexBuffer = (req) => {
+    const array = req.cells.getData();
+    const cellArraySize = array.length;
+    const cellOffset = req.cellOffset || 0;
+    const numPts = req.numberOfPoints;
+    const func = getCellBuilder(req.primitiveType, req.representation);
+    const state = {
+      iboSize: 0,
+      iboId: 0,
+      primitiveCount: 0,
+      primitiveToCellId: null,
+    };
+
+    // count the indices and primitives
+    processCell = countPrimitive;
+    let oneToOne = true;
+    let cellId = cellOffset;
+    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize; ) {
+      const countBefore = state.primitiveCount;
+      func(array[cellArrayIndex], array, cellArrayIndex + 1, cellId, state);
+      if (state.primitiveCount - countBefore !== 1) {
+        oneToOne = false;
+      }
+      cellArrayIndex += array[cellArrayIndex] + 1;
+      cellId++;
+    }
+
+    if (numPts <= 0xffff) {
+      state.ibo = new Uint16Array(state.iboSize);
+      req.format = 'uint16';
+    } else {
+      state.ibo = new Uint32Array(state.iboSize);
+      req.format = 'uint32';
+    }
+    if (!oneToOne) {
+      state.primitiveToCellId = new Uint32Array(state.primitiveCount);
+    }
+
+    // fill them in
+    processCell = fillPrimitive;
+    state.primitiveCount = 0;
+    cellId = cellOffset;
+    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize; ) {
+      func(array[cellArrayIndex], array, cellArrayIndex + 1, cellId, state);
+      cellArrayIndex += array[cellArrayIndex] + 1;
+      cellId++;
+    }
+
+    req.nativeArray = state.ibo;
+    model.flatIdToPointId = null;
+    model.flatIdToCellId = null;
+    model.flatSize = numPts;
+    model.indexCount = state.iboId;
+    model.primitiveToCellId = state.primitiveToCellId;
+  };
+
+  // Build a flat index buffer for a device without primitive-index. Each cell
+  // gets a provoking vertex, which the shaders read with flat interpolation.
+  // A point that is already the provoking vertex of a different cell is
+  // duplicated, and flatIdToPointId and flatIdToCellId map each flat vertex.
+  publicAPI.buildFlatIndexBuffer = (req) => {
     const cellArray = req.cells;
     const primitiveType = req.primitiveType;
     const representation = req.representation;
@@ -255,8 +355,6 @@ function vtkWebGPUIndexBuffer(publicAPI, model) {
 
     const array = cellArray.getData();
     const cellArraySize = array.length;
-
-    const inRepName = getPrimitiveName(primitiveType);
 
     const numPts = req.numberOfPoints;
     const state = {
@@ -268,20 +366,7 @@ function vtkWebGPUIndexBuffer(publicAPI, model) {
       cellProvokedMap: new _LimitedMap(),
     };
 
-    let func = null;
-    if (
-      representation === Representation.POINTS ||
-      primitiveType === PrimitiveTypes.Points
-    ) {
-      func = _indexCellBuilders.anythingToPoints;
-    } else if (
-      representation === Representation.WIREFRAME ||
-      primitiveType === PrimitiveTypes.Lines
-    ) {
-      func = _indexCellBuilders[`${inRepName}ToWireframe`];
-    } else {
-      func = _indexCellBuilders[`${inRepName}ToSurface`];
-    }
+    const func = getCellBuilder(primitiveType, representation);
 
     // first we count how many extra provoking points we need
     processCell = countCell;
@@ -339,6 +424,15 @@ function vtkWebGPUIndexBuffer(publicAPI, model) {
     model.flatIdToCellId = state.flatIdToCellId;
     model.flatSize = state.flatId;
     model.indexCount = state.iboId;
+    model.primitiveToCellId = null;
+  };
+
+  publicAPI.buildIndexBuffer = (req) => {
+    if (req.pointIds) {
+      publicAPI.buildPointIdIndexBuffer(req);
+    } else {
+      publicAPI.buildFlatIndexBuffer(req);
+    }
   };
 }
 
@@ -351,6 +445,8 @@ const DEFAULT_VALUES = {
   flatIdToCellId: null,
   flatSize: 0,
   indexCount: 0,
+  primitiveToCellId: null,
+  primitiveToCellIdBuffer: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -366,6 +462,8 @@ export function extend(publicAPI, model, initialValues = {}) {
     'flatIdToCellId',
     'flatSize',
     'indexCount',
+    'primitiveToCellId',
+    'primitiveToCellIdBuffer',
   ]);
 
   vtkWebGPUIndexBuffer(publicAPI, model);
