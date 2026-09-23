@@ -11,6 +11,7 @@ import vtkWebGPUImageMapper from 'vtk.js/Sources/Rendering/WebGPU/ImageMapper';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import { getTextureChannelMode } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ImageSampling';
 import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
+import { hasClipDistances } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 import {
   getInputProperty,
   getLabelOutlineTextureParameters,
@@ -868,6 +869,7 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
     model.WebGPURenderer = renderer;
     model.WebGPURenderWindow = renderWindow;
     model.device = device;
+    model.useClipDistances = hasClipDistances(device);
   };
 
   publicAPI.render = () => {
@@ -936,6 +938,9 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
       model.currentValidInputs
     )}`;
     model.pipelineHash += `comp${model.numberOfComponents}`;
+    if (model.useClipDistances) {
+      model.pipelineHash += 'cd';
+    }
     model.pipelineHash += model.renderEncoder.getPipelineHash();
   };
 
@@ -1187,6 +1192,7 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
     }
     lines.push(
       'output.vertexSC = vertexSC;',
+      '//VTK::ClipDistances::Impl',
       'var pos: vec4<f32> = rendererUBO.SCPCMatrix * vertexSC;',
       'pos.z = clamp(pos.z - 0.000016 * mapperUBO.CoincidentOffset * pos.w, 0.0, pos.w);',
       'output.Position = pos;'

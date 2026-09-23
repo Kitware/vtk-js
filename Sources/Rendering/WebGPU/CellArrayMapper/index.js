@@ -30,6 +30,7 @@ import {
 import {
   addClipPlaneEntries,
   getClippingPlaneEquationsInCoords,
+  hasClipDistances,
   MAX_CLIPPING_PLANES,
 } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 import replaceShaderPositionHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Position';
@@ -74,6 +75,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       model.WebGPURenderer = renderer;
       model.WebGPURenderWindow = renderWindow;
       model.device = device;
+      model.useClipDistances = hasClipDistances(device);
     }
   };
 
@@ -821,6 +823,10 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       pipelineHash += `cn`;
     }
 
+    if (model.useClipDistances) {
+      pipelineHash += 'cd';
+    }
+
     if (model.SSBO) {
       pipelineHash += `ssbo`;
     }
@@ -888,6 +894,7 @@ const DEFAULT_VALUES = {
   _cellColorSSBO: null,
   renderEncoder: null,
   textures: null,
+  useClipDistances: false,
 };
 
 // ----------------------------------------------------------------------------

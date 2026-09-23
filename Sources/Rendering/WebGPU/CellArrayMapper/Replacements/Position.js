@@ -1,6 +1,9 @@
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
-import { getClipPlaneShaderChecks } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
+import {
+  addClipDistances,
+  getClipPlaneShaderChecks,
+} from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 
 function replaceShaderPosition(publicAPI, model, hash, pipeline, vertexInput) {
   const vDesc = pipeline.getShaderDescription('vertex');
@@ -114,14 +117,37 @@ function replaceShaderPosition(publicAPI, model, hash, pipeline, vertexInput) {
     // Match the OpenGL coincident topology constant offset scale (~1 / 2^16 = 0.000016)
     '    pCoord.z = clamp(pCoord.z - 0.000016 * mapperUBO.CoincidentOffset * pCoord.w, 0.0, pCoord.w);',
     '    output.Position = pCoord;',
+    '//VTK::Position::Impl',
   ]).result;
   vDesc.setCode(code);
+
+  // Clip planes: clip distances in the vertex shader when the device has
+  // them, else discard in the fragment shader.
+  const clipOptions = {
+    countName: 'mapperUBO.NumClipPlanes',
+    planePrefix: 'mapperUBO.ClipPlane',
+  };
+  let clipLines = [];
+  if (model.useClipDistances) {
+    clipLines = addClipDistances(vDesc, {
+      ...clipOptions,
+      positionName: 'output.vertexSC',
+    });
+  }
+  code = vtkWebGPUShaderCache.substitute(
+    vDesc.getCode(),
+    '//VTK::Position::Impl',
+    clipLines
+  ).result;
+  vDesc.setCode(code);
+  if (model.useClipDistances) {
+    return;
+  }
 
   const fDesc = pipeline.getShaderDescription('fragment');
   code = fDesc.getCode();
   const clipPlaneChecks = getClipPlaneShaderChecks({
-    countName: 'mapperUBO.NumClipPlanes',
-    planePrefix: 'mapperUBO.ClipPlane',
+    ...clipOptions,
     positionName: 'input.vertexSC',
   });
   code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
