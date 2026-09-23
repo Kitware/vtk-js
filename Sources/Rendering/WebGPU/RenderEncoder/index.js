@@ -1,5 +1,6 @@
 import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
+import { getTimestampWrites } from 'vtk.js/Sources/Rendering/WebGPU/PassTimer';
 
 const { vtkErrorMacro } = macro;
 
@@ -21,7 +22,14 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 
   publicAPI.begin = (encoder) => {
     model.drawCallbacks = [];
-    model.handle = encoder.beginRenderPass(model.description);
+    // A pass timer that times the frame of this command encoder gives the
+    // timestamp writes of the pass.
+    let description = model.description;
+    const timestampWrites = getTimestampWrites(encoder, model.label);
+    if (timestampWrites) {
+      description = { ...model.description, timestampWrites };
+    }
+    model.handle = encoder.beginRenderPass(description);
     if (model.label) {
       model.handle.pushDebugGroup(model.label);
     }
@@ -118,14 +126,14 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
       return;
     }
     model.handle.setBindGroup(midx, bg.getBindGroup(device));
-    // verify bind group layout matches
-    const bgl1 = device.getBindGroupLayoutDescription(
-      bg.getBindGroupLayout(device)
-    );
-    const bgl2 = device.getBindGroupLayoutDescription(
-      model.boundPipeline.getBindGroupLayout(midx)
-    );
-    if (bgl1 !== bgl2) {
+    // Verify that the bind group layout matches. The device gives one layout
+    // object for each description, so an object comparison is sufficient,
+    // and the descriptions are only necessary for the message.
+    const bindGroupLayout = bg.getBindGroupLayout(device);
+    const pipelineLayout = model.boundPipeline.getBindGroupLayout(midx);
+    if (bindGroupLayout !== pipelineLayout) {
+      const bgl1 = device.getBindGroupLayoutDescription(bindGroupLayout);
+      const bgl2 = device.getBindGroupLayoutDescription(pipelineLayout);
       console.log(
         `renderEncoder ${model.pipelineHash} mismatched bind group layouts bind group has\n${bgl1}\n versus pipeline\n${bgl2}\n`
       );

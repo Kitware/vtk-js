@@ -22,6 +22,11 @@ import {
 } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Shaders';
 import { updateTextures as updateTexturesHelper } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Textures';
 import {
+  newKey,
+  texturesChanged,
+  vertexInputChanged,
+} from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/UpdateKeys';
+import {
   getUsage as getUsageHelper,
   getHashFromUsage as getHashFromUsageHelper,
   getTopologyFromUsage as getTopologyFromUsageHelper,
@@ -690,8 +695,28 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     buildVertexInputHelper(publicAPI, model);
   };
 
+  model.vertexInputKey = newKey();
+  model.texturesKey = newKey();
+  model.sourceTextures = [];
+
   publicAPI.updateTextures = () => {
+    // Skip the update when the source textures did not change and all of
+    // them were ready. An image that loads later changes its texture.
+    if (!texturesChanged(publicAPI, model) && !model.texturesPending) {
+      return;
+    }
+    model.texturesPending = false;
     updateTexturesHelper(publicAPI, model);
+  };
+
+  // The GPU resources go away, so the next update must build them again.
+  const superReleaseGraphicsResources = publicAPI.releaseGraphicsResources;
+  publicAPI.releaseGraphicsResources = () => {
+    superReleaseGraphicsResources();
+    model.vertexInputKey = newKey();
+    model.texturesKey = newKey();
+    model.textures.length = 0;
+    model.textureViews.length = 0;
   };
 
   // compute a unique hash for a pipeline, this needs to be unique enough to
@@ -851,8 +876,10 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     // handle per primitive type
     model.usage = publicAPI.getUsage(rep, model.primitiveType);
-    publicAPI.buildVertexInput();
-    publicAPI.updateCellScalarSSBO();
+    if (vertexInputChanged(publicAPI, model)) {
+      publicAPI.buildVertexInput();
+      publicAPI.updateCellScalarSSBO();
+    }
 
     const vbo = model.vertexInput.getBuffer('vertexBC');
     publicAPI.setNumberOfVertices(
@@ -888,6 +915,7 @@ const DEFAULT_VALUES = {
   _cellColorSSBO: null,
   renderEncoder: null,
   textures: null,
+  texturesPending: false,
 };
 
 // ----------------------------------------------------------------------------
