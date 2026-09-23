@@ -190,6 +190,19 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     }
   };
 
+  // The forwardpass draws only renderers with draw enabled. Build only those
+  // renderers, so that a hidden renderer does not upload its data.
+  publicAPI.traverseBuildPass = (renderPass) => {
+    publicAPI.apply(renderPass, true);
+    for (let index = 0; index < model.children.length; index++) {
+      const child = model.children[index];
+      if (child.getRenderable()?.getDraw?.() !== false) {
+        child.traverse(renderPass);
+      }
+    }
+    publicAPI.apply(renderPass, false);
+  };
+
   // publicAPI.traverseRenderers = (renPass) => {
   //   // iterate over renderers
   //   const numlayers = publicAPI.getRenderable().getNumberOfLayers();
