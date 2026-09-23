@@ -110,7 +110,10 @@ describe('vtkWebGPUTextureManager image data formats', () => {
         getTexture: (request) => ({ getFormat: () => request.format }),
       }),
       hasCachedObject: () => undefined,
-      hasFeature: () => {
+      hasFeature: (name) => {
+        if (name !== 'float32-filterable') {
+          return false;
+        }
         featureChecks++;
         return true;
       },
@@ -131,7 +134,10 @@ describe('vtkWebGPUTextureManager image data formats', () => {
         getTexture: (request) => ({ getFormat: () => request.format }),
       }),
       hasCachedObject: () => undefined,
-      hasFeature: () => {
+      hasFeature: (name) => {
+        if (name !== 'float32-filterable') {
+          return false;
+        }
         featureChecks++;
         return true;
       },

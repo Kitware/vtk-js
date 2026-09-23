@@ -666,6 +666,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
         existingTexture,
         preferSizeOverAccuracy,
         generateMipmaps: publicAPI.useImageMipmaps(),
+        owner: model.imageTextureOwner,
       });
     if (updatedExtents.length) {
       imageProperty.setUpdatedExtents([]);
@@ -1186,6 +1187,17 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.lutBuildTime = {};
   macro.obj(model.lutBuildTime, { mtime: 0 });
+
+  // The texture manager counts the users of the image texture by this key.
+  model.imageTextureOwner = {};
+  const superReleaseGraphicsResources = publicAPI.releaseGraphicsResources;
+  publicAPI.releaseGraphicsResources = () => {
+    model.device?.getTextureManager().releaseTexture(model.imageTextureOwner);
+    superReleaseGraphicsResources();
+  };
+  publicAPI.delete = macro.chain(() => {
+    model.device?.getTextureManager().releaseTexture(model.imageTextureOwner);
+  }, publicAPI.delete);
 
   model.imagemat = mat4.identity(new Float64Array(16));
   model.imagematinv = mat4.identity(new Float64Array(16));
