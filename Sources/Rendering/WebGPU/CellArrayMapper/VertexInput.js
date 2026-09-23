@@ -74,6 +74,17 @@ export function buildVertexInput(publicAPI, model) {
   const vertexInput = model.vertexInput;
   const points = pd.getPoints();
 
+  // With the feature primitive-index, the index values are the point ids
+  // and the fragment shader finds the cell from @builtin(primitive_index)
+  // and reads cell arrays from storage buffers. Without it (for example in
+  // Firefox), a flat index buffer gives each cell a provoking vertex, and
+  // the cell arrays are flat vertex attributes.
+  model.usePrimitiveIndex = device.hasFeature('primitive-index');
+  const usePrimitiveIndex = model.usePrimitiveIndex;
+  const cellStorage = model.cellStorage;
+  const activeCellStorage = [];
+  model.cellTCoordComponents = 0;
+
   // Index Buffer
   let indexBuffer = null;
   if (cells) {
@@ -87,10 +98,16 @@ export function buildVertexInput(publicAPI, model) {
       primitiveType: primType,
       representation,
       cellOffset: model.cellOffset,
+      pointIds: usePrimitiveIndex,
     });
     vertexInput.setIndexBuffer(indexBuffer);
   } else {
     vertexInput.setIndexBuffer(null);
+  }
+  const primitiveMapBuffer = indexBuffer?.getPrimitiveToCellIdBuffer();
+  if (primitiveMapBuffer) {
+    cellStorage.primitiveMap.setBuffer(primitiveMapBuffer);
+    activeCellStorage.push(cellStorage.primitiveMap);
   }
 
   // hash = all things that can change the values on the buffer
@@ -154,7 +171,16 @@ export function buildVertexInput(publicAPI, model) {
       vertexInput.addBuffer(device.getBufferManager().getBuffer(buffRequest), [
         'normalMC',
       ]);
+    } else if (primType === PrimitiveTypes.Triangles && usePrimitiveIndex) {
+      model._usesCellNormals = true;
+      cellStorage.normals.setBuffer(
+        device.getBufferManager().getStorageBufferForCellNormals(cells, points)
+      );
+      activeCellStorage.push(cellStorage.normals);
+      vertexInput.removeBufferIfPresent('normalMC');
     } else if (primType === PrimitiveTypes.Triangles) {
+      // The generated normals have one value for each cell of this cell
+      // array, so the flat map subtracts the cell offset.
       model._usesCellNormals = true;
       buffRequest.hash = `PFN${points.getMTime()}I${indexBuffer.getMTime()}snorm8x4`;
       buffRequest.dataArray = points;
@@ -230,13 +256,12 @@ export function buildVertexInput(publicAPI, model) {
         device.getBufferManager().getBuffer({
           usage: BufferUsage.PointArray,
           format: 'unorm8x4',
-          hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}O${
-            model.cellOffset
-          }unorm8x4`,
+          hash: `${haveCellScalars}${c.getMTime()}I${indexBuffer.getMTime()}unorm8x4`,
           dataArray: c,
           indexBuffer,
+          // The colors have one value for each cell of the whole polydata,
+          // so the flat map keeps the global cell id.
           cellData: haveCellScalars,
-          cellOffset: model.cellOffset,
         }),
         ['colorVI']
       );
@@ -285,29 +310,53 @@ export function buildVertexInput(publicAPI, model) {
 
   const indexedLookup =
     model.renderable.getLookupTable?.()?.getIndexedLookup?.() ?? false;
-  if (colorTCoords && !edges && !(indexedLookup && model._usesCellScalars)) {
+  const useColorTCoords =
+    colorTCoords && !edges && !(indexedLookup && model._usesCellScalars);
+  if (useColorTCoords && useCellTCoords && usePrimitiveIndex) {
+    cellStorage.tcoords.setBuffer(
+      device.getBufferManager().getStorageBuffer(
+        `cellTCoords${colorTCoords.getMTime()}`,
+        () => {
+          const data = colorTCoords.getData();
+          if (data instanceof Float32Array) {
+            return data;
+          }
+          return Float32Array.from(data);
+        },
+        'cellTCoords'
+      )
+    );
+    activeCellStorage.push(cellStorage.tcoords);
+    model.cellTCoordComponents = colorTCoords.getNumberOfComponents();
+    vertexInput.removeBufferIfPresent('colorTCoord');
+  } else if (useColorTCoords && useCellTCoords) {
+    // The color coordinates have one value for each cell of the whole
+    // polydata, so the flat map keeps the global cell id.
     vertexInput.addBuffer(
-      useCellTCoords
-        ? device
-            .getBufferManager()
-            .getBufferForCellArray(
-              colorTCoords,
-              vertexInput.getIndexBuffer(),
-              model.cellOffset
-            )
-        : device
-            .getBufferManager()
-            .getBufferForPointArray(colorTCoords, vertexInput.getIndexBuffer()),
+      device
+        .getBufferManager()
+        .getBufferForCellArray(colorTCoords, vertexInput.getIndexBuffer(), 0),
+      ['colorTCoord']
+    );
+  } else if (useColorTCoords) {
+    vertexInput.addBuffer(
+      device
+        .getBufferManager()
+        .getBufferForPointArray(colorTCoords, vertexInput.getIndexBuffer()),
       ['colorTCoord']
     );
   } else {
     vertexInput.removeBufferIfPresent('colorTCoord');
   }
 
+  model.activeCellStorage = activeCellStorage;
+
   // Selection IDs
+  // The primitive index path finds the ids in the shaders. The flat path
+  // gives each flat vertex its point id or its global cell id.
   const selector = model.WebGPURenderer?.getSelector?.();
-  if (selector && !edges && indexBuffer) {
-    let selectIds = null;
+  let selectIds = null;
+  if (selector && !edges && indexBuffer && !usePrimitiveIndex) {
     if (
       selector.getFieldAssociation() ===
       FieldAssociations.FIELD_ASSOCIATION_POINTS
@@ -319,42 +368,42 @@ export function buildVertexInput(publicAPI, model) {
     ) {
       selectIds = indexBuffer.getFlatIdToCellId();
     }
-
-    if (selectIds) {
-      vertexInput.addBuffer(
-        device.getBufferManager().getBuffer({
-          hash: `sel${selector.getFieldAssociation()}I${indexBuffer.getMTime()}`,
-          usage: BufferUsage.RawVertex,
-          format: 'uint32',
-          interpolation: 'flat',
-          nativeArray:
-            selectIds instanceof Uint32Array
-              ? selectIds
-              : Uint32Array.from(selectIds),
-        }),
-        ['selectId']
-      );
-    } else {
-      vertexInput.removeBufferIfPresent('selectId');
+  }
+  if (selectIds) {
+    let nativeArray = selectIds;
+    if (!(selectIds instanceof Uint32Array)) {
+      nativeArray = Uint32Array.from(selectIds);
     }
+    vertexInput.addBuffer(
+      device.getBufferManager().getBuffer({
+        hash: `sel${selector.getFieldAssociation()}I${indexBuffer.getMTime()}`,
+        usage: BufferUsage.RawVertex,
+        format: 'uint32',
+        interpolation: 'flat',
+        nativeArray,
+      }),
+      ['selectId']
+    );
   } else {
     vertexInput.removeBufferIfPresent('selectId');
   }
 
-  // Cell scalar IDs for fragment cell color fetch
-  if (model._usesCellScalars && !edges && indexBuffer) {
+  // Cell scalar IDs for fragment cell color fetch. The primitive index path
+  // finds the cell id in the fragment shader with vtkCellId().
+  if (model._usesCellScalars && !edges && indexBuffer && !usePrimitiveIndex) {
     const cellIds = indexBuffer.getFlatIdToCellId();
     if (cellIds) {
+      let nativeArray = cellIds;
+      if (!(cellIds instanceof Uint32Array)) {
+        nativeArray = Uint32Array.from(cellIds);
+      }
       vertexInput.addBuffer(
         device.getBufferManager().getBuffer({
           hash: `cellScalarIdI${indexBuffer.getMTime()}`,
           usage: BufferUsage.RawVertex,
           format: 'uint32',
           interpolation: 'flat',
-          nativeArray:
-            cellIds instanceof Uint32Array
-              ? cellIds
-              : Uint32Array.from(cellIds),
+          nativeArray,
         }),
         ['cellScalarId']
       );
