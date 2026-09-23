@@ -87,10 +87,7 @@ function vtkWebGPUConfiguration(publicAPI, model) {
           vtkErrorMacro('Failed to acquire a WebGPU adapter.');
           return false;
         }
-        // Request each optional feature that the adapter offers:
-        // float32-filterable for exact 16 bit integer textures in r32float,
-        // and primitive-index for cell data without point duplication. The
-        // mappers use a flat path on a device without primitive-index.
+        // Request only the optional features that the adapter supports.
         const requiredFeatures = (model.optionalFeatures || []).filter(
           (feature) => adapter.features.has(feature)
         );
@@ -178,7 +175,15 @@ const DEFAULT_VALUES = {
   initializationGeneration: 0,
   powerPreference: 'high-performance',
   requiredLimits: undefined,
-  optionalFeatures: ['float32-filterable', 'primitive-index'],
+  // Features to use when the adapter supports them:
+  optionalFeatures: [
+    // r32float textures with linear filtering (exact 16 bit integers)
+    'float32-filterable',
+    // cell data without point duplication (else the flat path)
+    'primitive-index',
+    // r16snorm and r16unorm textures (exact 16 bit integers)
+    'texture-formats-tier1',
+  ],
 };
 
 // ----------------------------------------------------------------------------

@@ -41,6 +41,14 @@ export class WeakRefMap extends Map {
     // else entry is undefined
     return entry;
   }
+
+  deleteValue(value) {
+    super.forEach((entry, key) => {
+      if (entry.deref() === value) {
+        super.delete(key);
+      }
+    });
+  }
 }
 /* eslint-enable no-undef */
 
@@ -70,6 +78,18 @@ function vtkWebGPUDevice(publicAPI, model) {
 
   publicAPI.submitCommandEncoder = (commandEncoder) => {
     model.handle.queue.submit([commandEncoder.finish()]);
+    const callbacks = model.afterSubmitCallbacks;
+    model.afterSubmitCallbacks = [];
+    for (let i = 0; i < callbacks.length; i++) {
+      callbacks[i]();
+    }
+  };
+
+  // A command encoder that is not yet submitted can refer to a resource that
+  // a caller releases. The callback runs after the next submit, when a
+  // destroy() waits for the submitted work instead of making it invalid.
+  publicAPI.afterNextSubmit = (callback) => {
+    model.afterSubmitCallbacks.push(callback);
   };
 
   publicAPI.getShaderModule = (sd) => model.shaderCache.getShaderModule(sd);
@@ -142,6 +162,11 @@ function vtkWebGPUDevice(publicAPI, model) {
   // is the object already cached?
   publicAPI.hasCachedObject = (hash) => model.objectCache.getValue(hash);
 
+  // remove all cache entries that refer to this object
+  publicAPI.removeCachedObject = (value) => {
+    model.objectCache.deleteValue(value);
+  };
+
   publicAPI.getCachedObject = (hash, creator, ...args) => {
     if (!hash) {
       vtkErrorMacro('attempt to cache an object without a hash');
@@ -207,6 +232,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.textureManager.setDevice(publicAPI);
 
   model.pipelines = {};
+
+  model.afterSubmitCallbacks = [];
 
   // For more macro methods, see "Sources/macros.js"
   // Object specific methods

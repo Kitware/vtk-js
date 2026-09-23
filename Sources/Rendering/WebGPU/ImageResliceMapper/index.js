@@ -149,6 +149,20 @@ function clearGeometryBuffers(publicAPI, model) {
   publicAPI.setNumberOfVertices(0);
 }
 
+function getScalarTextureOwner(model, index) {
+  if (!model.scalarTextureOwners[index]) {
+    model.scalarTextureOwners[index] = {};
+  }
+  return model.scalarTextureOwners[index];
+}
+
+function releaseScalarTexture(model, index) {
+  const owner = model.scalarTextureOwners[index];
+  if (owner) {
+    model.device?.getTextureManager().releaseTexture(owner);
+  }
+}
+
 function getCachedInputTexture(model, imageData, index, property) {
   const scalars = imageData.getPointData().getScalars();
   const currentMTime = scalars.getMTime();
@@ -174,6 +188,7 @@ function getCachedInputTexture(model, imageData, index, property) {
       updatedExtents,
       existingTexture,
       preferSizeOverAccuracy,
+      owner: getScalarTextureOwner(model, index),
     });
   if (updatedExtents.length) {
     property.setUpdatedExtents([]);
@@ -1137,6 +1152,7 @@ function vtkWebGPUImageResliceMapper(publicAPI, model) {
 
     for (let i = textureCount; i < model.scalarTextures.length; i++) {
       model.scalarTextures[i] = null;
+      releaseScalarTexture(model, i);
     }
 
     model.imageState = publicAPI.computeImageState();
@@ -1384,6 +1400,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   vtkWebGPUImageMapper.extend(publicAPI, model, initialValues);
   macro.get(publicAPI, model, ['scalarTextures']);
 
+  // Each instance needs its own arrays. The default value is shared.
+  model.scalarTextures = [...(initialValues.scalarTextures ?? [])];
+  // The texture manager counts the users of each input texture by these keys.
+  model.scalarTextureOwners = [];
+
   const superComputeImageState = publicAPI.computeImageState;
   publicAPI.computeImageState = () => {
     if (
@@ -1558,6 +1579,10 @@ export function extend(publicAPI, model, initialValues = {}) {
   };
 
   publicAPI.releaseGraphicsResources = () => {
+    for (let i = 0; i < model.scalarTextureOwners.length; i++) {
+      releaseScalarTexture(model, i);
+    }
+    model.scalarTextures = [];
     model.vertexInput.releaseGraphicsResources();
     model.textureViews.length = 0;
     model.imageState = null;

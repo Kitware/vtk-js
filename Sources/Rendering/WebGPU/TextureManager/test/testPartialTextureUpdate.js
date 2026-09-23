@@ -112,7 +112,7 @@ describe('vtkWebGPUTextureManager partial texture updates', () => {
       },
       getTextureManager: () => ({ getTexture: () => rebuiltTexture }),
       hasCachedObject: () => undefined,
-      hasFeature: () => true,
+      hasFeature: (name) => name === 'float32-filterable',
     });
 
     const result = textureManager.getTextureForImageData(imageData, {
@@ -155,7 +155,7 @@ describe('vtkWebGPUTextureManager partial texture updates', () => {
         },
       }),
       hasCachedObject: () => undefined,
-      hasFeature: () => true,
+      hasFeature: (name) => name === 'float32-filterable',
     });
 
     const result = textureManager.getTextureForImageData(imageData, {
