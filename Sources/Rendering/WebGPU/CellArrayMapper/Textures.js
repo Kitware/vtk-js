@@ -62,8 +62,10 @@ export function updateTextures(publicAPI, model) {
     ['SpecularColorTexture', actor.getProperty().getSpecularColorTexture?.()],
     ['EnvironmentTexture', renderer.getEnvironmentTexture?.()],
   ];
+  model.sourceTextures = [];
   textures.forEach(([name, tex]) => {
     if (!tex) return;
+    model.sourceTextures.push(tex);
     if (
       tex.getInputData() ||
       tex.getJsImageData() ||
@@ -83,7 +85,10 @@ export function updateTextures(publicAPI, model) {
       .getTextureManager()
       .getTextureForVTKTexture(srcTexture, textureName);
 
-    if (!newTex.getReady()) return;
+    if (!newTex.getReady()) {
+      model.texturesPending = true;
+      return;
+    }
     let found = false;
     for (let t = 0; t < model.textures.length; ++t) {
       if (
