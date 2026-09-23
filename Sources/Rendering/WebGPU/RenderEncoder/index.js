@@ -1,5 +1,6 @@
 import * as macro from 'vtk.js/Sources/macros';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
+import { getTimestampWrites } from 'vtk.js/Sources/Rendering/WebGPU/PassTimer';
 
 const { vtkErrorMacro } = macro;
 
@@ -21,7 +22,14 @@ function vtkWebGPURenderEncoder(publicAPI, model) {
 
   publicAPI.begin = (encoder) => {
     model.drawCallbacks = [];
-    model.handle = encoder.beginRenderPass(model.description);
+    // A pass timer that times the frame of this command encoder gives the
+    // timestamp writes of the pass.
+    let description = model.description;
+    const timestampWrites = getTimestampWrites(encoder, model.label);
+    if (timestampWrites) {
+      description = { ...model.description, timestampWrites };
+    }
+    model.handle = encoder.beginRenderPass(description);
     if (model.label) {
       model.handle.pushDebugGroup(model.label);
     }
