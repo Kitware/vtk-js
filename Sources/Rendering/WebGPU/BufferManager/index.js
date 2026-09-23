@@ -101,7 +101,8 @@ function packArray(indexBuffer, inArrayData, numComp, outputType, options) {
   const stride = numComp + (packExtra ? 1 : 0);
   const packedVBO = macro.newTypedArray(outputType, flatSize * stride);
 
-  // pick the right function based on point versus cell data
+  // pick the right function based on point versus cell data. An index
+  // buffer of point ids has no flat map, and the data stays in point order.
   let flatIdMap = indexBuffer.getFlatIdToPointId();
   let flatIdOffset = 0;
   if (options.cellData) {
@@ -142,9 +143,15 @@ function packArray(indexBuffer, inArrayData, numComp, outputType, options) {
   }
 
   // for each entry in the flat array process it
-  for (let index = 0; index < flatSize; index++) {
-    const inArrayId = numComp * (flatIdMap[index] - flatIdOffset);
-    addAPoint(inArrayId);
+  if (flatIdMap) {
+    for (let index = 0; index < flatSize; index++) {
+      const inArrayId = numComp * (flatIdMap[index] - flatIdOffset);
+      addAPoint(inArrayId);
+    }
+  } else {
+    for (let index = 0; index < flatSize; index++) {
+      addAPoint(numComp * index);
+    }
   }
 
   result.nativeArray = packedVBO;
@@ -223,6 +230,7 @@ function _computeBufferHash(req) {
   if (req.primitiveType !== undefined) hash += `P${req.primitiveType}`;
   if (req.cellOffset !== undefined) hash += `O${req.cellOffset}`;
   if (req.cellData) hash += 'cd';
+  if (req.pointIds) hash += 'pi';
   if (req.packExtra) hash += 'pe';
 
   if (req.shift !== undefined) {
@@ -263,6 +271,16 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       buffer.buildIndexBuffer(req);
       buffer.createAndWrite(req.nativeArray, gpuUsage);
       buffer.setArrayInformation([{ format: req.format }]);
+      const primitiveToCellId = buffer.getPrimitiveToCellId();
+      if (primitiveToCellId?.length) {
+        buffer.setPrimitiveToCellIdBuffer(
+          _createBuffer({
+            usage: BufferUsage.Storage,
+            nativeArray: primitiveToCellId,
+            label: 'cellPrimitiveMap',
+          })
+        );
+      }
     }
 
     // create one if not done already
@@ -321,16 +339,18 @@ function vtkWebGPUBufferManager(publicAPI, model) {
       buffer.setStrideInBytes(
         vtkWebGPUTypes.getByteStrideFromBufferFormat(req.format)
       );
+      // cell data on a flat index buffer is read from the provoking vertex
+      let interpolation = 'perspective';
+      if (req.cellData) {
+        interpolation = 'flat';
+      }
       buffer.setArrayInformation([
-        {
-          offset: 0,
-          format: req.format,
-          interpolation: req.cellData ? 'flat' : 'perspective',
-        },
+        { offset: 0, format: req.format, interpolation },
       ]);
     }
 
-    // handle normals from points, snorm8x4
+    // handle normals from points, snorm8x4, one flat value for each cell of
+    // the cell array (the flat index buffer path)
     if (req.usage === BufferUsage.NormalsFromPoints) {
       gpuUsage = GPUBufferUsage.VERTEX;
       const arrayType = vtkWebGPUTypes.getNativeTypeFromBufferFormat(
@@ -385,6 +405,26 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     return _createBuffer(req);
   };
 
+  // Get a cached read only storage buffer. createNativeArray runs only when
+  // the hash is not in the cache.
+  publicAPI.getStorageBuffer = (hash, createNativeArray, label) =>
+    model.device.getCachedObject(hash, () =>
+      _createBuffer({
+        usage: BufferUsage.Storage,
+        nativeArray: createNativeArray(),
+        label,
+      })
+    );
+
+  // Generated normals, one snorm8x4 value for each cell of the cell array,
+  // for a storage buffer.
+  publicAPI.getStorageBufferForCellNormals = (cells, points) =>
+    publicAPI.getStorageBuffer(
+      `cellNormals${cells.getMTime()}P${points.getMTime()}`,
+      () => generateNormals(cells, points),
+      'cellNormals'
+    );
+
   publicAPI.getBufferForPointArray = (dataArray, indexBuffer) => {
     const format = _getFormatForDataArray(dataArray);
     const buffRequest = {
@@ -397,6 +437,9 @@ function vtkWebGPUBufferManager(publicAPI, model) {
     return publicAPI.getBuffer(buffRequest);
   };
 
+  // A cell array on a flat index buffer: one flat value for each cell.
+  // cellOffset is subtracted from the global cell id, so a data array with
+  // one value for each cell of the whole dataset needs cellOffset 0.
   publicAPI.getBufferForCellArray = (
     dataArray,
     indexBuffer,

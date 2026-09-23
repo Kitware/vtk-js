@@ -32,6 +32,7 @@ import {
   getClippingPlaneEquationsInCoords,
   MAX_CLIPPING_PLANES,
 } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
+import { newStorageArray } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/StorageArray';
 import replaceShaderPositionHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Position';
 import replaceShaderCoincidentOffsetHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/CoincidentOffset';
 import replaceShaderNormalHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Normal';
@@ -387,12 +388,19 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       'Opacity',
       edgeLikeRepresentation ? ppty.getEdgeOpacity() : ppty.getOpacity()
     );
-    model.UBO.setValue('PropID', model.WebGPUActor.getPropID());
+    // In a selection pass, the selector gives the prop its selection id.
+    const runtimePropID = model.WebGPUActor.getPropID();
+    let propID = runtimePropID;
+    if (selector?.getPropIDForSelection) {
+      propID = selector.getPropIDForSelection(runtimePropID, actor) + 1;
+    }
+    model.UBO.setValue('PropID', propID);
     const cp = publicAPI.getCoincidentParameters();
     model.UBO.setValue('CoincidentFactor', cp.factor);
     model.UBO.setValue('CoincidentOffset', cp.offset);
     model.UBO.setValue('CellScalarOffset', model.cellOffset);
     model.UBO.setValue('NumClipPlanes', 0);
+    model.UBO.setValue('CellOffset', model.cellOffset);
 
     if (!model.is2D && model.useRendererMatrix) {
       const center = model.WebGPURenderer.getStabilizedCenterByReference();
@@ -616,6 +624,56 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     publicAPI.replaceShaderPosition
   );
 
+  // Give the fragment shader the function vtkCellId(), which returns the
+  // global cell id of the fragment. WGSL
+  // accepts module declarations in any order, so the function can come first,
+  // but the enable directive must be the first statement of the module.
+  publicAPI.addCellIdToFragmentShader = (pipeline) => {
+    if (!model.usePrimitiveIndex) {
+      return;
+    }
+    const fDesc = pipeline.getShaderDescription('fragment');
+    fDesc.addBuiltinInput('u32', '@builtin(primitive_index) primitiveIndex');
+    const usesMap = model.activeCellStorage.includes(
+      model.cellStorage.primitiveMap
+    );
+    const header = [
+      'enable primitive_index;',
+      'fn vtkCellId(primitiveIndex: u32) -> u32 {',
+    ];
+    if (usesMap) {
+      header.push('  return cellPrimitiveMap[primitiveIndex];');
+    } else {
+      header.push('  return primitiveIndex + mapperUBO.CellOffset;');
+    }
+    header.push('}');
+    let code = fDesc.getCode();
+    const numComp = model.cellTCoordComponents;
+    if (numComp) {
+      // cell color coordinates replace the interpolated ones
+      let type = `vec${numComp}<f32>`;
+      if (numComp === 1) {
+        type = 'f32';
+      }
+      const values = [];
+      for (let i = 0; i < numComp; i++) {
+        values.push(`cellTCoords[${numComp}u * cellId + ${i}u]`);
+      }
+      header.push(
+        `fn vtkCellTCoord(primitiveIndex: u32) -> ${type} {`,
+        '  let cellId = vtkCellId(primitiveIndex);',
+        `  return ${type}(${values.join(', ')});`,
+        '}'
+      );
+      code = code.replaceAll(
+        'input.colorTCoordVS',
+        'vtkCellTCoord(input.primitiveIndex)'
+      );
+    }
+    header.push(code);
+    fDesc.setCode(header.join('\n'));
+  };
+
   publicAPI.replaceShaderCoincidentOffset = (hash, pipeline, vertexInput) => {
     replaceShaderCoincidentOffsetHelper(
       publicAPI,
@@ -629,6 +687,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     'replaceShaderCoincidentOffset',
     publicAPI.replaceShaderCoincidentOffset
   );
+
+  // The WGSL expression of the matrix that transforms a cell normal from
+  // model coordinates to world coordinates in the fragment shader.
+  publicAPI.getCellNormalMatrix = () => 'mapperUBO.MCWCNormals';
+
+  publicAPI.usesCellNormals = () =>
+    model.activeCellStorage.includes(model.cellStorage.normals);
 
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
     replaceShaderNormalHelper(publicAPI, model, hash, pipeline, vertexInput);
@@ -664,6 +729,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     publicAPI.replaceShaderTCoord
   );
 
+  // Selection ids. The selection pass adds 1 to attributeID, so the shaders
+  // write the raw id.
+  // - Primitive index path: the index values are point ids, so vertex_index
+  //   is the point id of a vertex and the flat output gives the first point
+  //   of the primitive. vtkCellId() gives the cell id.
+  // - Flat path: the selectId vertex attribute of the provoking vertex.
+  // - A subclass that makes its own vertex buffers writes zero ids.
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
     replaceShaderSelectHelper(publicAPI, model, hash, pipeline, vertexInput);
   };
@@ -821,6 +893,19 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       pipelineHash += `cn`;
     }
 
+    if (model.usePrimitiveIndex) {
+      // the storage buffers change the bind group layout and the shaders
+      pipelineHash += 'pi';
+      for (let i = 0; i < model.activeCellStorage.length; i++) {
+        pipelineHash += model.activeCellStorage[i].getLabel();
+      }
+      pipelineHash += `ct${model.cellTCoordComponents}`;
+      if (model.selectionPass) {
+        const selector = model.WebGPURenderer?.getSelector?.();
+        pipelineHash += `sa${selector?.getFieldAssociation()}`;
+      }
+    }
+
     if (model.SSBO) {
       pipelineHash += `ssbo`;
     }
@@ -836,6 +921,21 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     model.pipelineHash = pipelineHash;
   };
+
+  // The IO structs are always replaced last, after all other replacements
+  // (also those of subclasses) used vtkCellId() and input.colorTCoordVS.
+  const superReplaceShaderIOStructs = publicAPI.replaceShaderIOStructs;
+  publicAPI.replaceShaderIOStructs = (hash, pipeline, vertexInput) => {
+    publicAPI.addCellIdToFragmentShader(pipeline);
+    superReplaceShaderIOStructs(hash, pipeline, vertexInput);
+  };
+
+  // The cell arrays are storage buffers in the mapper bind group.
+  const superGetBindables = publicAPI.getBindables;
+  publicAPI.getBindables = () => [
+    ...superGetBindables(),
+    ...model.activeCellStorage,
+  ];
 
   publicAPI.updateBuffers = () => {
     // handle textures if not edges
@@ -861,7 +961,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     publicAPI.setTopology(publicAPI.getTopologyFromUsage(model.usage));
     publicAPI.updateUBO();
     publicAPI.updateSkinSSBO();
-    model.SSBO = model._skinSSBO || model._cellColorSSBO || null;
+    // The skin or cell color SSBO of this mapper. An SSBO that an other
+    // object set with setSSBO() (for example the glyph SSBO) stays.
+    const internalSSBO = model._skinSSBO || model._cellColorSSBO || null;
+    if (!model.SSBO || model.SSBO === model._internalSSBO) {
+      model.SSBO = internalSSBO;
+    }
+    model._internalSSBO = internalSSBO;
     if (publicAPI.haveWideLines()) {
       const ppty = actor.getProperty();
       publicAPI.setNumberOfInstances(Math.ceil(ppty.getLineWidth() * 2.0));
@@ -886,8 +992,10 @@ const DEFAULT_VALUES = {
   colorTexture: null,
   _usesCellScalars: false,
   _cellColorSSBO: null,
+  _internalSSBO: null,
   renderEncoder: null,
   textures: null,
+  usePrimitiveIndex: false,
 };
 
 // ----------------------------------------------------------------------------
@@ -992,6 +1100,8 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('DebugChannel', 'u32');
   addClipPlaneEntries(model.UBO, 'ClipPlane');
   model.UBO.addEntry('NumClipPlanes', 'u32');
+  // The global id of the first cell of this cell array.
+  model.UBO.addEntry('CellOffset', 'u32');
   // Coordinate shift baked into the point buffer (vertexBC = modelCoord +
   // BufferShift). Exposed so mappers that transform vertices before BCSCMatrix
   // (e.g. the glyph mapper's per instance matrix) can recover raw model coords.
@@ -1014,6 +1124,16 @@ export function extend(publicAPI, model, initialValues = {}) {
     'primitiveType',
     'renderEncoder',
   ]);
+
+  // Cell arrays. The fragment shader reads them at the cell id of the
+  // fragment.
+  model.cellStorage = {
+    primitiveMap: newStorageArray('cellPrimitiveMap', 'u32'),
+    tcoords: newStorageArray('cellTCoords', 'f32'),
+    normals: newStorageArray('cellNormals', 'u32'),
+  };
+  model.activeCellStorage = [];
+  model.cellTCoordComponents = 0;
 
   model.textures = [];
   model.clipPlanes = Array.from({ length: MAX_CLIPPING_PLANES }, () => [

@@ -64,7 +64,22 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
     publicAPI.replaceShaderPosition
   );
 
+  // A cell normal is transformed in the fragment shader, so the fragment
+  // shader needs the instance of the glyph.
+  publicAPI.getCellNormalMatrix = () =>
+    'mapperUBO.MCWCNormals * glyphSSBO.values[input.glyphInstance].normal';
+
   publicAPI.replaceShaderNormal = (hash, pipeline, vertexInput) => {
+    if (publicAPI.usesCellNormals()) {
+      const vDesc = pipeline.getShaderDescription('vertex');
+      vDesc.addOutput('u32', 'glyphInstance', 'flat');
+      const code = vtkWebGPUShaderCache.substitute(
+        vDesc.getCode(),
+        '//VTK::Normal::Impl',
+        ['  output.glyphInstance = input.instanceIndex;']
+      ).result;
+      vDesc.setCode(code);
+    }
     if (vertexInput.hasAttribute('normalMC')) {
       const vDesc = pipeline.getShaderDescription('vertex');
       let code = vDesc.getCode();

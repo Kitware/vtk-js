@@ -93,4 +93,30 @@ describe('vtkWebGPUConfiguration', () => {
     expect(configuration.isInitialized()).toBe(false);
     configuration.delete();
   });
+
+  it.each([
+    [
+      ['float32-filterable', 'primitive-index'],
+      ['float32-filterable', 'primitive-index'],
+    ],
+    [['float32-filterable'], ['float32-filterable']],
+  ])(
+    'requests primitive-index only when the adapter has it (%j)',
+    async (adapterFeatures, requested) => {
+      const adapter = {
+        features: new Set(adapterFeatures),
+        limits,
+        requestDevice: vi.fn(async () => createDevice(adapterFeatures)),
+      };
+      installGPU(adapter);
+
+      const configuration = vtkWebGPUConfiguration.newInstance();
+      expect(await configuration.initialize()).toBe(true);
+      expect(adapter.requestDevice).toHaveBeenCalledWith(
+        expect.objectContaining({ requiredFeatures: requested })
+      );
+      configuration.finalize();
+      configuration.delete();
+    }
+  );
 });

@@ -5,6 +5,33 @@ function replaceShaderNormal(publicAPI, model, hash, pipeline, vertexInput) {
   const tangentBuffer = vertexInput.getBuffer('tangentMC');
   const actor = model.WebGPUActor.getRenderable();
 
+  // Generated cell normals of the primitive index path come from a storage
+  // buffer with one value for each cell of this cell array.
+  if (publicAPI.usesCellNormals()) {
+    const fDesc = pipeline.getShaderDescription('fragment');
+    fDesc.addBuiltinInput('bool', '@builtin(front_facing) frontFacing');
+    const cellNormalImpl = [
+      '  let cellNormalMC = unpack4x8snorm(cellNormals[vtkCellId(input.primitiveIndex) - mapperUBO.CellOffset]);',
+      `  var normal: vec3<f32> = normalize((rendererUBO.WCVCNormals * ${publicAPI.getCellNormalMatrix()} * cellNormalMC).xyz);`,
+      '  var geometricNormal = normal;',
+      '  let isFrontFace = select(!input.frontFacing, input.frontFacing, mapperUBO.FlipFrontFacing < 0.5);',
+      '  let faceSign = select(-1.0, 1.0, isFrontFace);',
+      '  normal = normal * faceSign;',
+      '  geometricNormal = geometricNormal * faceSign;',
+    ];
+    if ((actor.getProperty().getCoatStrength?.() ?? 0) > 0) {
+      cellNormalImpl.push('  var coatNormal: vec3<f32> = normal;');
+    }
+    let code = fDesc.getCode();
+    code = vtkWebGPUShaderCache.substitute(
+      code,
+      '//VTK::Normal::Impl',
+      cellNormalImpl
+    ).result;
+    fDesc.setCode(code);
+    return;
+  }
+
   if (normalBuffer) {
     const vDesc = pipeline.getShaderDescription('vertex');
     const interpMode = normalBuffer.getArrayInformation()[0].interpolation;
