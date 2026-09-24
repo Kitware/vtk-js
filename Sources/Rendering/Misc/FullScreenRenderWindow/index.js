@@ -13,6 +13,8 @@ import 'vtk.js/Sources/Rendering/Core/Actor';
 import 'vtk.js/Sources/Rendering/Core/Mapper';
 import 'vtk.js/Sources/Rendering/Misc/RenderingAPIs';
 
+const { vtkWarningMacro } = macro;
+
 // Process arguments from URL
 const userParams = vtkURLExtract.extractURLParameters();
 
@@ -220,6 +222,10 @@ export function extend(publicAPI, model, initialValues = {}) {
     'container',
     'controlContainer',
   ]);
+
+  vtkWarningMacro(
+    'The vtkFullScreenRenderWindow class is intended only for example development. Please use vtkGenericRenderWindow instead.'
+  );
 
   // Object specific methods
   vtkFullScreenRenderWindow(publicAPI, model);
