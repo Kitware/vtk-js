@@ -57,7 +57,7 @@ function vtkAnnotatedCubeActor(publicAPI, model) {
     canvas.width = prop.resolution;
     canvas.height = prop.resolution;
 
-    const ctxt = canvas.getContext('2d');
+    const ctxt = canvas.getContext('2d', { willReadFrequently: true });
 
     // set background color
     ctxt.fillStyle = prop.faceColor;
