@@ -1,19 +1,7 @@
 import { vtkObject } from '../../../interfaces';
+import { BoundaryCondition } from './Constants';
 
 export interface ISpline1DInitialValues {}
-
-// Boundary conditions available to compute open splines
-// DEFAULT : desired slope at boundary point is derivative from two points (boundary and second interior)
-// DERIVATIVE : desired slope at boundary point is the boundary value given.
-// SECOND_DERIVATIVE : second derivative at boundary point is the boundary value given.
-// SECOND_DERIVATIVE_INTERIOR_POINT : desired second derivative at boundary point is the boundary value given times second derivative
-// at first interior point.
-export enum BoundaryCondition {
-  DEFAULT,
-  DERIVATIVE,
-  SECOND_DERIVATIVE,
-  SECOND_DERIVATIVE_INTERIOR_POINT,
-}
 
 export interface vtkSpline1D extends vtkObject {
   /**
@@ -47,7 +35,7 @@ export interface vtkSpline1D extends vtkObject {
     work: Float32Array,
     x: number[],
     y: number[],
-    options: {
+    options?: {
       leftConstraint: BoundaryCondition;
       leftValue: number;
       rightConstraint: BoundaryCondition;

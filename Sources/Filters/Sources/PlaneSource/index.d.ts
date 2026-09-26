@@ -125,7 +125,7 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
    * Set the normal of the plane.
    * @param {Vector3} normal The normal coordinate.
    */
-  setNormal(normal: Vector3): boolean;
+  setNormal(normal: Vector3): void;
 
   /**
    * Set the normal of the plane.
@@ -133,13 +133,7 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
    * @param {Number} y The y coordinate.
    * @param {Number} z The z coordinate.
    */
-  setNormal(x: number, y: number, z: number): boolean;
-
-  /**
-   * Set the normal of the plane.
-   * @param {Vector3} normal The normal coordinate.
-   */
-  setNormalFrom(normal: Vector3): boolean;
+  setNormal(x: number, y: number, z: number): void;
 
   /**
    * Set the origin of the plane.
@@ -159,7 +153,7 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
    * Set the origin of the plane.
    * @param {Vector3} origin The coordinate of the origin point.
    */
-  setOriginFrom(origin: Vector3): boolean;
+  setOriginFrom(origin: Vector3): void;
 
   /**
    * Specify a point defining the first axis of the plane.
@@ -167,13 +161,13 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
    * @param {Number} y The y coordinate.
    * @param {Number} z The z coordinate.
    */
-  setPoint1(x: number, y: number, z: number): boolean;
+  setPoint1(x: number, y: number, z: number): void;
 
   /**
    * Specify a point defining the first axis of the plane.
    * @param {Vector3} point1
    */
-  setPoint1(point1: Vector3): boolean;
+  setPoint1(point1: Vector3): void;
 
   /**
    * Specify a point defining the second axis of the plane.
@@ -181,13 +175,13 @@ export interface vtkPlaneSource extends vtkPlaneSourceBase {
    * @param {Number} y The y coordinate.
    * @param {Number} z The z coordinate.
    */
-  setPoint2(x: number, y: number, z: number): boolean;
+  setPoint2(x: number, y: number, z: number): void;
 
   /**
    * Specify a point defining the second axis of the plane.
    * @param {Vector3} point2
    */
-  setPoint2(point2: Vector3): boolean;
+  setPoint2(point2: Vector3): void;
 
   /**
    * Set the number of facets used to represent the cone.

@@ -47,7 +47,7 @@ export function intersectDisplayWithPlane(
   planeNormal: Vector3,
   renderer: any,
   glRenderWindow: any
-): Vector3;
+): Vector3 | [];
 
 /**
  * vtkPlaneManipulator.

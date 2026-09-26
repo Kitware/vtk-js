@@ -14,15 +14,13 @@ type vtkImageCropFilterBase = vtkObject & vtkAlgorithm;
 export interface vtkImageCropFilter extends vtkImageCropFilterBase {
   /**
    * Get The cropping planes, in IJK space.
-   * @default [0, 0, 0, 0, 0, 0].
    */
-  getCroppingPlanes(): CroppingPlanes;
+  getCroppingPlanes(): CroppingPlanes | undefined;
 
   /**
    * Get The cropping planes, in IJK space.
-   * @default [0, 0, 0, 0, 0, 0].
    */
-  getCroppingPlanesByReference(): CroppingPlanes;
+  getCroppingPlanesByReference(): CroppingPlanes | undefined;
 
   /**
    *
@@ -51,7 +49,7 @@ export interface vtkImageCropFilter extends vtkImageCropFilterBase {
    *
    * @param croppingPlanes
    */
-  setCroppingPlanesFrom(croppingPlanes: CroppingPlanes): boolean;
+  setCroppingPlanesFrom(croppingPlanes: CroppingPlanes): void;
 }
 
 /**

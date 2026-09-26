@@ -2,7 +2,12 @@ import vtkPiecewiseFunction from '../../../Common/DataModel/PiecewiseFunction';
 import { vtkObject } from '../../../interfaces';
 import { Extent, Nullable } from '../../../types';
 import vtkColorTransferFunction from '../ColorTransferFunction';
-import { ColorMixPreset, InterpolationType, OpacityMode } from './Constants';
+import {
+  ColorMixPreset,
+  FilterMode,
+  InterpolationType,
+  OpacityMode,
+} from './Constants';
 
 export interface IVolumePropertyInitialValues {
   independentComponents?: boolean;
@@ -13,7 +18,11 @@ export interface IVolumePropertyInitialValues {
   specularPower?: number;
   useLabelOutline?: boolean;
   labelOutlineThickness?: number | number[];
+  labelOutlineOpacity?: number;
   colorMixPreset?: ColorMixPreset;
+  filterMode?: FilterMode;
+  preferSizeOverAccuracy?: boolean;
+  computeNormalFromOpacity?: boolean;
 }
 
 export interface vtkVolumeProperty extends vtkObject {
@@ -107,7 +116,13 @@ export interface vtkVolumeProperty extends vtkObject {
   /**
    * gets the label outline thickness
    */
-  getLabelOutlineThickness(): number;
+  getLabelOutlineThickness(): number[];
+
+  /**
+   * Get the label outline thickness array by reference.
+   * This returns the actual internal array, not a copy.
+   */
+  getLabelOutlineThicknessByReference(): number[];
 
   /**
    * Get the currently set RGB transfer function. Create one if none set.
@@ -152,6 +167,21 @@ export interface vtkVolumeProperty extends vtkObject {
    *
    */
   getUseLabelOutline(): boolean;
+
+  /** Get the opacity applied to label outlines. */
+  getLabelOutlineOpacity(): number;
+
+  /** Get the volume filtering mode. */
+  getFilterMode(): FilterMode;
+
+  /** Get the volume filtering mode as a string. */
+  getFilterModeAsString(): string;
+
+  /** Get whether half-float storage is preferred over accuracy. */
+  getPreferSizeOverAccuracy(): boolean;
+
+  /** Get whether normals are computed from opacity. */
+  getComputeNormalFromOpacity(): boolean;
 
   /**
    * Set the ambient lighting coefficient.
@@ -252,6 +282,12 @@ export interface vtkVolumeProperty extends vtkObject {
   setLabelOutlineThickness(labelOutlineThickness: number | number[]): boolean;
 
   /**
+   * Set the label outline thickness array from another array, without a copy.
+   * @param {Number[]} labelOutlineThickness
+   */
+  setLabelOutlineThicknessFrom(labelOutlineThickness: number[]): void;
+
+  /**
    *
    * @param {Number} index
    * @param {Number} value
@@ -305,6 +341,24 @@ export interface vtkVolumeProperty extends vtkObject {
    * @param {Boolean} useLabelOutline
    */
   setUseLabelOutline(useLabelOutline: boolean): boolean;
+
+  /** Set the opacity applied to label outlines. */
+  setLabelOutlineOpacity(labelOutlineOpacity: number): boolean;
+
+  /** Set the volume filtering mode. */
+  setFilterMode(filterMode: FilterMode): boolean;
+
+  /** Set filtering off. */
+  setFilterModeToOff(): void;
+
+  /** Set normalized filtering. */
+  setFilterModeToNormalized(): void;
+
+  /** Set raw filtering. */
+  setFilterModeToRaw(): void;
+
+  /** Set whether half-float storage is preferred over accuracy. */
+  setPreferSizeOverAccuracy(preferSizeOverAccuracy: boolean): boolean;
 
   /**
    * Set the color of a volume to an RGB transfer function
@@ -382,12 +436,12 @@ export interface vtkVolumeProperty extends vtkObject {
   /**
    *
    */
-  getAverageIPScalarRange(): Range;
+  getIpScalarRange(): Range;
 
   /**
    *
    */
-  getAverageIPScalarRangeByReference(): Range;
+  getIpScalarRangeByReference(): Range;
 
   /**
    * Get the blending coefficient that interpolates between surface and volume rendering
@@ -426,17 +480,30 @@ export interface vtkVolumeProperty extends vtkObject {
   getLAOKernelRadius(): number;
 
   /**
+   * @deprecated use setIpScalarRange
+   * @param x
+   * @param y
+   */
+  setAverageIPScalarRange(x: number, y: number): void;
+
+  /**
    *
    * @param x
    * @param y
    */
-  setAverageIPScalarRange(x: number, y: number): boolean;
+  setIpScalarRange(x: number, y: number): boolean;
 
   /**
    *
-   * @param {Range} averageIPScalarRange
+   * @param {Range} ipScalarRange
    */
-  setAverageIPScalarRangeFrom(averageIPScalarRange: Range): boolean;
+  setIpScalarRange(ipScalarRange: Range): boolean;
+
+  /**
+   *
+   * @param {Range} ipScalarRange
+   */
+  setIpScalarRangeFrom(ipScalarRange: Range): void;
 
   /**
    * Set the normal computation to be dependent on the transfer function.
@@ -604,5 +671,7 @@ export declare const vtkVolumeProperty: {
   extend: typeof extend;
   InterpolationType: typeof InterpolationType;
   OpacityMode: typeof OpacityMode;
+  ColorMixPreset: typeof ColorMixPreset;
+  FilterMode: typeof FilterMode;
 };
 export default vtkVolumeProperty;

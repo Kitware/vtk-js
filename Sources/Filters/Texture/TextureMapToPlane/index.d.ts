@@ -112,7 +112,7 @@ export interface vtkTextureMapToPlane extends vtkTextureMapToPlaneBase {
    * Set the normal object.
    * @param {Number[]} normal The normal object coordinates.
    */
-  setNormalFrom(normal: number[]): boolean;
+  setNormalFrom(normal: number[]): void;
 
   /**
    * Set the origin of the plane.
@@ -132,7 +132,7 @@ export interface vtkTextureMapToPlane extends vtkTextureMapToPlaneBase {
    * Set the origin of the plane.
    * @param {Number[]} origin The origin of the plane.
    */
-  setOriginFrom(origin: number[]): boolean;
+  setOriginFrom(origin: number[]): void;
 
   /**
    * Set the point which defines the first axis of the plane.
@@ -152,7 +152,7 @@ export interface vtkTextureMapToPlane extends vtkTextureMapToPlaneBase {
    * Set the point which defines the first axis of the plane.
    * @param {Number[]} point1 The coordinate of the point.
    */
-  setPoint1From(point1: number[]): boolean;
+  setPoint1From(point1: number[]): void;
 
   /**
    * Set the point which defines the second axis of the plane
@@ -172,7 +172,7 @@ export interface vtkTextureMapToPlane extends vtkTextureMapToPlaneBase {
    * Set the point which defines the second axis of the plane
    * @param {Number[]} point2 The coordinate of the point.
    */
-  setPoint2From(point2: number[]): boolean;
+  setPoint2From(point2: number[]): void;
 
   /**
    * Set the s-coordinate range for texture s-t coordinate pair.
@@ -191,7 +191,7 @@ export interface vtkTextureMapToPlane extends vtkTextureMapToPlaneBase {
    * Set the s-coordinate range for texture s-t coordinate pair.
    * @param {Number[]} sRange The s-coordinate range.
    */
-  setSRangeFrom(sRange: number[]): boolean;
+  setSRangeFrom(sRange: number[]): void;
 
   /**
    * Set the t-coordinate range for texture s-t coordinate pair.
@@ -210,7 +210,7 @@ export interface vtkTextureMapToPlane extends vtkTextureMapToPlaneBase {
    * Set the t-coordinate range for texture s-t coordinate pair.
    * @param {Number[]} tRange The t-coordinate range.
    */
-  setTRangeFrom(tRange: number[]): boolean;
+  setTRangeFrom(tRange: number[]): void;
 }
 
 /**

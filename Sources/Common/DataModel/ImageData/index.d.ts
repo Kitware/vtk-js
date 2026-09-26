@@ -26,7 +26,7 @@ export interface vtkImageData extends vtkDataSet {
    * and the data set.
    * @see vtkDataSet::initialize()
    */
-  initialize(): void;
+  initialize(): vtkImageData;
 
   /**
    * Returns an object with `{ minimum, maximum, average, variance, sigma, count }`
@@ -134,6 +134,13 @@ export interface vtkImageData extends vtkDataSet {
   getDirection(): mat3;
 
   /**
+   * Direction is a `mat3` matrix corresponding to the axes directions in
+   * world coordinates for the I, J, K axes of the image. Direction must form
+   * an orthonormal basis.
+   */
+  getDirectionByReference(): mat3;
+
+  /**
    * The maximal extent of the projection.
    * @default [0, -1, 0, -1, 0, -1]
    */
@@ -167,7 +174,7 @@ export interface vtkImageData extends vtkDataSet {
    * 1D data array.
    * @param {Number} index
    */
-  getPoint(index: number): Vector3;
+  getPoint(index: number): Vector3 | null;
 
   /**
    * Get the origin of the dataset. The origin is the position in world
@@ -299,6 +306,16 @@ export interface vtkImageData extends vtkDataSet {
   ): boolean;
 
   /**
+   * The direction matrix is a 3x3 basis for the I, J, K axes
+   * of the image. The rows of the matrix correspond to the
+   * axes directions in world coordinates. Direction must
+   * form an orthonormal basis, results are undefined if
+   * it is not.
+   * @param {mat3} direction
+   */
+  setDirectionFrom(direction: mat3): void;
+
+  /**
    * Set the extent.
    * @param {Extent} extent
    */
@@ -320,7 +337,7 @@ export interface vtkImageData extends vtkDataSet {
     y2: number,
     z1: number,
     z2: number
-  ): void;
+  ): boolean;
 
   /**
    * Set the origin of the image.
@@ -332,7 +349,7 @@ export interface vtkImageData extends vtkDataSet {
    * Set the origin of the image.
    * @param {Vector3} origin The coordinate of the origin point.
    */
-  setOriginFrom(origin: Vector3): boolean;
+  setOriginFrom(origin: Vector3): void;
 
   /**
    *
@@ -344,7 +361,7 @@ export interface vtkImageData extends vtkDataSet {
    *
    * @param spacing
    */
-  setSpacingFrom(spacing: number[]): boolean;
+  setSpacingFrom(spacing: number[]): void;
 
   /**
    * this is the fast version, requires vec3 arguments

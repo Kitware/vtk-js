@@ -1,5 +1,6 @@
 import { vtkObject } from '../../../interfaces';
 import { RGBColor } from '../../../types';
+import { Representation } from '../Property/Constants';
 import { DisplayLocation } from './Constants';
 
 export interface IProperty2DInitialValues {
@@ -10,6 +11,7 @@ export interface IProperty2DInitialValues {
   displayLocation?: DisplayLocation;
   backfaceCulling?: boolean;
   frontfaceCulling?: boolean;
+  representation?: Representation;
 }
 
 export interface vtkProperty2D extends vtkObject {
@@ -56,6 +58,12 @@ export interface vtkProperty2D extends vtkObject {
    */
   getPointSize(): number;
 
+  /** Get the geometric representation mode. */
+  getRepresentation(): Representation;
+
+  /** Get the geometric representation mode as a string. */
+  getRepresentationAsString(): string;
+
   /**
    * Set the color of the object. Has the side effect of setting the
    * ambient diffuse and specular colors as well. This is basically
@@ -82,7 +90,7 @@ export interface vtkProperty2D extends vtkObject {
    * @param {Number} g Defines the green component (between 0 and 1).
    * @param {Number} b Defines the blue component (between 0 and 1).
    */
-  setColorFrom(r: number, g: number, b: number): boolean;
+  setColorFrom(r: number, g: number, b: number): void;
 
   /**
    * Set the color of the object. Has the side effect of setting the
@@ -90,7 +98,7 @@ export interface vtkProperty2D extends vtkObject {
    * a quick overall color setting method.
    * @param {RGBColor} color Defines the RGB color array..
    */
-  setColorFrom(color: RGBColor): boolean;
+  setColorFrom(color: RGBColor): void;
 
   /**
    * Turn on/off fast culling of polygons based on orientation of normal
@@ -136,6 +144,24 @@ export interface vtkProperty2D extends vtkObject {
    * @default 1.0
    */
   setPointSize(pointSize: number): boolean;
+
+  /** Set the geometric representation mode. */
+  setRepresentation(representation: Representation): boolean;
+
+  /** Set representation to points. */
+  setRepresentationToPoints(): boolean;
+
+  /** Set representation to surface. */
+  setRepresentationToSurface(): boolean;
+
+  /** Set representation to wireframe. */
+  setRepresentationToWireframe(): boolean;
+
+  /** Set display location to the background. */
+  setDisplayLocationToBackground(): boolean;
+
+  /** Set display location to the foreground. */
+  setDisplayLocationToForeground(): boolean;
 }
 
 /**
@@ -174,5 +200,6 @@ export function newInstance(
 export declare const vtkProperty2D: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  DisplayLocation: typeof DisplayLocation;
 };
 export default vtkProperty2D;

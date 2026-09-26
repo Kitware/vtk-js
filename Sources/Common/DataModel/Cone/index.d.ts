@@ -1,5 +1,5 @@
-import { vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
+import vtkImplicitFunction from '../ImplicitFunction';
 
 /**
  *
@@ -8,7 +8,7 @@ export interface IConeInitialValues {
   angle?: number;
 }
 
-export interface vtkCone extends vtkObject {
+export interface vtkCone extends vtkImplicitFunction {
   /**
    * Given the point x evaluate the cone equation.
    * @param {Vector3} x The point coordinate.

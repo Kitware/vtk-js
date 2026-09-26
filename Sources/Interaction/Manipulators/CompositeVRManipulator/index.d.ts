@@ -24,6 +24,12 @@ export interface vtkCompositeVRManipulator {
     state: States,
     eventData: I3DEvent
   ): void;
+
+  getDevice(): Device | undefined;
+  setDevice(device: Device): boolean;
+
+  getInput(): Input | undefined;
+  setInput(input: Input): boolean;
 }
 
 export interface ICompositeVRManipulatorInitialValues {
@@ -39,6 +45,8 @@ export function extend(
 
 export const vtkCompositeVRManipulator: {
   extend: typeof extend;
+  Device: typeof Device;
+  Input: typeof Input;
 };
 
 export default vtkCompositeVRManipulator;

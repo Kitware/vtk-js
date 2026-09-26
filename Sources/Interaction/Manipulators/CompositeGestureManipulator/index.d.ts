@@ -1,7 +1,6 @@
 import vtkInteractorStyle from '../../../Rendering/Core/InteractorStyle';
 import vtkRenderer from '../../..//Rendering/Core/Renderer';
 import vtkRenderWindowInteractor from '../../../Rendering/Core/RenderWindowInteractor';
-import { Nullable } from '../../../types';
 
 export interface vtkCompositeGestureManipulator {
   /**
@@ -101,11 +100,6 @@ export interface vtkCompositeGestureManipulator {
   setPinchEnabled(pinch: boolean): boolean;
 
   /**
-   * Gets flag if pinch is enabled.
-   */
-  getPinchEnabled(): boolean;
-
-  /**
    * Is pan enabled.
    */
   isPanEnabled(): boolean;
@@ -115,11 +109,6 @@ export interface vtkCompositeGestureManipulator {
    * @param pan
    */
   setPanEnabled(pan: boolean): boolean;
-
-  /**
-   * Gets flag if pan is enabled.
-   */
-  getPanEnabled(): boolean;
 
   /**
    * Is rotate enabled.
@@ -133,20 +122,15 @@ export interface vtkCompositeGestureManipulator {
   setRotateEnabled(rotate: boolean): boolean;
 
   /**
-   * Gets flag if rotate is enabled.
-   */
-  getRotateEnabled(): boolean;
-
-  /**
    * Sets the interactor style.
    * @param style vtkInteractorStyle
    */
-  setInteractorStyle(style: Nullable<vtkInteractorStyle>): boolean;
+  setInteractorStyle(style: vtkInteractorStyle): boolean;
 
   /**
    * Gets the interactor style.
    */
-  getInteractorStyle(): Nullable<vtkInteractorStyle>;
+  getInteractorStyle(): vtkInteractorStyle | undefined;
 }
 
 export interface ICompositeGestureManipulatorInitialValues {

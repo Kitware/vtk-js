@@ -1,5 +1,5 @@
 import { vtkObject } from '../../../interfaces';
-import { Vector3 } from '../../../types';
+import { Nullable, Vector3 } from '../../../types';
 import vtkImplicitFunction from '../ImplicitFunction';
 
 /**
@@ -14,7 +14,18 @@ interface IIntersectWithLine {
   intersection: boolean;
   betweenPoints: boolean;
   t: number;
-  x: Vector3;
+  /**
+   * The intersection point, or an empty array when the line is parallel to the
+   * plane and no intersection was computed.
+   */
+  x: Vector3 | [];
+}
+
+interface IIntersectWithPlane {
+  intersection: boolean;
+  l0: Vector3;
+  l1: Vector3;
+  error: Nullable<string>;
 }
 
 export interface vtkPlane extends vtkImplicitFunction {
@@ -156,7 +167,7 @@ export interface vtkPlane extends vtkImplicitFunction {
   intersectWithPlane(
     planeOrigin: Vector3,
     planeNormal: Vector3
-  ): IIntersectWithLine;
+  ): IIntersectWithPlane;
 
   /**
    * Set the normal of the plane.
@@ -176,7 +187,7 @@ export interface vtkPlane extends vtkImplicitFunction {
    * Set the normal object.
    * @param {Vector3} normal The normal coordinate.
    */
-  setNormalFrom(normal: Vector3): boolean;
+  setNormalFrom(normal: Vector3): void;
 
   /**
    * Set the origin of the plane.
@@ -196,7 +207,7 @@ export interface vtkPlane extends vtkImplicitFunction {
    * Set the origin of the plane.
    * @param {Vector3} origin The coordinate of the origin point.
    */
-  setOriginFrom(origin: Vector3): boolean;
+  setOriginFrom(origin: Vector3): void;
 }
 
 /**
@@ -225,7 +236,7 @@ export function newInstance(initialValues?: IPlaneInitialValues): vtkPlane;
  * @param {Vector3} origin The coordinate of the origin point.
  * @param {Vector3} x
  */
-export function evaluate(normal: Vector3, origin: Vector3, x: Vector3): number;
+declare function evaluate(normal: Vector3, origin: Vector3, x: Vector3): number;
 
 /**
  * Return the distance of a point x to a plane defined by n (x-p0) = 0.
@@ -235,7 +246,7 @@ export function evaluate(normal: Vector3, origin: Vector3, x: Vector3): number;
  * @param {Vector3} origin The coordinate of the origin point.
  * @param {Vector3} normal
  */
-export function distanceToPlane(
+declare function distanceToPlane(
   x: Vector3,
   origin: Vector3,
   normal: Vector3
@@ -252,7 +263,7 @@ export function distanceToPlane(
  * @param {Vector3} normal
  * @param {Vector3} xproj
  */
-export function projectPoint(
+declare function projectPoint(
   x: any,
   origin: Vector3,
   normal: Vector3,
@@ -267,7 +278,7 @@ export function projectPoint(
  * @param {Vector3} normal
  * @param {Vector3} vproj The projection vector's coordinate..
  */
-export function projectVector(
+declare function projectVector(
   v: Vector3,
   normal: Vector3,
   vproj: Vector3
@@ -285,7 +296,7 @@ export function projectVector(
  * @param {Vector3} normal 
  * @param {Vector3} xproj 
  */
-export function generalizedProjectPoint(
+declare function generalizedProjectPoint(
   x: any,
   origin: Vector3,
   normal: Vector3,
@@ -314,7 +325,7 @@ export function generalizedProjectPoint(
  * @param {Vector3} origin The coordinate of the origin point.
  * @param {Vector3} normal
  */
-export function intersectWithLine(
+declare function intersectWithLine(
   p1: Vector3,
   p2: Vector3,
   origin: Vector3,
@@ -343,22 +354,22 @@ export function intersectWithLine(
  * @param {Vector3} plane2Origin
  * @param {Vector3} plane2Normal
  */
-export function intersectWithPlane(
+declare function intersectWithPlane(
   plane1Origin: Vector3,
   plane1Normal: Vector3,
   plane2Origin: Vector3,
   plane2Normal: Vector3
-): IIntersectWithLine;
+): IIntersectWithPlane;
 
 /**
  * Constants for the `intersectWithPlane` function.
  */
-export declare const COINCIDE: string;
+declare const COINCIDE: string;
 
 /**
  * Constants for the `intersectWithPlane` function.
  */
-export declare const DISJOINT: string;
+declare const DISJOINT: string;
 
 /**
  * vtkPlane provides methods for various plane computations. These include
@@ -375,5 +386,19 @@ export declare const vtkPlane: {
   generalizedProjectPoint: typeof generalizedProjectPoint;
   intersectWithLine: typeof intersectWithLine;
   intersectWithPlane: typeof intersectWithPlane;
+  // constants
+  COINCIDE: typeof COINCIDE;
+  DISJOINT: typeof DISJOINT;
 };
+export declare const STATIC: Readonly<{
+  evaluate: typeof evaluate;
+  distanceToPlane: typeof distanceToPlane;
+  projectPoint: typeof projectPoint;
+  projectVector: typeof projectVector;
+  generalizedProjectPoint: typeof generalizedProjectPoint;
+  intersectWithLine: typeof intersectWithLine;
+  intersectWithPlane: typeof intersectWithPlane;
+  DISJOINT: typeof DISJOINT;
+  COINCIDE: typeof COINCIDE;
+}>;
 export default vtkPlane;

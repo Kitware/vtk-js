@@ -1,7 +1,13 @@
 import { vtkRenderer } from '../Renderer';
 import { vtkRenderWindowInteractor } from '../RenderWindowInteractor';
 import { vtkObject, EventHandler, vtkSubscription } from '../../../interfaces';
-import { Vector3 } from '../../../types';
+import { Nullable, Vector3 } from '../../../types';
+
+export interface IInteractorObserverInitialValues {
+  enabled?: boolean;
+  priority?: number;
+  processEvents?: boolean;
+}
 
 export interface vtkInteractorObserver extends vtkObject {
   /**
@@ -120,7 +126,7 @@ export interface vtkInteractorObserver extends vtkObject {
     x: number,
     y: number,
     z: number
-  ): Vector3;
+  ): Nullable<Vector3>;
 
   /**
    * Transform from display to world coordinates.
@@ -135,8 +141,69 @@ export interface vtkInteractorObserver extends vtkObject {
     x: number,
     y: number,
     z: number
-  ): Vector3;
+  ): Nullable<Vector3>;
 }
 
-declare const _default: vtkInteractorObserver;
+/**
+ * Transform from world to display coordinates.
+ *
+ * @param {vtkRenderer} renderer The vtkRenderer instance.
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ */
+declare function computeWorldToDisplay(
+  renderer: vtkRenderer,
+  x: number,
+  y: number,
+  z: number
+): Vector3;
+
+/**
+ * Transform from display to world coordinates.
+ *
+ * @param {vtkRenderer} renderer The vtkRenderer instance.
+ * @param {Number} x
+ * @param {Number} y
+ * @param {Number} z
+ */
+declare function computeDisplayToWorld(
+  renderer: vtkRenderer,
+  x: number,
+  y: number,
+  z: number
+): Vector3;
+
+/**
+ * Method used to decorate a given object (publicAPI+model) with
+ * vtkInteractorObserver characteristics.
+ *
+ * @param publicAPI object on which methods will be bounds (public)
+ * @param model object on which data structure will be bounds (protected)
+ * @param {IInteractorObserverInitialValues} [initialValues] (default: {})
+ */
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: IInteractorObserverInitialValues
+): void;
+
+/**
+ * Method used to create a new instance of vtkInteractorObserver.
+ * @param {IInteractorObserverInitialValues} [initialValues] for pre-setting some of its content
+ */
+export function newInstance(
+  initialValues?: IInteractorObserverInitialValues
+): vtkInteractorObserver;
+
+declare const _default: {
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+  computeWorldToDisplay: typeof computeWorldToDisplay;
+  computeDisplayToWorld: typeof computeDisplayToWorld;
+};
+export declare const STATIC: Readonly<{
+  computeWorldToDisplay: typeof computeWorldToDisplay;
+  computeDisplayToWorld: typeof computeDisplayToWorld;
+}>;
 export default _default;

@@ -14,7 +14,7 @@ export interface vtkPoints extends vtkDataArray {
   /**
    * Trigger the computation of bounds
    */
-  computeBounds(): Bounds;
+  computeBounds(): void;
 
   /**
    * Get a copy of the bounds of the array.

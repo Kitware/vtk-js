@@ -54,7 +54,7 @@ export interface vtkSphere extends vtkImplicitFunction {
    * Set the center of the sphere.
    * @param {Vector3} center The center coordinate.
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenterFrom(center: Vector3): void;
 
   /**
    * Set the radius of the sphere. Radius must be > 0.
@@ -84,11 +84,15 @@ export function extend(
 export function newInstance(initialValues?: ISphereInitialValues): vtkSphere;
 
 /**
- * @param {Number} radius
+ * @param {Number|Vector3} radius
  * @param {Vector3} center
  * @param {Vector3} x
  */
-declare function evaluate(radius: number, center: Vector3, x: Vector3): number;
+declare function evaluate(
+  radius: number | Vector3,
+  center: Vector3,
+  x: Vector3
+): number;
 
 /**
  * Approximate bounding sphere for a point set represented as a flat xyz array.
@@ -130,4 +134,9 @@ export declare const vtkSphere: {
   computeBoundingSphere: typeof computeBoundingSphere;
   computeBoundingSphereFromSpheres: typeof computeBoundingSphereFromSpheres;
 };
+export declare const STATIC: Readonly<{
+  evaluate: typeof evaluate;
+  computeBoundingSphere: typeof computeBoundingSphere;
+  computeBoundingSphereFromSpheres: typeof computeBoundingSphereFromSpheres;
+}>;
 export default vtkSphere;

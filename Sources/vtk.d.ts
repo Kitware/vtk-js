@@ -1,4 +1,5 @@
 import { vtkObject } from './interfaces';
+import { Nullable } from './types';
 
 interface ISerializedVtkObject {
   vtkClass: string;
@@ -6,12 +7,29 @@ interface ISerializedVtkObject {
 }
 
 interface Ivtk {
+  (obj: null): null;
+  (obj: undefined): undefined;
+  <T extends vtkObject>(obj: T): T;
+
   /**
    * Deserializes a serialized VTK.js object.
+   *
+   * Returns null when `vtkClass` names no registered factory, and when the
+   * registered factory itself returns null.
    */
-  (obj: ISerializedVtkObject): vtkObject;
+  (obj: ISerializedVtkObject): Nullable<vtkObject>;
 
-  register(vtkClassName: string, constructor: <T>(model: unknown) => T): void;
+  /**
+   * Register the factory used to rebuild instances of `vtkClassName` when
+   * deserializing.
+   *
+   * @param vtkClassName The `vtkClass` value the factory handles
+   * @param constructor Typically the class's own `newInstance`
+   */
+  register(
+    vtkClassName: string,
+    constructor: (initialValues?: any) => Nullable<vtkObject>
+  ): void;
 }
 
 declare const vtk: Ivtk;

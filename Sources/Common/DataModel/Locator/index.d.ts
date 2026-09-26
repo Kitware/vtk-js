@@ -1,4 +1,5 @@
 import { vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkDataSet from '../DataSet';
 
 /**
@@ -25,7 +26,7 @@ export interface vtkLocator extends vtkObject {
    *
    * @returns {vtkDataSet} The dataset associated with this locator.
    */
-  getDataSet(): vtkDataSet;
+  getDataSet(): Nullable<vtkDataSet>;
 
   /**
    * Get the current level of the locator.
@@ -71,14 +72,6 @@ export interface vtkLocator extends vtkObject {
    * @returns {Boolean} Whether the operation was successful.
    */
   setDataSet(dataSet: vtkDataSet): boolean;
-
-  /**
-   * Set the current level of the locator.
-   *
-   * @param {Number} level - The level to set.
-   * @returns {Boolean} Whether the operation was successful.
-   */
-  setLevel(level: number): boolean;
 
   /**
    * Set the maximum level of the locator.

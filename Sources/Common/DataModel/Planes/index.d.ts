@@ -1,4 +1,4 @@
-import { Bounds, Vector3 } from '../../../types';
+import { Bounds, Nullable, Vector3 } from '../../../types';
 import vtkDataArray from '../../Core/DataArray';
 import vtkImplicitFunction, {
   IImplicitFunctionInitialValues,
@@ -46,13 +46,13 @@ export interface vtkPlanes extends vtkImplicitFunction {
    * Get the normals of the plane.
    * @returns {vtkDataArray} The normals of the plane.
    */
-  getNormals(): vtkDataArray;
+  getNormals(): Nullable<vtkDataArray>;
 
   /**
    * Get the points of the plane.
    * @returns {vtkPoints} The points of the plane.
    */
-  getPoints(): vtkPoints;
+  getPoints(): Nullable<vtkPoints>;
 
   /**
    * Get the i-th plane
@@ -62,6 +62,15 @@ export interface vtkPlanes extends vtkImplicitFunction {
    * If no plane is provided, a new vtkPlane instance will be created.
    */
   getPlane(i: number, plane?: vtkPlane): vtkPlane;
+
+  /**
+   * Get the raw frustum plane coefficients (4 per plane).
+   *
+   * Defaults to a 24 element Float64Array, but becomes a plain array once
+   * setFrustumPlanes() has been called.
+   * @see setFrustumPlanes
+   */
+  getPlanes(): Float64Array | number[];
 
   /**
    * Set the bounds of the planes.

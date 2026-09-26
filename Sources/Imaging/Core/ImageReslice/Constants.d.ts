@@ -1,9 +1,11 @@
-export declare enum SlabMode {
-  MIN = 0,
-  MAX = 1,
-  MEAN = 2,
-  SUM = 3,
-}
+export declare const SlabMode: {
+  readonly MIN: 0;
+  readonly MAX: 1;
+  readonly MEAN: 2;
+  readonly SUM: 3;
+};
+
+export type SlabMode = (typeof SlabMode)[keyof typeof SlabMode];
 
 declare const _default: {
   SlabMode: typeof SlabMode;

@@ -7,7 +7,7 @@ import { NonNegativeInteger } from '../../../types';
 export interface IVariantArrayInitialValues {
   name?: string;
   numberOfComponents?: number;
-  size: number;
+  size?: number;
   dataType?: string;
 }
 
@@ -70,7 +70,7 @@ export interface vtkVariantArray extends vtkObject {
   /**
    *
    */
-  newClone(): void;
+  newClone(): vtkVariantArray;
 
   /**
    * Set the data component at the location specified by tupleIdx and compIdx
@@ -96,9 +96,9 @@ export interface vtkVariantArray extends vtkObject {
   /**
    *
    * @param {Array<any>} array
-   * @param {Number} numberOfComponents
+   * @param {Number} [numberOfComponents]
    */
-  setData(array: Array<any>, numberOfComponents: number): void;
+  setData(array: Array<any>, numberOfComponents?: number): void;
 
   /**
    *

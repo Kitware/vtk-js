@@ -31,7 +31,7 @@ export interface IMapperInitialValues
   renderTime?: number;
   forceCompileOnly?: number;
   useInvertibleColors?: boolean;
-  customShaderAttributes?: any;
+  customShaderAttributes?: string[];
 }
 
 export interface vtkMapper
@@ -61,7 +61,7 @@ export interface vtkMapper
    *
    * @default []
    */
-  getCustomShaderAttributes(): any;
+  getCustomShaderAttributes(): string[];
 
   /**
    * Check if the mapper does not expect to have translucent geometry. This
@@ -121,7 +121,7 @@ export interface vtkMapper
    * @param {Number} forceCompileOnly
    * @default 0
    */
-  setForceCompileOnly(forceCompileOnly: number): boolean;
+  setForceCompileOnly(forceCompileOnly: number): void;
 
   /**
    * Set whether selection ID mappings should be populated.

@@ -1,5 +1,5 @@
 import { vtkObject, vtkSubscription } from '../../../interfaces';
-import { RGBAColor, RGBColor } from '../../../types';
+import { Nullable, RGBAColor, RGBColor } from '../../../types';
 import vtkRenderer from '../../Core/Renderer';
 import vtkRenderWindow from '../../Core/RenderWindow';
 import vtkRenderWindowInteractor from '../../Core/RenderWindowInteractor';
@@ -24,7 +24,7 @@ export interface vtkGenericRenderWindow extends vtkObject {
   /**
    * Get container element
    */
-  getContainer(): HTMLElement;
+  getContainer(): Nullable<HTMLElement>;
 
   /**
    * Get interactor object
