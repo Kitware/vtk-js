@@ -35,10 +35,13 @@ export interface vtkViewNode extends vtkObject {
   removeNode(dobj: any): boolean;
 
   /**
-   *
+   * Add missing child view nodes for the renderables given as argument.
+   * Call it between prepareNodes and removeUnusedNodes.
    * @param dataObjs
+   * @param {boolean} [enforceOrder] Keep the view nodes of dataObjs next to each
+   * other and in the order of dataObjs, defaults to false
    */
-  addMissingNodes(dataObjs: any): void;
+  addMissingNodes(dataObjs: any, enforceOrder?: boolean): void;
 
   /**
    *

@@ -13,22 +13,44 @@ function vtkViewNode(publicAPI, model) {
   model.classHierarchy.push('vtkViewNode');
 
   /**
-   * Convenient method to move a child to a specific index.
-   * @param {*} child the child to move
-   * @param {*} toIndex the index to move the child to
-   * @returns true if the child was moved, false otherwise
+   * Puts child right after the run of children that addMissingNodes keeps in
+   * order, model.children[run.start, run.end), and extends the run over it.
+   * A child already in the run is listed twice and stays where it is.
+   * @param {*} run the start and end of the run, updated in place
+   * @param {*} child the child to add to the run
    */
-  function moveChild(child, toIndex) {
-    for (let i = 0; i < model.children.length; ++i) {
-      // Start browsing from toIndex + 1
-      const childIndex = (toIndex + 1 + i) % model.children.length;
-      if (model.children[childIndex] === child) {
-        model.children[childIndex] = model.children[toIndex];
-        model.children[toIndex] = child;
-        return true;
-      }
+  function appendToRun(run, child) {
+    const { children } = model;
+    if (run.end === undefined) {
+      // The first child starts the run wherever it is
+      run.start = children.lastIndexOf(child);
+      run.end = run.start + 1;
+      return;
     }
-    return false;
+    if (children[run.end] === child) {
+      run.end++;
+      return;
+    }
+    // The child is usually just after the run, so look there first
+    let from = children.indexOf(child, run.end + 1);
+    if (from < 0) {
+      from = children.indexOf(child);
+    }
+    if (from >= run.start && from < run.end) {
+      // Listed twice: it keeps its first place
+      return;
+    }
+    if (run.end >= children.length) {
+      // Nothing follows the run, so the child comes from before it: closing
+      // its slot shifts the run down by one, and the child goes on the end.
+      children.splice(from, 1);
+      children.push(child);
+      run.start--;
+      return;
+    }
+    children[from] = children[run.end];
+    children[run.end] = child;
+    run.end++;
   }
 
   // Builds myself.
@@ -141,19 +163,12 @@ function vtkViewNode(publicAPI, model) {
       return;
     }
 
-    let nextIndex;
+    const run = {};
     for (let index = 0; index < dataObjs.length; ++index) {
       const dobj = dataObjs[index];
       const node = publicAPI.addMissingNode(dobj);
       if (enforceOrder && node !== undefined) {
-        if (nextIndex === undefined) {
-          // First node can be anywhere
-          nextIndex = model.children.lastIndexOf(node); // node is likely the list child
-        } else if (model.children[nextIndex] !== node) {
-          moveChild(model.children, node, nextIndex);
-        }
-        // Next node must follow current node
-        nextIndex++;
+        appendToRun(run, node);
       }
     }
   };
