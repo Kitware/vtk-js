@@ -2975,7 +2975,9 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
       }
     }
 
-    // add in 3d volume textures
+    // add in 3d volume textures. The volume node is the owner of its texture
+    // in the texture manager, because one pass draws the volumes of all
+    // renderers. The volume node releases the texture when it is deleted.
     for (let vidx = 0; vidx < model.volumes.length; vidx++) {
       const webgpuvol = model.volumes[vidx];
       const actor = webgpuvol.getRenderable();
@@ -2994,6 +2996,7 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
           updatedExtents,
           existingTexture,
           preferSizeOverAccuracy,
+          owner: webgpuvol,
         });
       if (updatedExtents.length) {
         vprop.setUpdatedExtents([]);

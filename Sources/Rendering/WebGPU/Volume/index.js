@@ -139,6 +139,13 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkWebGPUVolume(publicAPI, model);
+
+  // The volume pass gets the volume texture with this node as its owner.
+  publicAPI.delete = macro.chain(() => {
+    model.WebGPURenderWindow?.getDevice()
+      ?.getTextureManager()
+      .releaseTexture(publicAPI);
+  }, publicAPI.delete);
 }
 
 // ----------------------------------------------------------------------------

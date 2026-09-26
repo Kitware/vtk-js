@@ -87,9 +87,9 @@ function vtkWebGPUConfiguration(publicAPI, model) {
           vtkErrorMacro('Failed to acquire a WebGPU adapter.');
           return false;
         }
-        // Exact storage of 16 bit integers uses r32float. Request filter
-        // support when the adapter offers it, as vtkWebGPUConfiguration does
-        // for implementation-supported features.
+        // Exact storage of 16 bit integers uses r16snorm or r16unorm
+        // (texture-formats-tier1), else r32float with float32-filterable.
+        // Request each optional feature that the adapter offers.
         const requiredFeatures = (model.optionalFeatures || []).filter(
           (feature) => adapter.features.has(feature)
         );
@@ -177,7 +177,7 @@ const DEFAULT_VALUES = {
   initializationGeneration: 0,
   powerPreference: 'high-performance',
   requiredLimits: undefined,
-  optionalFeatures: ['float32-filterable'],
+  optionalFeatures: ['float32-filterable', 'texture-formats-tier1'],
 };
 
 // ----------------------------------------------------------------------------

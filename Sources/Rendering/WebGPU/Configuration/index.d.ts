@@ -17,7 +17,7 @@ export interface IWebGPUConfigurationInitialValues {
 
   /**
    * Features to request when the adapter supports them.
-   * @defaultValue ['float32-filterable']
+   * @defaultValue ['float32-filterable', 'texture-formats-tier1']
    */
   optionalFeatures?: GPUFeatureName[];
 }
