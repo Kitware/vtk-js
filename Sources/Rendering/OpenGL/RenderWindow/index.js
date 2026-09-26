@@ -1261,7 +1261,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   publicAPI.getGraphicsMemoryInfo = () => {
     let memUsed = 0;
     model._graphicsResources.forEach(({ oglObject }) => {
-      memUsed += oglObject.getAllocatedGPUMemoryInBytes();
+      memUsed += oglObject?.getAllocatedGPUMemoryInBytes() ?? 0;
     });
     return memUsed;
   };
@@ -1273,10 +1273,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       model.shaderCache.releaseGraphicsResources(publicAPI);
     }
     // Free cached graphics resources at the context level
-    model._graphicsResources.forEach(({ oglObject }) => {
-      oglObject.releaseGraphicsResources(publicAPI);
+    model._graphicsResources.forEach(({ users }, coreObject) => {
+      // Keep user registrations when invalidating cached resources.
+      publicAPI.setGraphicsResourceForObject(coreObject, null, null);
+      if (users.size === 0) {
+        model._graphicsResources.delete(coreObject);
+      }
     });
-    model._graphicsResources.clear();
     if (model.textureUnitManager !== null) {
       model.textureUnitManager.freeAll();
     }

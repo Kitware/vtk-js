@@ -1,14 +1,18 @@
-import { it, expect } from 'vitest';
+import { it, expect, vi } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import {
   createConeActor,
   createTrackedRenderView,
 } from 'vtk.js/Sources/Testing/renderTestUtils';
 
+import vtkColorTransferFunction from 'vtk.js/Sources/Rendering/Core/ColorTransferFunction';
 import vtkForwardPass from 'vtk.js/Sources/Rendering/OpenGL/ForwardPass';
 import vtkOpenGLRenderWindow from 'vtk.js/Sources/Rendering/OpenGL/RenderWindow';
+import vtkPiecewiseFunction from 'vtk.js/Sources/Common/DataModel/PiecewiseFunction';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
 import vtkRenderWindow from 'vtk.js/Sources/Rendering/Core/RenderWindow';
+import vtkVolume from 'vtk.js/Sources/Rendering/Core/Volume';
+import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 
 it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'frees the render passes it no longer renders through',
@@ -199,5 +203,61 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     rootRenderWindow.delete();
     childRenderWindow.delete();
     gc.releaseResources();
+  }
+);
+
+function createVolume(gc, image, colorTransferFunction, opacityFunction) {
+  const mapper = gc.registerResource(vtkVolumeMapper.newInstance());
+  mapper.setInputData(image);
+  const volume = gc.registerResource(vtkVolume.newInstance());
+  volume.setMapper(mapper);
+  volume.getProperty().setRGBTransferFunction(0, colorTransferFunction);
+  volume.getProperty().setScalarOpacity(0, opacityFunction);
+  return volume;
+}
+
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'preserves shared textures after context release and volume removal',
+  async ({ onTestFinished }) => {
+    const gc = testUtils.createGarbageCollector();
+    const { tracker, renderer, renderWindow, view, emptySceneObjects } =
+      createTrackedRenderView(gc);
+
+    const image = testUtils.createImage([8, 8, 8], [1, 1, 1]);
+    const [low, high] = image.getPointData().getScalars().getRange();
+    const color = gc.registerResource(vtkColorTransferFunction.newInstance());
+    color.addRGBPoint(low, 0, 0, 1);
+    color.addRGBPoint(high, 1, 0.5, 0);
+    const opacity = gc.registerResource(vtkPiecewiseFunction.newInstance());
+    opacity.addPoint(low, 0);
+    opacity.addPoint(high, 1);
+
+    const volume = createVolume(gc, image, color, opacity);
+    renderer.addVolume(volume);
+    renderer.resetCamera();
+    const volumeAlone = view.captureNextImage();
+    renderWindow.render();
+
+    const sharingVolume = createVolume(gc, image, color, opacity);
+    renderer.addVolume(sharingVolume);
+    renderWindow.render();
+    const objectsInUse = tracker.count();
+
+    view.releaseGraphicsResources();
+    expect(view.getGraphicsMemoryInfo()).toBe(0);
+    renderWindow.render();
+    expect(tracker.count()).toBe(objectsInUse);
+
+    const createTexture = vi.spyOn(view.getContext(), 'createTexture');
+    onTestFinished(() => createTexture.mockRestore());
+    renderer.removeVolume(sharingVolume);
+    const afterRemoval = view.captureNextImage();
+    renderWindow.render();
+    expect(createTexture).not.toHaveBeenCalled();
+    expect(await afterRemoval).toBe(await volumeAlone);
+
+    renderer.removeVolume(volume);
+    renderWindow.render();
+    expect(tracker.count()).toBe(emptySceneObjects);
   }
 );
