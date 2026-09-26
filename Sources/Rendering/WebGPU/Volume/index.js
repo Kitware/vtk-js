@@ -16,7 +16,7 @@ function vtkWebGPUVolume(publicAPI, model) {
 
   // Builds myself.
   publicAPI.buildPass = (prepass) => {
-    if (!model.renderable || !model.renderable.getVisibility()) {
+    if (!model.renderable || !model.renderable.getNestedVisibility()) {
       return;
     }
     if (prepass) {
@@ -33,7 +33,12 @@ function vtkWebGPUVolume(publicAPI, model) {
 
   publicAPI.queryPass = (prepass, renderPass) => {
     if (prepass) {
-      if (!model.renderable || !model.renderable.getVisibility()) {
+      if (
+        !model.renderable ||
+        !model.renderable.getNestedVisibility() ||
+        (model.WebGPURenderer.getSelector() &&
+          !model.renderable.getNestedPickable())
+      ) {
         return;
       }
 
