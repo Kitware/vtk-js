@@ -41,6 +41,7 @@ function vtkWebGPUTextureView(publicAPI, model) {
       tDetails.sampleType,
       model.texture.getDevice()
     );
+    model.bindGroupTime.modified();
   };
 
   publicAPI.createFromTextureHandle = (textureHandle, options) => {

@@ -5,6 +5,7 @@ import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
 import vtkWebGPUConfiguration from 'vtk.js/Sources/Rendering/WebGPU/Configuration';
 import vtkWebGPUDevice from 'vtk.js/Sources/Rendering/WebGPU/Device';
 import vtkWebGPUHardwareSelector from 'vtk.js/Sources/Rendering/WebGPU/HardwareSelector';
+import vtkWebGPUPassTimer from 'vtk.js/Sources/Rendering/WebGPU/PassTimer';
 import vtkWebGPUViewNodeFactory, {
   registerOverride,
 } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
@@ -187,6 +188,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
         publicAPI.recreateSwapChain();
       }
       model.commandEncoder = model.device.createCommandEncoder();
+      model.passTimer.beginFrame(model.device, model.commandEncoder);
     }
   };
 
@@ -350,6 +352,7 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     if (model.ownsWebGPUConfiguration) {
       model.webGPUConfiguration.finalize();
     }
+    model.passTimer.releaseGraphicsResources();
     model.device = null;
     model.context = null;
     model.commandEncoder = null;
@@ -551,7 +554,9 @@ function vtkWebGPURenderWindow(publicAPI, model) {
         }
       }
       if (model.commandEncoder) {
+        model.passTimer.endFrame();
         model.device.submitCommandEncoder(model.commandEncoder);
+        model.passTimer.readResults();
         model.commandEncoder = null;
         if (model.notifyStartCaptureImage) {
           model.device.onSubmittedWorkDone().then(() => {
@@ -719,7 +724,10 @@ function vtkWebGPURenderWindow(publicAPI, model) {
     model.webGPUConfiguration = null;
   }
 
+  // The pass timer is deleted first, because the base delete removes all
+  // the fields of the model.
   publicAPI.delete = macro.chain(
+    () => model.passTimer?.delete(),
     publicAPI.delete,
     publicAPI.setViewStream,
     deleteOwnedConfiguration
@@ -797,6 +805,9 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   macro.event(publicAPI, model, 'imageReady');
   macro.event(publicAPI, model, 'initialized');
+
+  // GPU times of the render passes of each frame
+  model.passTimer = vtkWebGPUPassTimer.newInstance();
   macro.event(publicAPI, model, 'deviceLost');
 
   // Build VTK API
@@ -805,6 +816,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'deviceLostInfo',
     'device',
     'webGPUConfiguration',
+    'passTimer',
     'presentationFormat',
     'useBackgroundImage',
     'xrSupported',

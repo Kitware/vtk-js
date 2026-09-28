@@ -29,7 +29,29 @@ function vtkWebGPUBindGroup(publicAPI, model) {
     publicAPI.modified();
   };
 
+  // The newest mtime of the bind group and of its bindables. A bindable
+  // changes its bindGroupTime when its resource or its layout entry changes.
+  function getBindablesMTime() {
+    let mtime = publicAPI.getMTime();
+    for (let i = 0; i < model.bindables.length; i++) {
+      const tm = model.bindables[i].getBindGroupTime().getMTime();
+      if (tm > mtime) {
+        mtime = tm;
+      }
+    }
+    return mtime;
+  }
+
+  // The layout is kept until the bindables change, because each draw asks
+  // for it.
   publicAPI.getBindGroupLayout = (device) => {
+    if (
+      model.layout &&
+      model.layoutDevice === device &&
+      getBindablesMTime() < model.layoutTime.getMTime()
+    ) {
+      return model.layout;
+    }
     const entries = [];
     for (let i = 0; i < model.bindables.length; i++) {
       model.bindables[i].setDevice?.(device);
@@ -37,7 +59,10 @@ function vtkWebGPUBindGroup(publicAPI, model) {
       entry.binding = i;
       entries.push(entry);
     }
-    return device.getBindGroupLayout({ entries });
+    model.layout = device.getBindGroupLayout({ entries });
+    model.layoutDevice = device;
+    model.layoutTime.modified();
+    return model.layout;
   };
 
   publicAPI.getBindGroup = (device) => {
@@ -48,11 +73,7 @@ function vtkWebGPUBindGroup(publicAPI, model) {
     }
 
     // check mtime
-    let mtime = publicAPI.getMTime();
-    for (let i = 0; i < model.bindables.length; i++) {
-      const tm = model.bindables[i].getBindGroupTime().getMTime();
-      mtime = tm > mtime ? tm : mtime;
-    }
+    const mtime = getBindablesMTime();
     if (!deviceChanged && mtime < model.bindGroupTime.getMTime()) {
       return model.bindGroup;
     }
@@ -93,6 +114,8 @@ function vtkWebGPUBindGroup(publicAPI, model) {
   publicAPI.releaseGraphicsResources = () => {
     model.bindGroup = null;
     model.bindGroupDevice = null;
+    model.layout = null;
+    model.layoutDevice = null;
     model.bindGroupTime.modified();
     publicAPI.modified();
   };
@@ -121,6 +144,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.bindGroupTime = {};
   macro.obj(model.bindGroupTime, { mtime: 0 });
+
+  model.layout = null;
+  model.layoutDevice = null;
+  model.layoutTime = {};
+  macro.obj(model.layoutTime, { mtime: 0 });
 
   macro.get(publicAPI, model, [
     'bindGroupTime',

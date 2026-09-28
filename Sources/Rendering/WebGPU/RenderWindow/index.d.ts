@@ -2,6 +2,7 @@ import { vtkObject, vtkSubscription } from '../../../interfaces';
 import { Nullable } from '../../../types';
 import { vtkViewNode } from '../../SceneGraph/ViewNode';
 import { vtkWebGPUConfiguration } from '../Configuration';
+import { vtkWebGPUPassTimer } from '../PassTimer';
 
 export interface IWebGPURenderWindowInitialValues {
   initialized?: boolean;
@@ -262,6 +263,12 @@ export interface vtkWebGPURenderWindow extends vtkViewNode {
    * one, the render window creates and owns it, and deletes it with itself.
    */
   getWebGPUConfiguration(): vtkWebGPUConfiguration;
+
+  /**
+   * Get the timer that measures the GPU time of each render pass. It is
+   * disabled by default.
+   */
+  getPassTimer(): vtkWebGPUPassTimer;
 
   /**
    * Get the render passes.
