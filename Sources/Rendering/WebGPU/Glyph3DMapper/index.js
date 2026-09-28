@@ -3,7 +3,10 @@ import vtkWebGPUCellArrayMapper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayM
 import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
-import { getClipPlaneShaderChecks } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
+import {
+  addClipDistances,
+  getClipPlaneShaderChecks,
+} from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
@@ -43,14 +46,37 @@ function vtkWebGPUGlyph3DCellArrayMapper(publicAPI, model) {
       '    output.vertexSC = mapperUBO.BCSCMatrix*glyphBC;',
       '    output.vertexVC = (rendererUBO.SCVCMatrix*output.vertexSC).xyz;',
       '    output.Position = rendererUBO.SCPCMatrix*output.vertexSC;',
+      '//VTK::Position::Impl',
     ]).result;
     vDesc.setCode(code);
+
+    // Clip planes: clip distances in the vertex shader when the device has
+    // them, else discard in the fragment shader.
+    const clipOptions = {
+      countName: 'mapperUBO.NumClipPlanes',
+      planePrefix: 'mapperUBO.ClipPlane',
+    };
+    let clipLines = [];
+    if (model.useClipDistances) {
+      clipLines = addClipDistances(vDesc, {
+        ...clipOptions,
+        positionName: 'output.vertexSC',
+      });
+    }
+    code = vtkWebGPUShaderCache.substitute(
+      vDesc.getCode(),
+      '//VTK::Position::Impl',
+      clipLines
+    ).result;
+    vDesc.setCode(code);
+    if (model.useClipDistances) {
+      return;
+    }
 
     const fDesc = pipeline.getShaderDescription('fragment');
     let fcode = fDesc.getCode();
     const clipPlaneChecks = getClipPlaneShaderChecks({
-      countName: 'mapperUBO.NumClipPlanes',
-      planePrefix: 'mapperUBO.ClipPlane',
+      ...clipOptions,
       positionName: 'input.vertexSC',
     });
     fcode = vtkWebGPUShaderCache.substitute(fcode, '//VTK::Position::Impl', [

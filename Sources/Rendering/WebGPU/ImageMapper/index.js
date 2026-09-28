@@ -7,9 +7,11 @@ import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQ
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 import {
+  addClipDistances,
   addClipPlaneEntries,
   getClippingPlaneEquationsInCoords,
   getClipPlaneShaderChecks,
+  hasClipDistances,
   MAX_CLIPPING_PLANES,
 } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 
@@ -145,6 +147,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       model.WebGPURenderer = renderer;
       model.WebGPURenderWindow = renderWindow;
       model.device = device;
+      model.useClipDistances = hasClipDistances(device);
 
       const ren = model.WebGPURenderer.getRenderable();
       // Only vtkImageMapper has the getSliceAtFocalPoint API. This view node
@@ -223,6 +226,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     }
     if (publicAPI.useImageMipmaps()) {
       model.pipelineHash += 'mip';
+    }
+    if (model.useClipDistances) {
+      model.pipelineHash += 'cd';
     }
     model.pipelineHash += model.renderEncoder.getPipelineHash();
   };
@@ -733,6 +739,7 @@ function vtkWebGPUImageMapper(publicAPI, model) {
       // Clip planes are evaluated in stabilized coordinates, so capture the
       // position before it is projected.
       'output.vertexSC = pos;',
+      '//VTK::ClipDistances::Impl',
       'pos = rendererUBO.SCPCMatrix * pos;',
       // Match the OpenGL coincident topology constant offset scale (~1 / 2^16 = 0.000016)
       'pos.z = clamp(pos.z - 0.000016 * mapperUBO.CoincidentOffset * pos.w, 0.0, pos.w);',
@@ -1090,12 +1097,36 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   };
   sr.set('replaceShaderImage', publicAPI.replaceShaderImage);
 
+  // Clip planes: clip distances in the vertex shader when the device has
+  // them, else discard in the fragment shader. The position replacement,
+  // which runs first, puts //VTK::ClipDistances::Impl after output.vertexSC.
   publicAPI.replaceShaderClip = (hash, pipeline, vertexInput) => {
+    const clipOptions = {
+      countName: 'mapperUBO.NumClipPlanes',
+      planePrefix: 'mapperUBO.ClipPlane',
+    };
+    const vDesc = pipeline.getShaderDescription('vertex');
+    let clipLines = [];
+    if (model.useClipDistances) {
+      clipLines = addClipDistances(vDesc, {
+        ...clipOptions,
+        positionName: 'output.vertexSC',
+      });
+    }
+    const vCode = vtkWebGPUShaderCache.substitute(
+      vDesc.getCode(),
+      '//VTK::ClipDistances::Impl',
+      clipLines
+    ).result;
+    vDesc.setCode(vCode);
+    if (model.useClipDistances) {
+      return;
+    }
+
     const fDesc = pipeline.getShaderDescription('fragment');
     let code = fDesc.getCode();
     const clipPlaneChecks = getClipPlaneShaderChecks({
-      countName: 'mapperUBO.NumClipPlanes',
-      planePrefix: 'mapperUBO.ClipPlane',
+      ...clipOptions,
       positionName: 'input.vertexSC',
     });
 
