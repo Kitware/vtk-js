@@ -1043,11 +1043,12 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       publicAPI.recognizeGesture('TouchMove', positions);
     } else if (pointers.length === 1) {
       if (
+        tapInformation.timer !== null &&
         distance2BetweenPositions(
           pointers[0].position,
           model.startingEventPositions[pointers[0].pointerId]
         ) >
-        model.longTapMaximumDistance * model.longTapMaximumDistance
+          model.longTapMaximumDistance * model.longTapMaximumDistance
       ) {
         cancelTapGesture();
       }

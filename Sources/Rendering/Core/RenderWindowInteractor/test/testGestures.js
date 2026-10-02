@@ -156,3 +156,93 @@ it('Test RenderWindowInteractor handles taps well', () => {
 
   teardown(env);
 });
+
+it.each([
+  ['pointerup', 1],
+  ['pointerup', 2],
+  ['pointercancel', 1],
+  ['pointercancel', 2],
+])('continues dragging after %s for touch %s', (endEvent, endedPointerId) => {
+  vi.useFakeTimers();
+  const env = setupInteractor();
+  const { container, interactor } = env;
+  const moves = [];
+  const taps = [];
+  const events = [];
+  const subscriptions = [
+    interactor.onLeftButtonPress(() => events.push('Press')),
+    interactor.onLeftButtonRelease(() => events.push('Release')),
+    interactor.onStartPinch(() => events.push('StartPinch')),
+    interactor.onEndPinch(() => events.push('EndPinch')),
+    interactor.onMouseMove((data) => {
+      moves.push(data.position);
+      events.push('Move');
+    }),
+    interactor.onTap(() => taps.push('Tap')),
+    interactor.onLongTap(() => taps.push('LongTap')),
+  ];
+  try {
+    container.dispatchEvent(makePointerEvent('pointerdown'));
+    container.dispatchEvent(
+      makePointerEvent('pointerdown', { pointerId: 2, x: 200 })
+    );
+    container.dispatchEvent(
+      makePointerEvent('pointermove', { pointerId: 2, x: 240 })
+    );
+    container.dispatchEvent(
+      makePointerEvent(endEvent, { pointerId: endedPointerId })
+    );
+    const remainingPointerId = endedPointerId === 1 ? 2 : 1;
+    // Call directly so a handler exception fails the assertion instead of
+    // being reported as an uncaught DOM event error by dispatchEvent.
+    expect(() =>
+      interactor.handlePointerMove(
+        makePointerEvent('pointermove', {
+          pointerId: remainingPointerId,
+          x: 120,
+        })
+      )
+    ).not.toThrow();
+    expect(moves).toMatchObject([{ x: 120, y: 100 }]);
+    vi.advanceTimersByTime(1000);
+    container.dispatchEvent(
+      makePointerEvent('pointerup', { pointerId: remainingPointerId })
+    );
+    expect(events).toEqual([
+      'Press',
+      'Release',
+      'StartPinch',
+      'EndPinch',
+      'Press',
+      'Move',
+      'Release',
+    ]);
+    expect(taps).toEqual([]);
+    tapTest(container, 490, 0);
+    expect(taps).toEqual(['Tap']);
+  } finally {
+    subscriptions.forEach((subscription) => subscription.unsubscribe());
+    teardown(env);
+  }
+});
+
+it('drags with gesture recognition disabled', () => {
+  const env = setupInteractor();
+  const { container, interactor } = env;
+  interactor.setRecognizeGestures(false);
+  const moves = [];
+  const subscription = interactor.onMouseMove((data) =>
+    moves.push(data.position)
+  );
+  try {
+    container.dispatchEvent(makePointerEvent('pointerdown'));
+    expect(() =>
+      interactor.handlePointerMove(makePointerEvent('pointermove', { x: 120 }))
+    ).not.toThrow();
+    expect(moves).toMatchObject([{ x: 120, y: 100 }]);
+    container.dispatchEvent(makePointerEvent('pointerup'));
+  } finally {
+    subscription.unsubscribe();
+    teardown(env);
+  }
+});
