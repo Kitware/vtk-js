@@ -4,8 +4,23 @@ import Constants from 'vtk.js/Sources/Rendering/WebGPU/BufferManager/Constants';
 // methods we forward to the handle
 const forwarded = ['getMappedRange', 'mapAsync', 'unmap'];
 
-function bufferSubData(device, destBuffer, destOffset, srcArrayBuffer) {
-  const byteCount = srcArrayBuffer.byteLength;
+// A buffer that is mapped at creation, and a buffer copy, need a size that is
+// a multiple of 4 bytes.
+function alignTo4(byteCount) {
+  return Math.ceil(byteCount / 4) * 4;
+}
+
+// The bytes of a typed array or a DataView. The view can start at an offset
+// in a larger ArrayBuffer.
+function getBytes(data) {
+  if (ArrayBuffer.isView(data)) {
+    return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+  }
+  return new Uint8Array(data);
+}
+
+function bufferSubData(device, destBuffer, destOffset, srcBytes) {
+  const byteCount = alignTo4(srcBytes.byteLength);
   const srcBuffer = device.createBuffer({
     size: byteCount,
     /* eslint-disable no-undef */
@@ -14,7 +29,7 @@ function bufferSubData(device, destBuffer, destOffset, srcArrayBuffer) {
     mappedAtCreation: true,
   });
   const arrayBuffer = srcBuffer.getMappedRange(0, byteCount);
-  new Uint8Array(arrayBuffer).set(new Uint8Array(srcArrayBuffer)); // memcpy
+  new Uint8Array(arrayBuffer).set(srcBytes); // memcpy
   srcBuffer.unmap();
 
   const encoder = device.createCommandEncoder();
@@ -34,8 +49,10 @@ function vtkWebGPUBuffer(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPUBuffer');
 
   publicAPI.create = (sizeInBytes, usage) => {
+    // The allocation has room for a write of sizeInBytes, which copies a
+    // size that is a multiple of 4.
     model.handle = model.device.getHandle().createBuffer({
-      size: sizeInBytes,
+      size: alignTo4(sizeInBytes),
       usage,
       label: model.label,
     });
@@ -44,11 +61,11 @@ function vtkWebGPUBuffer(publicAPI, model) {
   };
 
   publicAPI.write = (data) => {
-    bufferSubData(model.device.getHandle(), model.handle, 0, data.buffer);
+    bufferSubData(model.device.getHandle(), model.handle, 0, getBytes(data));
   };
 
   publicAPI.createAndWrite = (data, usage) => {
-    const paddedSize = Math.ceil(data.byteLength / 4) * 4;
+    const paddedSize = alignTo4(data.byteLength);
     model.handle = model.device.getHandle().createBuffer({
       size: paddedSize,
       usage,
@@ -57,9 +74,7 @@ function vtkWebGPUBuffer(publicAPI, model) {
     });
     model.sizeInBytes = paddedSize;
     model.usage = usage;
-    new Uint8Array(model.handle.getMappedRange()).set(
-      new Uint8Array(data.buffer)
-    ); // memcpy
+    new Uint8Array(model.handle.getMappedRange()).set(getBytes(data)); // memcpy
     model.handle.unmap();
   };
 
