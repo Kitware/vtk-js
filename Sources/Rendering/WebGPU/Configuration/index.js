@@ -181,6 +181,8 @@ const DEFAULT_VALUES = {
     'float32-filterable',
     // cell data without point duplication (else the flat path)
     'primitive-index',
+    // support for texture component swizzling
+    'texture-component-swizzle',
     // r16snorm and r16unorm textures (exact 16 bit integers)
     'texture-formats-tier1',
   ],

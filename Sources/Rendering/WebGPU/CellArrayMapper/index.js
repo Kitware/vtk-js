@@ -179,6 +179,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       model.UBO.setValue('DiffuseIntensity', 0.0);
       model.UBO.setArray('SpecularColor', [1.0, 1.0, 1.0, 1.0]);
       model.UBO.setValue('SpecularIntensity', 0.0);
+      model.UBO.setValue('SpecularPower', 1.0);
       model.UBO.setValue('Roughness', 1.0);
       model.UBO.setValue('BaseIOR', 1.45);
       model.UBO.setValue('Metallic', 0.0);
@@ -222,6 +223,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       model.UBO.setValue('Emission', ppty.getEmission());
       // Specular
       model.UBO.setValue('SpecularIntensity', ppty.getSpecular());
+      model.UBO.setValue('SpecularPower', ppty.getSpecularPower());
       model.UBO.setArray('SpecularColor', [
         ...ppty.getSpecularColorByReference(),
         1.0,
@@ -814,7 +816,12 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       }
       if (model.textures.length) {
         const textureLabels = model.textureViews
-          .map((view) => view.getLabel?.() ?? '')
+          .map(
+            (view, i) =>
+              `${view.getLabel?.() ?? ''}/${view.getDimension?.() ?? ''}/${
+                model.textures[i]?.getFormat?.() ?? ''
+              }`
+          )
           .join(',');
         pipelineHash += `tx${model.textures.length}:${textureLabels}`;
       }
@@ -1027,6 +1034,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.UBO.addEntry('AmbientIntensityBF', 'f32');
   model.UBO.addEntry('DiffuseIntensity', 'f32');
   model.UBO.addEntry('DiffuseIntensityBF', 'f32');
+  model.UBO.addEntry('SpecularPower', 'f32');
   model.UBO.addEntry('Roughness', 'f32');
   model.UBO.addEntry('RoughnessBF', 'f32');
   model.UBO.addEntry('Metallic', 'f32');

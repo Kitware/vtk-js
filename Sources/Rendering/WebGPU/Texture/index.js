@@ -18,8 +18,59 @@ function vtkWebGPUTexture(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUTexture');
 
-  const getMaxMipLevel = (width, height, depth) =>
-    Math.floor(Math.log2(Math.max(width, height, depth)));
+  // The depth of a 2D texture is its number of array layers, which do not
+  // get smaller in the mip chain
+  const getMaxMipLevel = (width, height, depth, dimension) => {
+    if (dimension === '3d') {
+      return Math.floor(Math.log2(Math.max(width, height, depth)));
+    }
+    return Math.floor(Math.log2(Math.max(width, height)));
+  };
+
+  // Return false and log an error when the size is larger than the device
+  // limits. createTexture fails with a validation error for such a size.
+  const fitsDeviceLimits = (device) => {
+    const limits = device.getHandle().limits;
+    if (!limits) {
+      return true;
+    }
+    let maxSize = limits.maxTextureDimension2D;
+    let maxDepth = limits.maxTextureArrayLayers;
+    if (model.dimension === '3d') {
+      maxSize = limits.maxTextureDimension3D;
+      maxDepth = limits.maxTextureDimension3D;
+    } else if (model.dimension === '1d') {
+      maxSize = limits.maxTextureDimension1D;
+    }
+    if (
+      model.width > maxSize ||
+      model.height > maxSize ||
+      model.depth > maxDepth
+    ) {
+      vtkErrorMacro(
+        `Texture size (${model.width}, ${model.height}, ${model.depth}) ` +
+          `is larger than the ${model.dimension} limits of the device ` +
+          `(${maxSize}, ${maxSize}, ${maxDepth}).`
+      );
+      return false;
+    }
+    return true;
+  };
+
+  // Make the mip chain when the texture has one and the format allows it
+  const updateMipmaps = () => {
+    if (
+      model.mipLevel > 0 &&
+      model.dimension === '2d' &&
+      vtkTexture.canGenerateMipmaps(model.format)
+    ) {
+      vtkTexture.generateMipmaps(
+        model._device.getHandle(),
+        model.handle,
+        model.mipLevel + 1
+      );
+    }
+  };
 
   const isHalfFloatFormat = (format) => format.endsWith('16float');
 
@@ -224,10 +275,18 @@ function vtkWebGPUTexture(publicAPI, model) {
       model.dimension = model.depth === 1 ? '2d' : '3d';
     }
     model.format = options.format ? options.format : 'rgba8unorm';
+    if (options.viewDimension) {
+      model.viewDimension = options.viewDimension;
+    }
     model.mipLevel = options.mipLevel
       ? Math.min(
           options.mipLevel,
-          getMaxMipLevel(model.width, model.height, model.depth)
+          getMaxMipLevel(
+            model.width,
+            model.height,
+            model.depth,
+            model.dimension
+          )
         )
       : 0;
     model.sampleCount = options.sampleCount ? options.sampleCount : 1;
@@ -238,6 +297,10 @@ function vtkWebGPUTexture(publicAPI, model) {
       : GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
     /* eslint-enable no-undef */
     /* eslint-enable no-bitwise */
+    if (!fitsDeviceLimits(device)) {
+      model.handle = null;
+      return;
+    }
     model.handle = model._device.getHandle().createTexture({
       size: [model.width, model.height, model.depth],
       format: model.format, // 'rgba8unorm',
@@ -279,6 +342,10 @@ function vtkWebGPUTexture(publicAPI, model) {
   };
 
   publicAPI.writeImageData = (req) => {
+    // create() did not make a GPU texture, for example the size is too large
+    if (!model.handle) {
+      return;
+    }
     let nativeArray = [];
     const _copyImageToTexture = (source) => {
       const originZ = req.originZ ?? 0;
@@ -297,13 +364,8 @@ function vtkWebGPUTexture(publicAPI, model) {
         [source.width, source.height, depth]
       );
 
-      // Generate mipmaps on GPU if needed
-      if (model.dimension === '2d' && depth === 1 && model.mipLevel > 0) {
-        vtkTexture.generateMipmaps(
-          model._device.getHandle(),
-          model.handle,
-          model.mipLevel + 1
-        );
+      if (!req.deferMipmaps) {
+        updateMipmaps();
       }
 
       model.ready = true;
@@ -381,12 +443,8 @@ function vtkWebGPUTexture(publicAPI, model) {
       }
     );
 
-    if (model.dimension === '2d' && depth === 1 && model.mipLevel > 0) {
-      vtkTexture.generateMipmaps(
-        model._device.getHandle(),
-        model.handle,
-        model.mipLevel + 1
-      );
+    if (!req.deferMipmaps) {
+      updateMipmaps();
     }
     model.ready = true;
   };
@@ -399,6 +457,9 @@ function vtkWebGPUTexture(publicAPI, model) {
     const height = req.height ?? model.height - y;
     const depth = req.depth ?? model.depth - z;
     const nativeArray = req.nativeArray || [];
+    if (!model.handle) {
+      return false;
+    }
     if (!validateTextureWriteBounds(x, y, z, width, height, depth)) {
       return false;
     }
@@ -445,13 +506,7 @@ function vtkWebGPUTexture(publicAPI, model) {
   };
 
   publicAPI.generateMipmaps = () => {
-    if (publicAPI.getDimensionality() !== 3 && model.mipLevel > 0) {
-      vtkTexture.generateMipmaps(
-        model._device.getHandle(),
-        model.handle,
-        model.mipLevel + 1
-      );
-    }
+    updateMipmaps();
   };
 
   // This scale converts a sampled texture value to the source scalar range.
@@ -529,7 +584,9 @@ function vtkWebGPUTexture(publicAPI, model) {
   publicAPI.createView = (label, options = {}) => {
     // if options is missing values try to add them in
     if (!options.dimension) {
-      if (model.dimension === '3d') {
+      if (model.viewDimension) {
+        options.dimension = model.viewDimension;
+      } else if (model.dimension === '3d') {
         options.dimension = '3d';
       } else if (model.depth === 1) {
         options.dimension = '2d';
@@ -555,6 +612,7 @@ const DEFAULT_VALUES = {
   ready: false,
   label: null,
   sampleCount: 1,
+  viewDimension: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -576,6 +634,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'mipLevel',
     'usage',
     'sampleCount',
+    'viewDimension',
   ]);
   macro.setGet(publicAPI, model, ['_device', 'label']);
 

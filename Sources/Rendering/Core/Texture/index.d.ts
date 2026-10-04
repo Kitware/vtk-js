@@ -63,6 +63,20 @@ export interface vtkTexture extends vtkAlgorithm {
   getMipLevel(): number;
 
   /**
+   * Returns true if the texture is a cube map.
+   * @default false
+   */
+  getCubeMap(): boolean;
+
+  /**
+   * Set if the texture is a cube map. A cube map needs image data on each of
+   * the six input ports, one for each face, in the sequence
+   * +X, -X, +Y, -Y, +Z, -Z.
+   * @param {Boolean} cubeMap
+   */
+  setCubeMap(cubeMap: boolean): boolean;
+
+  /**
    * Returns true if the texture can be resized at run time.
    * This is useful for dynamic textures that may change size based on user
    * interaction or other factors.
@@ -120,6 +134,93 @@ export interface vtkTexture extends vtkAlgorithm {
    * @default false
    */
   setRepeat(repeat: boolean): boolean;
+
+  /**
+   * Get the wrap mode of the R (third) texture coordinate.
+   * null uses the wrap mode of the S coordinate. WebGPU only.
+   * @default null
+   */
+  getWrapR(): Nullable<string>;
+
+  /**
+   * Set the wrap mode of the R (third) texture coordinate:
+   * 'repeat', 'clamp-to-edge' or 'mirror-repeat'. WebGPU only.
+   * @param {String} wrapR
+   */
+  setWrapR(wrapR: Nullable<string>): boolean;
+
+  /**
+   * Get the minification filter. null uses the interpolate flag.
+   * @default null
+   */
+  getMinFilter(): Nullable<string>;
+
+  /**
+   * Set the minification filter: 'nearest' or 'linear'. WebGPU only.
+   * @param {String} minFilter
+   */
+  setMinFilter(minFilter: Nullable<string>): boolean;
+
+  /**
+   * Get the magnification filter. null uses the interpolate flag.
+   * @default null
+   */
+  getMagFilter(): Nullable<string>;
+
+  /**
+   * Set the magnification filter: 'nearest' or 'linear'. WebGPU only.
+   * @param {String} magFilter
+   */
+  setMagFilter(magFilter: Nullable<string>): boolean;
+
+  /**
+   * Get the filter between mip levels. null gives 'linear'.
+   * @default null
+   */
+  getMipmapFilter(): Nullable<string>;
+
+  /**
+   * Set the filter between mip levels: 'nearest' or 'linear'. WebGPU only.
+   * @param {String} mipmapFilter
+   */
+  setMipmapFilter(mipmapFilter: Nullable<string>): boolean;
+
+  /**
+   * Get the lowest mip level that the sampler uses. null gives 0.
+   * @default null
+   */
+  getMinLOD(): Nullable<number>;
+
+  /**
+   * Set the lowest mip level that the sampler uses. WebGPU only.
+   * @param {Number} minLOD
+   */
+  setMinLOD(minLOD: Nullable<number>): boolean;
+
+  /**
+   * Get the highest mip level that the sampler uses. null gives the last level.
+   * @default null
+   */
+  getMaxLOD(): Nullable<number>;
+
+  /**
+   * Set the highest mip level that the sampler uses. WebGPU only.
+   * @param {Number} maxLOD
+   */
+  setMaxLOD(maxLOD: Nullable<number>): boolean;
+
+  /**
+   * Get the maximum anisotropy of the sampler.
+   * @default 1
+   */
+  getMaxAnisotropy(): number;
+
+  /**
+   * Set the maximum anisotropy of the sampler, from 1 to 16. A value larger
+   * than 1 needs linear min, mag and mipmap filters. WebGPU only.
+   * @param {Number} maxAnisotropy
+   */
+  setMaxAnisotropy(maxAnisotropy: number): boolean;
 }
 
 /**
@@ -142,12 +243,12 @@ export function extend(
 export function newInstance(initialValues?: ITextureInitialValues): vtkTexture;
 
 /**
- * Generates mipmaps for a given GPU texture using a compute shader.
+ * Generates the mip levels of a 2D GPU texture from its level 0.
  *
- * This function iteratively generates each mip level for the provided texture,
- * using a bilinear downsampling compute shader implemented in WGSL. It creates
- * the necessary pipeline, bind groups, and dispatches compute passes for each
- * mip level.
+ * Each level is a render pass that writes the bilinear mix of the level
+ * above. Each array layer (for example each cube map face) gets its own mip
+ * chain. The texture needs the RENDER_ATTACHMENT and TEXTURE_BINDING usages
+ * and a format that canGenerateMipmaps accepts.
  *
  * @param {GPUDevice} device - The WebGPU device used to create resources and submit commands.
  * @param {GPUTexture} texture - The GPU texture for which mipmaps will be generated.
@@ -157,7 +258,25 @@ export function generateMipmaps(
   device: any,
   texture: any,
   mipLevelCount: number
-): Array<Uint8ClampedArray>;
+): void;
+
+/**
+ * Return true when generateMipmaps can make the mip levels of a texture
+ * with this WebGPU format.
+ *
+ * @param {String} format
+ */
+export function canGenerateMipmaps(format: string): boolean;
+
+/**
+ * Return true when a render backend must upload the texture as a cube map.
+ * This is true when the cubeMap flag is set and the six input ports have
+ * image data with scalars. Six faces without the cubeMap flag also give a
+ * cube map, with a warning one time for each texture.
+ *
+ * @param {vtkTexture} texture
+ */
+export function useCubeMap(texture: vtkTexture): boolean;
 
 /**
  * vtkTexture is an image algorithm that handles loading and binding of texture
@@ -174,5 +293,8 @@ export function generateMipmaps(
 export declare const vtkTexture: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  generateMipmaps: typeof generateMipmaps;
+  canGenerateMipmaps: typeof canGenerateMipmaps;
+  useCubeMap: typeof useCubeMap;
 };
 export default vtkTexture;
