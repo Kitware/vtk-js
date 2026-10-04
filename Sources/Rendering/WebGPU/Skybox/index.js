@@ -1,17 +1,14 @@
 import { mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macros';
-import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
-import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
-const { VtkDataTypes } = vtkDataArray;
 const { vtkErrorMacro } = macro;
 
 const backgroundFragTemplate = `
@@ -80,46 +77,6 @@ fn main(
 `;
 
 const _imcpc = new Float64Array(16);
-
-function getTextureFormat(dataArray) {
-  const numComp = dataArray.getNumberOfComponents();
-  let format = 'rgba';
-
-  if (numComp === 1) {
-    format = 'r';
-  } else if (numComp === 2) {
-    format = 'rg';
-  }
-
-  switch (dataArray.getDataType()) {
-    case VtkDataTypes.UNSIGNED_CHAR:
-      return `${format}8unorm`;
-    case VtkDataTypes.FLOAT:
-    case VtkDataTypes.UNSIGNED_INT:
-    case VtkDataTypes.INT:
-    case VtkDataTypes.DOUBLE:
-    case VtkDataTypes.UNSIGNED_SHORT:
-    case VtkDataTypes.SHORT:
-    default:
-      return `${format}16float`;
-  }
-}
-
-function flipTextureRowsY(dataArray, width, height, numComponents) {
-  const flipped = macro.newTypedArray(
-    dataArray.constructor.name,
-    dataArray.length
-  );
-  const rowSize = width * numComponents;
-
-  for (let y = 0; y < height; ++y) {
-    const dstOffset = y * rowSize;
-    const srcOffset = (height - y - 1) * rowSize;
-    flipped.set(dataArray.subarray(srcOffset, srcOffset + rowSize), dstOffset);
-  }
-
-  return flipped;
-}
 
 function vtkWebGPUSkybox(publicAPI, model) {
   model.classHierarchy.push('vtkWebGPUSkybox');
@@ -256,48 +213,15 @@ function vtkWebGPUSkybox(publicAPI, model) {
     return hash;
   };
 
+  // The texture manager uploads the six faces as one cube map texture, with
+  // the same face orientation as the OpenGL backend
   publicAPI.getCubeTexture = (device, texture) => {
-    const hash = publicAPI.getCubeTextureHash(texture);
-    if (!hash) {
+    if (!publicAPI.getCubeTextureHash(texture)) {
       return null;
     }
-
-    return device.getCachedObject(hash, () => {
-      const firstImage = texture.getInputData(0);
-      const firstScalars = firstImage.getPointData().getScalars();
-      const dims = firstImage.getDimensions();
-      const webgpuTexture = vtkWebGPUTexture.newInstance({
-        label: 'sbtexture',
-      });
-      webgpuTexture.create(device, {
-        width: dims[0],
-        height: dims[1],
-        depth: 6,
-        dimension: '2d',
-        format: getTextureFormat(firstScalars),
-      });
-
-      for (let i = 0; i < 6; i++) {
-        const imageData = texture.getInputData(i);
-        const faceDims = imageData.getDimensions();
-        const scalars = imageData.getPointData().getScalars();
-        const faceData = flipTextureRowsY(
-          scalars.getData(),
-          faceDims[0],
-          faceDims[1],
-          scalars.getNumberOfComponents()
-        );
-        webgpuTexture.writeImageData({
-          nativeArray: faceData,
-          width: faceDims[0],
-          height: faceDims[1],
-          depth: 1,
-          originZ: i,
-        });
-      }
-
-      return webgpuTexture;
-    });
+    return device
+      .getTextureManager()
+      .getCubeTextureForVTKTexture(texture, 'sbtexture');
   };
 
   publicAPI.updateTexture = (device) => {

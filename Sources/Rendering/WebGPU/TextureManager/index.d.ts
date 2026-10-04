@@ -97,10 +97,27 @@ export interface vtkWebGPUTextureManager extends vtkObject {
   /**
    * Get the texture holding the contents of a vtkTexture, whichever of its
    * image data, image, ImageData, ImageBitmap or canvas source is set.
+   * If the texture is a cube map (see vtkTexture.useCubeMap) and
+   * `options.allowCubeMap` is true, the result is a cube map texture.
    * @param srcTexture The texture to upload.
    * @param {String} [label] The WGSL name given to the created texture.
+   * @param [options]
    */
   getTextureForVTKTexture(
+    srcTexture: vtkTexture,
+    label?: string,
+    options?: { allowCubeMap?: boolean }
+  ): Nullable<vtkWebGPUTexture>;
+
+  /**
+   * Get the cube map texture of the six input ports of a vtkTexture. The
+   * texture has six 2D layers, and its createView() gives a 'cube' view.
+   * The result is null if a face is missing, a face is not square, or the
+   * faces do not have the same size and format.
+   * @param srcTexture The texture with the six faces +X, -X, +Y, -Y, +Z, -Z.
+   * @param {String} [label] The WGSL name given to the created texture.
+   */
+  getCubeTextureForVTKTexture(
     srcTexture: vtkTexture,
     label?: string
   ): Nullable<vtkWebGPUTexture>;
