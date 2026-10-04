@@ -26,6 +26,27 @@ function vtkWebGPUSampler(publicAPI, model) {
     model.options.mipmapFilter = options.mipmapFilter
       ? options.mipmapFilter
       : 'nearest';
+    if (options.lodMinClamp !== undefined) {
+      model.options.lodMinClamp = options.lodMinClamp;
+    }
+    if (options.lodMaxClamp !== undefined) {
+      model.options.lodMaxClamp = options.lodMaxClamp;
+    }
+    if (options.compare) {
+      model.options.compare = options.compare;
+    }
+    // WebGPU accepts an anisotropy larger than 1 only with linear filters
+    if (
+      options.maxAnisotropy > 1 &&
+      model.options.magFilter === 'linear' &&
+      model.options.minFilter === 'linear' &&
+      model.options.mipmapFilter === 'linear'
+    ) {
+      model.options.maxAnisotropy = Math.min(
+        16,
+        Math.floor(options.maxAnisotropy)
+      );
+    }
     model.options.label = model.label;
     model.handle = model.device.getHandle().createSampler(model.options);
     model.bindGroupTime.modified();

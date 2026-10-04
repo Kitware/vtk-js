@@ -56,6 +56,10 @@ function vtkWebGPUTextureView(publicAPI, model) {
     model.bindGroupTime.modified();
   };
 
+  publicAPI.getDimension = () => model.options?.dimension;
+
+  publicAPI.getSwizzle = () => model.options?.swizzle;
+
   publicAPI.getBindGroupEntry = () => {
     const foo = {
       resource: publicAPI.getHandle(),

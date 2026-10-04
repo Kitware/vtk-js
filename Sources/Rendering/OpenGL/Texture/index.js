@@ -5,6 +5,7 @@ import * as macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
@@ -163,7 +164,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           model.generateMipmap = true;
           publicAPI.setMinificationFilter(Filter.LINEAR_MIPMAP_LINEAR);
         }
-        if (data.length % 6 === 0) {
+        if (vtkTexture.useCubeMap(model.renderable)) {
           publicAPI.createCubeFromRaw({
             width: ext[1] - ext[0] + 1,
             height: ext[3] - ext[2] + 1,
