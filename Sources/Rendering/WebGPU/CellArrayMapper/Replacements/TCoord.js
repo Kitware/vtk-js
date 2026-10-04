@@ -14,21 +14,31 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
     tcoords.getArrayInformation()[0].format
   );
   let code = vDesc.getCode();
-  vDesc.addOutput(`vec${numComp}<f32>`, 'tcoordVS');
+
+  // A texture coordinate with one component goes to the fragment shader as
+  // vec2(t, 0), so it samples the first row of a 2D texture. The 1D texture
+  // of a color ramp is a texture with one row.
+  const tcoordOutput = (name, components) => {
+    if (components === 1) {
+      vDesc.addOutput('vec2<f32>', `${name}VS`);
+      return `  output.${name}VS = vec2<f32>(${name}, 0.0);`;
+    }
+    vDesc.addOutput(`vec${components}<f32>`, `${name}VS`);
+    return `  output.${name}VS = ${name};`;
+  };
 
   const actor = model.WebGPUActor.getRenderable();
   const ppty = actor.getProperty();
   const isPBR = ppty.getInterpolation?.() === Shading.PBR;
 
   const hasTcoord1 = vertexInput.hasAttribute('tcoord1');
-  const tcoordImpl = ['  output.tcoordVS = tcoord;'];
+  const tcoordImpl = [tcoordOutput('tcoord', numComp)];
   if (hasTcoord1) {
     const tcoords1 = vertexInput.getBuffer('tcoord1');
     const numComp1 = vtkWebGPUTypes.getNumberOfComponentsFromBufferFormat(
       tcoords1.getArrayInformation()[0].format
     );
-    vDesc.addOutput(`vec${numComp1}<f32>`, 'tcoord1VS');
-    tcoordImpl.push('  output.tcoord1VS = tcoord1;');
+    tcoordImpl.push(tcoordOutput('tcoord1', numComp1));
   }
 
   // Always pass through UVs untransformed; transforms are applied per-texture in fragment
@@ -46,9 +56,18 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
 
   const uv = (transformKey) => getUV(transformKey, transforms, hasTcoord1);
 
+  // Only an HTML image loads after it is set, so only an image texture
+  // must wait for imageLoaded. The other sources have their data at once.
+  const isTextureReady = (texture) => {
+    if (texture.getImage?.()) {
+      return !!texture.getImageLoaded?.();
+    }
+    return true;
+  };
+
   const isSampleableTexture = (texture) =>
     !!texture &&
-    (texture.getImageLoaded?.() ?? true) &&
+    isTextureReady(texture) &&
     texture.getDimensionality?.() === numComp;
 
   const usedTextures = [];
@@ -60,12 +79,45 @@ function replaceShaderTCoord(publicAPI, model, hash, pipeline, vertexInput) {
 
   const diffuseTexture = ppty.getDiffuseTexture?.();
 
+  // A cube map is sampled with the 3D direction in the texture coordinates.
+  // The UV transforms are 2D only, so they do not apply to it. The bound view
+  // tells if the texture manager made a cube map, so the shader always
+  // matches the binding.
+  const diffuseIsCubeMap =
+    numComp === 3 &&
+    model.textureViews.some(
+      (view) =>
+        view.getLabel?.() === 'DiffuseTexture' &&
+        view.getDimension?.() === 'cube'
+    );
+
   const diffuseSources = [diffuseTexture, actor.getTextures()[0]];
-  if (diffuseSources.some(isSampleableTexture)) {
+  if (diffuseIsCubeMap) {
+    usedTextures.push(
+      '_diffuseMap = textureSample(DiffuseTexture, DiffuseTextureSampler, input.tcoordVS);'
+    );
+  } else if (diffuseSources.some(isSampleableTexture)) {
+    // As in the OpenGL backend, one component is luminance and two
+    // components are luminance and alpha. A view with a swizzle already
+    // remaps the channels.
+    const diffuseIndex = model.textureViews.findIndex(
+      (view) => view.getLabel?.() === 'DiffuseTexture'
+    );
+    const diffuseView = model.textureViews[diffuseIndex];
+    const diffuseComponents =
+      model.textures[diffuseIndex]?.getNumberOfComponents?.() ?? 4;
+    let swizzle = '';
+    if (!diffuseView?.getSwizzle?.()) {
+      if (diffuseComponents === 1) {
+        swizzle = '.rrra';
+      } else if (diffuseComponents === 2) {
+        swizzle = '.rrrg';
+      }
+    }
     usedTextures.push(
       `_diffuseMap = textureSample(DiffuseTexture, DiffuseTextureSampler, ${uv(
         'diffuse'
-      )});`
+      )})${swizzle};`
     );
   }
 

@@ -5,6 +5,68 @@ import { getDebugChannelCode } from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMa
 
 const { Shading } = vtkProperty;
 
+// Color without lights, as in the WebGL backend: the ambient and diffuse
+// terms with their intensities. It is used when there are no normals and
+// for all interpolations when the property lighting is off.
+function getUnlitCode() {
+  return [
+    '  let diffuse = diffuseColor.rgb;',
+    '  let specular = specularColor.rgb * specularColor.a;',
+    '  let unlit = ambientIntensity * ambientColor.rgb + diffuseIntensity * diffuse;',
+    '  computedColor = vec4<f32>(unlit * _diffuseMap.rgb, opacity);',
+  ];
+}
+
+// Blinn-Phong lighting for non PBR interpolations.
+// LightColor.w is the light intensity times 5, so 0.2 gives the intensity.
+function getBlinnPhongCode() {
+  return [
+    '  let fragPos = vec3<f32>(input.vertexVC.xyz);',
+    '  let V = mix(normalize(-fragPos), vec3<f32>(0, 0, 1), f32(rendererUBO.cameraParallel));',
+    '  var diffuseLight = vec3<f32>(0.0);',
+    '  var specularLight = vec3<f32>(0.0);',
+    '  {',
+    '    var i = 0;',
+    '    loop {',
+    '      if (!(i < rendererUBO.LightCount)) { break; }',
+    '      var L: vec3<f32>;',
+    '      var radiance: vec3<f32>;',
+    '      let color = rendererLightSSBO.values[i].LightColor.rgb * rendererLightSSBO.values[i].LightColor.w * 0.2;',
+    '      switch (i32(rendererLightSSBO.values[i].LightData.x)) {',
+    '        case 0 {',
+    '          L = normalize(rendererLightSSBO.values[i].LightPos.xyz - fragPos);',
+    '          radiance = color;',
+    '        }',
+    '        case 1 {',
+    '          L = normalize((rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz);',
+    '          radiance = color;',
+    '        }',
+    '        case 2 {',
+    '          let dir = normalize((rendererUBO.WCVCNormals * vec4<f32>(normalize(rendererLightSSBO.values[i].LightDir.xyz), 0.)).xyz);',
+    '          let cones = vec2<f32>(rendererLightSSBO.values[i].LightData.y, rendererLightSSBO.values[i].LightData.z);',
+    '          L = normalize(rendererLightSSBO.values[i].LightPos.xyz - fragPos);',
+    '          let theta = max(dot(dir, L), 0.0);',
+    '          let coneDelta = max(cones.x - cones.y, 1e-5);',
+    '          radiance = color * clamp((theta - cones.y) / coneDelta, 0.0, 1.0);',
+    '        }',
+    '        default { continue; }',
+    '      }',
+    '      let NdL = max(dot(normal, L), 0.0);',
+    '      diffuseLight += radiance * NdL;',
+    '      if (NdL > 0.0) {',
+    '        let H = normalize(L + V);',
+    '        specularLight += radiance * pow(max(dot(normal, H), 1e-5), mapperUBO.SpecularPower);',
+    '      }',
+    '      continuing { i++; }',
+    '    }',
+    '  }',
+    '  let ambient = ambientIntensity * ambientColor.rgb * _diffuseMap.rgb;',
+    '  let diffuse = diffuseIntensity * diffuseColor.rgb * _diffuseMap.rgb * diffuseLight;',
+    '  let specular = specularIntensity * specularColor.rgb * specularLight;',
+    '  computedColor = vec4<f32>(ambient + diffuse + specular, opacity);',
+  ];
+}
+
 function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
   if (model.selectionPass) return;
   const vDesc = pipeline.getShaderDescription('vertex');
@@ -17,22 +79,22 @@ function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
 
   // Code that runs if the fragment shader includes normals
   const hasNormal = code.includes('var normal:');
+  const ppty = model.WebGPUActor.getRenderable().getProperty();
   const needLighting =
+    ppty.getLighting() &&
     hasNormal &&
     model.useRendererMatrix &&
     !publicAPI.isEdgePrimitive() &&
     !model.is2D &&
     !model.selectionPass;
   if (needLighting) {
-    const actor = model.WebGPUActor.getRenderable();
-    const ppty = actor.getProperty();
     const isPBR = ppty.getInterpolation?.() === Shading.PBR;
     if (!isPBR) {
-      code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
-        '  let diffuse = diffuseColor.rgb;',
-        '  let specular = specularColor.rgb * specularColor.a;',
-        '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, opacity);',
-      ]).result;
+      code = vtkWebGPUShaderCache.substitute(
+        code,
+        '//VTK::Light::Impl',
+        getBlinnPhongCode()
+      ).result;
       fDesc.setCode(code);
       return;
     }
@@ -588,13 +650,13 @@ function replaceShaderLight(publicAPI, model, hash, pipeline, vertexInput) {
       lightingCode
     ).result;
     fDesc.setCode(code);
-    // If theres no normals, just set the specular color to be flat
+    // No normals or lighting off: use the unlit color
   } else {
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Light::Impl', [
-      '  let diffuse = diffuseColor.rgb;',
-      '  let specular = specularColor.rgb * specularColor.a;',
-      '  computedColor = vec4<f32>(diffuse * _diffuseMap.rgb, opacity);',
-    ]).result;
+    code = vtkWebGPUShaderCache.substitute(
+      code,
+      '//VTK::Light::Impl',
+      getUnlitCode()
+    ).result;
     fDesc.setCode(code);
   }
 }
