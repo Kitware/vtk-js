@@ -19,6 +19,9 @@ function vtkWebGPUShaderDescription(publicAPI, model) {
     model.outputInterpolations.push(interpolation);
   };
 
+  publicAPI.hasBuiltinOutput = (name) =>
+    model.builtinOutputNames.includes(name);
+
   publicAPI.addBuiltinOutput = (type, name) => {
     if (!model.builtinOutputNames.includes(name)) {
       model.builtinOutputTypes.push(type);

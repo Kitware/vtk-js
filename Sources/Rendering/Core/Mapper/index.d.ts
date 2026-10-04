@@ -20,6 +20,144 @@ export interface IPrimitiveCount {
   triangles: number;
 }
 
+/**
+ * A text replacement in the generated shader code.
+ */
+export interface IShaderReplacement {
+  /**
+   * The shader to change. WebGPU has no geometry stage.
+   */
+  shaderType: 'Vertex' | 'Fragment' | 'Geometry';
+
+  /**
+   * The text to find, used as a regular expression. This is usually a
+   * marker such as '//VTK::Normal::Impl'.
+   */
+  originalValue: string;
+
+  /**
+   * If true, the replacement runs before the replacements of the mapper.
+   * If false, it runs after them.
+   */
+  replaceFirst: boolean;
+
+  /**
+   * The new text. Keep the marker in it if other code must still use the
+   * marker.
+   */
+  replacementValue: string;
+
+  /**
+   * If true, replace all matches. If false, replace the first match only.
+   */
+  replaceAll: boolean;
+}
+
+/**
+ * Shader changes for the OpenGL (WebGL) backend. The code is GLSL.
+ * Call mapper.modified() after a change.
+ */
+export interface IOpenGLViewSpecificProperties {
+  /**
+   * Replaces the vertex shader template.
+   */
+  VertexShaderCode?: string;
+
+  /**
+   * Replaces the fragment shader template.
+   */
+  FragmentShaderCode?: string;
+
+  /**
+   * Replaces the geometry shader template.
+   */
+  GeometryShaderCode?: string;
+
+  ShaderReplacements?: IShaderReplacement[];
+}
+
+/**
+ * A value that the vertex shader writes as output.<name> and the fragment
+ * shader reads as input.<name>.
+ */
+export interface IWebGPUVertexOutput {
+  /**
+   * The WGSL type, for example 'vec3<f32>'.
+   */
+  type: string;
+
+  name: string;
+
+  /**
+   * The WGSL interpolation, for example 'flat' or 'linear, centroid'.
+   * Integer types must use 'flat'.
+   */
+  interpolation?: string;
+}
+
+/**
+ * Shader changes for the WebGPU backend. The code is WGSL.
+ * A change is found at the next render, mapper.modified() is not necessary.
+ */
+export interface IWebGPUViewSpecificProperties {
+  /**
+   * Replaces the vertex shader template.
+   */
+  VertexShaderCode?: string;
+
+  /**
+   * Replaces the fragment shader template.
+   */
+  FragmentShaderCode?: string;
+
+  /**
+   * The shaderType 'Geometry' is not supported.
+   */
+  ShaderReplacements?: IShaderReplacement[];
+
+  /**
+   * Values to pass from the vertex shader to the fragment shader. A text
+   * replacement cannot add them, because the IO structs are generated last.
+   */
+  VertexOutputs?: IWebGPUVertexOutput[];
+}
+
+/**
+ * Properties that a rendering backend reads from the mapper.
+ *
+ * @example
+ * ```js
+ * mapper.getViewSpecificProperties().WebGPU = {
+ *   VertexOutputs: [{ type: 'vec3<f32>', name: 'myNormalMC' }],
+ *   ShaderReplacements: [
+ *     {
+ *       shaderType: 'Vertex',
+ *       originalValue: '//VTK::Normal::Impl',
+ *       replaceFirst: true,
+ *       replacementValue:
+ *         '  output.myNormalMC = normalMC.xyz;
+//VTK::Normal::Impl',
+ *       replaceAll: false,
+ *     },
+ *     {
+ *       shaderType: 'Fragment',
+ *       originalValue: '//VTK::Alpha::Impl',
+ *       replaceFirst: true,
+ *       replacementValue:
+ *         '  computedColor = vec4<f32>(abs(input.myNormalMC), 1.0);
+//VTK::Alpha::Impl',
+ *       replaceAll: false,
+ *     },
+ *   ],
+ * };
+ * ```
+ */
+export interface IViewSpecificProperties {
+  OpenGL?: IOpenGLViewSpecificProperties;
+  WebGPU?: IWebGPUViewSpecificProperties;
+  [key: string]: any;
+}
+
 export interface ISelectionWebGLIdsToVTKIds {
   points: Int32Array | null;
   cells: Int32Array | null;
@@ -103,7 +241,7 @@ export interface vtkMapper
    *
    * @default null
    */
-  getViewSpecificProperties(): object;
+  getViewSpecificProperties(): IViewSpecificProperties;
 
   /**
    * Convert selector pixel buffers from WebGL IDs to VTK IDs.
@@ -159,9 +297,12 @@ export interface vtkMapper
    * on specific properties.
    * For example, for OpenGL/WebGL see OpenGL/PolyDataMapper/api.md
    * If there is no details, viewSpecificProperties is not supported.
+   * See IViewSpecificProperties for the shader changes of OpenGL and WebGPU.
    * @param viewSpecificProperties
    */
-  setViewSpecificProperties(viewSpecificProperties: object): boolean;
+  setViewSpecificProperties(
+    viewSpecificProperties: IViewSpecificProperties
+  ): boolean;
 
   /**
    *
