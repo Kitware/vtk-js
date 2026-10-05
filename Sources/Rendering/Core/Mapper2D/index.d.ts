@@ -1,7 +1,7 @@
 import vtkAbstractMapper, {
   IAbstractMapperInitialValues,
 } from '../AbstractMapper';
-import { IPrimitiveCount } from '../Mapper';
+import { IPrimitiveCount, IViewSpecificProperties } from '../Mapper';
 import {
   IScalarColoringInitialValues,
   TScalarColoringWithout,
@@ -58,7 +58,7 @@ export interface vtkMapper2D
    *
    * @default null
    */
-  getViewSpecificProperties(): object;
+  getViewSpecificProperties(): IViewSpecificProperties;
 
   /**
    * Sets point data array names that will be transferred to the VBO
@@ -97,7 +97,9 @@ export interface vtkMapper2D
    * If there is no details, viewSpecificProperties is not supported.
    * @param viewSpecificProperties
    */
-  setViewSpecificProperties(viewSpecificProperties: object): boolean;
+  setViewSpecificProperties(
+    viewSpecificProperties: IViewSpecificProperties
+  ): boolean;
 }
 
 /**
