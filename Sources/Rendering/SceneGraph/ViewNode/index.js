@@ -95,6 +95,9 @@ function vtkViewNode(publicAPI, model) {
       return publicAPI;
     }
 
+    const direct = model._renderableChildMap.get(dataObject);
+    if (direct) return direct;
+
     for (let index = 0; index < model.children.length; ++index) {
       const child = model.children[index];
       const vn = child.getViewNodeFor(dataObject);
