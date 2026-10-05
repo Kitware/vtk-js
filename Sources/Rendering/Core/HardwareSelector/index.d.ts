@@ -22,6 +22,16 @@ export interface vtkHardwareSelector extends vtkObject {
   ): Promise<unknown>;
 
   /**
+   * Used by the backends before they render the selection. Returns false
+   * with an error when the view or the renderer is not set. Otherwise it
+   * gets the scene ready as vtkRenderWindow.render() does.
+   *
+   * @param {object} view The API specific render window.
+   * @param {vtkRenderer} renderer
+   */
+  prepareCapture(view: unknown, renderer: vtkRenderer): boolean;
+
+  /**
    * Generates a selection.
    *
    * @param {vtkRenderer} renderer

@@ -1,270 +1,129 @@
 import macro from 'vtk.js/Sources/macros';
 import vtkHardwareSelector from 'vtk.js/Sources/Rendering/Core/HardwareSelector';
+import PixelSelectionHelper from 'vtk.js/Sources/Rendering/Core/HardwareSelector/PixelSelectionHelper';
 import vtkWebGPUBuffer from 'vtk.js/Sources/Rendering/WebGPU/Buffer';
 import vtkWebGPUHardwareSelectionPass from 'vtk.js/Sources/Rendering/WebGPU/HardwareSelectionPass';
-import vtkSelectionNode from 'vtk.js/Sources/Common/DataModel/SelectionNode';
-import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 
-const { SelectionContent, SelectionField } = vtkSelectionNode;
-const { FieldAssociations } = vtkDataSet;
 const { vtkErrorMacro } = macro;
 
-function getInfoHash(info) {
-  return `${info.propID} ${info.compositeID}`;
+// The buffers hold only the captured area. Display y goes up and texture
+// rows go down, so the first buffer row is the top row of the area.
+function isInArea(xx, yy, buffdata) {
+  const area = buffdata.area;
+  return xx >= area[0] && xx <= area[2] && yy >= area[1] && yy <= area[3];
+}
+
+function getPixelIndex(xx, yy, buffdata, rowWidth) {
+  return (buffdata.area[3] - yy) * rowWidth + (xx - buffdata.area[0]);
 }
 
 function convert(xx, yy, buffdata, channel) {
-  const offset =
-    ((buffdata.height - yy - 1) * buffdata.colorBufferWidth + xx) * 4 + channel;
-  return buffdata.colorValues[offset];
+  const index = getPixelIndex(xx, yy, buffdata, buffdata.colorBufferWidth);
+  return buffdata.colorValues[index * 4 + channel];
 }
 
-function getPixelInformationWithData(
-  buffdata,
-  inDisplayPosition,
-  maxDistance,
-  outSelectedPosition
-) {
-  // Base case
-  const maxDist = maxDistance < 0 ? 0 : maxDistance;
-  if (maxDist === 0) {
-    outSelectedPosition[0] = inDisplayPosition[0];
-    outSelectedPosition[1] = inDisplayPosition[1];
-    if (
-      inDisplayPosition[0] < 0 ||
-      inDisplayPosition[0] >= buffdata.width ||
-      inDisplayPosition[1] < 0 ||
-      inDisplayPosition[1] >= buffdata.height
-    ) {
-      return null;
-    }
-
-    const actorid = convert(
-      inDisplayPosition[0],
-      inDisplayPosition[1],
-      buffdata,
-      0
-    );
-
-    if (actorid <= 0 || actorid - 1 >= (buffdata.props?.length ?? 0)) {
-      // the pixel did not hit any actor.
-      return null;
-    }
-
-    const info = {};
-
-    info.propID = actorid - 1;
-    info.prop = buffdata.props?.[info.propID];
-
-    let compositeID = convert(
-      inDisplayPosition[0],
-      inDisplayPosition[1],
-      buffdata,
-      1
-    );
-    if (compositeID < 0 || compositeID > 0xffffff) {
-      compositeID = 0;
-    }
-    info.compositeID = compositeID - 1;
-    // attributeID is stored with a +1 offset in the selection buffer so that
-    // 0 means "no data" while 0 remains a valid decoded attribute index.
-    // A buffer value < 1 means no attribute was written, fall back to compositeID.
-    // After fallback, subtract 1 to recover the original 0 based index.
-    let attributeID = convert(
-      inDisplayPosition[0],
-      inDisplayPosition[1],
-      buffdata,
-      2
-    );
-    if (attributeID < 1) {
-      attributeID = compositeID;
-    }
-    info.attributeID = attributeID - 1;
-
-    if (buffdata.captureZValues) {
-      const offset =
-        (buffdata.height - inDisplayPosition[1] - 1) *
-          buffdata.zbufferBufferWidth +
-        inDisplayPosition[0];
-      info.zValue = buffdata.depthValues[offset];
-      info.zValue = buffdata.webGPURenderer.convertToOpenGLDepth(info.zValue);
-      info.displayPosition = inDisplayPosition;
-    }
-    return info;
+// Decode one pixel of the read back buffers.
+function readPixel(buffdata, inDisplayPosition) {
+  if (!isInArea(inDisplayPosition[0], inDisplayPosition[1], buffdata)) {
+    return null;
   }
 
-  // Iterate over successively growing boxes.
-  // They recursively call the base case to handle single pixels.
-  const dispPos = [inDisplayPosition[0], inDisplayPosition[1]];
-  const curPos = [0, 0];
-  let info = getPixelInformationWithData(
+  const actorid = convert(
+    inDisplayPosition[0],
+    inDisplayPosition[1],
     buffdata,
-    inDisplayPosition,
-    0,
-    outSelectedPosition
+    0
   );
-  if (info) {
-    return info;
-  }
-  for (let dist = 1; dist < maxDist; ++dist) {
-    // Vertical sides of box.
-    for (
-      let y = dispPos[1] > dist ? dispPos[1] - dist : 0;
-      y <= dispPos[1] + dist;
-      ++y
-    ) {
-      curPos[1] = y;
-      if (dispPos[0] >= dist) {
-        curPos[0] = dispPos[0] - dist;
-        info = getPixelInformationWithData(
-          buffdata,
-          curPos,
-          0,
-          outSelectedPosition
-        );
-        if (info) {
-          return info;
-        }
-      }
-      curPos[0] = dispPos[0] + dist;
-      info = getPixelInformationWithData(
-        buffdata,
-        curPos,
-        0,
-        outSelectedPosition
-      );
-      if (info) {
-        return info;
-      }
-    }
-    // Horizontal sides of box.
-    for (
-      let x = dispPos[0] >= dist ? dispPos[0] - (dist - 1) : 0;
-      x <= dispPos[0] + (dist - 1);
-      ++x
-    ) {
-      curPos[0] = x;
-      if (dispPos[1] >= dist) {
-        curPos[1] = dispPos[1] - dist;
-        info = getPixelInformationWithData(
-          buffdata,
-          curPos,
-          0,
-          outSelectedPosition
-        );
-        if (info) {
-          return info;
-        }
-      }
-      curPos[1] = dispPos[1] + dist;
-      info = getPixelInformationWithData(
-        buffdata,
-        curPos,
-        0,
-        outSelectedPosition
-      );
-      if (info) {
-        return info;
-      }
-    }
+
+  if (actorid <= 0 || actorid - 1 >= (buffdata.props?.length ?? 0)) {
+    // the pixel did not hit any actor.
+    return null;
   }
 
-  // nothing hit.
-  outSelectedPosition[0] = inDisplayPosition[0];
-  outSelectedPosition[1] = inDisplayPosition[1];
-  return null;
-}
+  const info = { valid: true };
 
-//-----------------------------------------------------------------------------
-function convertSelection(fieldassociation, dataMap, buffdata) {
-  const sel = [];
+  info.propID = actorid - 1;
+  info.prop = buffdata.props?.[info.propID];
 
-  let count = 0;
-  dataMap.forEach((value, key) => {
-    const child = vtkSelectionNode.newInstance();
-    child.setContentType(SelectionContent.INDICES);
-    switch (fieldassociation) {
-      case FieldAssociations.FIELD_ASSOCIATION_CELLS:
-        child.setFieldType(SelectionField.CELL);
-        break;
-      case FieldAssociations.FIELD_ASSOCIATION_POINTS:
-        child.setFieldType(SelectionField.POINT);
-        break;
-      default:
-        vtkErrorMacro('Unknown field association');
-    }
-    child.getProperties().propID = value.info.propID;
-    child.getProperties().prop = value.info.prop;
-    child.getProperties().compositeID = value.info.compositeID;
-    child.getProperties().attributeID = value.info.attributeID;
-    child.getProperties().pixelCount = value.pixelCount;
-    if (buffdata.captureZValues) {
-      child.getProperties().displayPosition = [
-        value.info.displayPosition[0],
-        value.info.displayPosition[1],
-        value.info.zValue,
-      ];
-      child.getProperties().worldPosition =
-        buffdata.webGPURenderWindow.displayToWorld(
-          value.info.displayPosition[0],
-          value.info.displayPosition[1],
-          value.info.zValue,
-          buffdata.renderer
-        );
-    }
+  let compositeID = convert(
+    inDisplayPosition[0],
+    inDisplayPosition[1],
+    buffdata,
+    1
+  );
+  if (compositeID < 0 || compositeID > 0xffffff) {
+    compositeID = 0;
+  }
+  info.compositeID = compositeID - 1;
+  // attributeID is stored with a +1 offset in the selection buffer so that
+  // 0 means "no data" while 0 remains a valid decoded attribute index.
+  // A buffer value < 1 means no attribute was written, fall back to compositeID.
+  // After fallback, subtract 1 to recover the original 0 based index.
+  let attributeID = convert(
+    inDisplayPosition[0],
+    inDisplayPosition[1],
+    buffdata,
+    2
+  );
+  if (attributeID < 1) {
+    attributeID = compositeID;
+  }
+  info.attributeID = attributeID - 1;
 
-    child.setSelectionList(value.attributeIDs);
-    sel[count] = child;
-    count++;
-  });
-
-  return sel;
+  if (buffdata.captureZValues) {
+    // A copy from a depth texture must use the full texture, so the depth
+    // buffer holds all the window.
+    const offset =
+      (buffdata.height - inDisplayPosition[1] - 1) *
+        buffdata.zbufferBufferWidth +
+      inDisplayPosition[0];
+    info.zValue = buffdata.depthValues[offset];
+    info.zValue = buffdata.webGPURenderer.convertToOpenGLDepth(info.zValue);
+    info.displayPosition = [inDisplayPosition[0], inDisplayPosition[1]];
+  }
+  return info;
 }
 
 //----------------------------------------------------------------------------
-function generateSelectionWithData(buffdata, fx1, fy1, fx2, fy2) {
-  const x1 = Math.floor(fx1);
-  const y1 = Math.floor(fy1);
-  const x2 = Math.floor(fx2);
-  const y2 = Math.floor(fy2);
-
-  const dataMap = new Map();
-
-  const outSelectedPosition = [0, 0];
-
-  for (let yy = y1; yy <= y2; yy++) {
-    for (let xx = x1; xx <= x2; xx++) {
-      const pos = [xx, yy];
-      const info = getPixelInformationWithData(
-        buffdata,
-        pos,
-        0,
-        outSelectedPosition
-      );
-      if (info) {
-        const hash = getInfoHash(info);
-        if (!dataMap.has(hash)) {
-          dataMap.set(hash, {
-            info,
-            pixelCount: 1,
-            attributeIDs: [info.attributeID],
-          });
-        } else {
-          const dmv = dataMap.get(hash);
-          dmv.pixelCount++;
-          if (buffdata.captureZValues) {
-            if (info.zValue < dmv.info.zValue) {
-              dmv.info = info;
-            }
-          }
-          if (dmv.attributeIDs.indexOf(info.attributeID) === -1) {
-            dmv.attributeIDs.push(info.attributeID);
-          }
+// Give the read back buffers the functions that use them. The fields are
+// area, width, height, colorValues, colorBufferWidth, props,
+// fieldAssociation and captureZValues. With captureZValues, also
+// depthValues, zbufferBufferWidth, renderer, webGPURenderer and
+// webGPURenderWindow.
+export function newSourceData(fields) {
+  const result = { ...fields };
+  const read = (position) => readPixel(result, position);
+  result.generateSelection = (fx1, fy1, fx2, fy2) =>
+    PixelSelectionHelper.generateSelection(read, fx1, fy1, fx2, fy2, {
+      fieldAssociation: result.fieldAssociation,
+      captureZValues: result.captureZValues,
+      displayToWorld: (x, y, z) =>
+        result.webGPURenderWindow.displayToWorld(x, y, z, result.renderer),
+    });
+  result.getPixelInformation = (
+    inDisplayPosition,
+    maxDistance,
+    outSelectedPosition
+  ) =>
+    PixelSelectionHelper.getPixelInformation(
+      read,
+      inDisplayPosition,
+      maxDistance,
+      outSelectedPosition
+    );
+  result.isPropHit = (propID) => {
+    if (!result.hitProps) {
+      result.hitProps = new Set();
+      const values = result.colorValues;
+      for (let i = 0; i < values.length; i += 4) {
+        if (values[i] > 0) {
+          result.hitProps.add(values[i] - 1);
         }
       }
     }
-  }
-  return convertSelection(buffdata.fieldAssociation, dataMap, buffdata);
+    return result.hitProps.has(propID);
+  };
+  return result;
 }
 
 // ----------------------------------------------------------------------------
@@ -293,23 +152,99 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
 
   //----------------------------------------------------------------------------
   publicAPI.endSelection = () => {
-    model.WebGPURenderer.setSelector(null);
+    model._WebGPURenderWindow
+      ?.getViewNodeFor(model._renderer)
+      ?.setSelector(null);
   };
 
   //----------------------------------------------------------------------------
-  // note we ignore the x,y arguments as WebGPU has to do buffer copies
-  // of the entire depth bufer. We could realloc hardware selection textures
-  // based on the passed in size etc but it gets messy so for now we always
-  // render the full size window and copy it to the buffers.
-  publicAPI.getSourceDataAsync = async (renderer = model._renderer) => {
-    if (!renderer || !model._WebGPURenderWindow) {
-      vtkErrorMacro('Renderer and view must be set before calling Select.');
+  // The area is in display pixels, with y up. setArea rounds it down.
+  const superSetArea = publicAPI.setArea;
+  publicAPI.setArea = (...args) => {
+    if (superSetArea(...args)) {
+      for (let i = 0; i < 4; i++) {
+        model.area[i] = Math.floor(model.area[i]);
+      }
+      return true;
+    }
+    return false;
+  };
+
+  //----------------------------------------------------------------------------
+  // WebGPU reads the GPU buffers back asynchronously, so there is no
+  // synchronous captureBuffers() or select(). captureBuffersAsync() reads
+  // the area of setArea() and keeps the data. Then getPixelInformation(),
+  // generateSelection() and isPropHit() read the kept data synchronously.
+  // With no area set, all the window is read.
+  publicAPI.captureBuffersAsync = async () => {
+    const area = model.area;
+    let data = null;
+    // An area of all zeros is the default value, which means all the window.
+    if (area.some((v) => v !== 0)) {
+      data = await publicAPI.getSourceDataAsync(
+        model._renderer,
+        area[0],
+        area[1],
+        area[2],
+        area[3]
+      );
+    } else {
+      data = await publicAPI.getSourceDataAsync(model._renderer);
+    }
+    model._capturedData = data || null;
+    return !!data;
+  };
+
+  publicAPI.getCapturedData = () => model._capturedData;
+
+  publicAPI.releasePixBuffers = () => {
+    model._capturedData = null;
+  };
+
+  publicAPI.releaseGraphicsResources = () => {
+    publicAPI.releasePixBuffers();
+  };
+
+  publicAPI.getPixelInformation = (
+    inDisplayPosition,
+    maxDistance,
+    outSelectedPosition
+  ) => {
+    if (!model._capturedData) {
+      vtkErrorMacro('Call captureBuffersAsync before getPixelInformation.');
+      return null;
+    }
+    return model._capturedData.getPixelInformation(
+      inDisplayPosition,
+      maxDistance,
+      outSelectedPosition
+    );
+  };
+
+  publicAPI.generateSelection = (fx1, fy1, fx2, fy2) => {
+    if (!model._capturedData) {
+      vtkErrorMacro('Call captureBuffersAsync before generateSelection.');
+      return [];
+    }
+    return model._capturedData.generateSelection(fx1, fy1, fx2, fy2);
+  };
+
+  publicAPI.isPropHit = (propID) => !!model._capturedData?.isPropHit(propID);
+
+  //----------------------------------------------------------------------------
+  // The selection pass renders the full window. Only the pixels of the area
+  // fx1, fy1, fx2, fy2 (display pixels, y up) are copied back to the CPU.
+  // With no area, all the window is copied.
+  publicAPI.getSourceDataAsync = async (
+    renderer = model._renderer,
+    fx1 = undefined,
+    fy1 = undefined,
+    fx2 = undefined,
+    fy2 = undefined
+  ) => {
+    if (!publicAPI.prepareCapture(model._WebGPURenderWindow, renderer)) {
       return false;
     }
-
-    // todo revisit making selection part of core
-    // then we can do this in core
-    model._WebGPURenderWindow.getRenderable().preRender();
 
     if (!model._WebGPURenderWindow.getInitialized()) {
       model._WebGPURenderWindow.initialize();
@@ -349,22 +284,38 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     // the class as multiple calls may start before resolving
     // so anything specific to this request gets put into the
     // result object (by value in most cases)
+    const width = texture.getWidth();
+    const height = texture.getHeight();
+    const area = [0, 0, width - 1, height - 1];
+    if (fx1 !== undefined) {
+      area[0] = Math.max(0, Math.floor(Math.min(fx1, fx2)));
+      area[1] = Math.max(0, Math.floor(Math.min(fy1, fy2)));
+      area[2] = Math.min(width - 1, Math.floor(Math.max(fx1, fx2)));
+      area[3] = Math.min(height - 1, Math.floor(Math.max(fy1, fy2)));
+    }
+    if (area[2] < area[0] || area[3] < area[1]) {
+      return false;
+    }
+    const copyWidth = area[2] - area[0] + 1;
+    const copyHeight = area[3] - area[1] + 1;
+    const copyOrigin = { x: area[0], y: height - 1 - area[3] };
+
     const result = {
-      area: [0, 0, texture.getWidth() - 1, texture.getHeight() - 1],
+      area,
       captureZValues: model.captureZValues,
       fieldAssociation: model.fieldAssociation,
       props: [...model._selectionProps],
       renderer,
       webGPURenderer,
       webGPURenderWindow: model._WebGPURenderWindow,
-      width: texture.getWidth(),
-      height: texture.getHeight(),
+      width,
+      height,
     };
 
     // must be a multiple of 256 bytes, so 16 texels with rgba32uint
-    result.colorBufferWidth = 16 * Math.floor((result.width + 15) / 16);
+    result.colorBufferWidth = 16 * Math.floor((copyWidth + 15) / 16);
     result.colorBufferSizeInBytes =
-      result.colorBufferWidth * result.height * 4 * 4;
+      result.colorBufferWidth * copyHeight * 4 * 4;
     const colorBuffer = vtkWebGPUBuffer.newInstance({
       label: 'hardwareSelectColorBuffer',
     });
@@ -382,27 +333,28 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
     cmdEnc.copyTextureToBuffer(
       {
         texture: texture.getHandle(),
+        origin: copyOrigin,
       },
       {
         buffer: colorBuffer.getHandle(),
         bytesPerRow: 16 * result.colorBufferWidth,
-        rowsPerImage: result.height,
+        rowsPerImage: copyHeight,
       },
       {
-        width: result.width,
-        height: result.height,
+        width: copyWidth,
+        height: copyHeight,
         depthOrArrayLayers: 1,
       }
     );
 
     let zbuffer;
     if (model.captureZValues) {
-      result.zbufferBufferWidth = 64 * Math.floor((result.width + 63) / 64);
+      result.zbufferBufferWidth = 64 * Math.floor((width + 63) / 64);
       zbuffer = vtkWebGPUBuffer.newInstance({
         label: 'hardwareSelectDepthBuffer',
       });
       zbuffer.setDevice(device);
-      result.zbufferSizeInBytes = result.height * result.zbufferBufferWidth * 4;
+      result.zbufferSizeInBytes = height * result.zbufferBufferWidth * 4;
       /* eslint-disable no-bitwise */
       /* eslint-disable no-undef */
       zbuffer.create(
@@ -420,11 +372,11 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
         {
           buffer: zbuffer.getHandle(),
           bytesPerRow: 4 * result.zbufferBufferWidth,
-          rowsPerImage: result.height,
+          rowsPerImage: height,
         },
         {
-          width: result.width,
-          height: result.height,
+          width,
+          height,
           depthOrArrayLayers: 1,
         }
       );
@@ -438,6 +390,7 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
       await Promise.all([cLoad, zLoad]);
       result.depthValues = new Float32Array(zbuffer.getMappedRange().slice());
       zbuffer.unmap();
+      zbuffer.getHandle().destroy();
     } else {
       await cLoad;
     }
@@ -445,10 +398,10 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
 
     result.colorValues = new Uint32Array(colorBuffer.getMappedRange().slice());
     colorBuffer.unmap();
+    // the read back buffers are used one time only
+    colorBuffer.getHandle().destroy();
 
-    result.generateSelection = (fx1, fy1, fx2, fy2) =>
-      generateSelectionWithData(result, fx1, fy1, fx2, fy2);
-    return result;
+    return newSourceData(result);
   };
 }
 
@@ -458,8 +411,10 @@ function vtkWebGPUHardwareSelector(publicAPI, model) {
 
 const DEFAULT_VALUES = {
   // WebGPURenderWindow: null,
+  area: undefined,
   _selectionPropMap: null,
   _selectionProps: null,
+  _capturedData: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -473,7 +428,11 @@ export function extend(publicAPI, model, initialValues = {}) {
   model._selectionPass = vtkWebGPUHardwareSelectionPass.newInstance();
   model._selectionPropMap = new Map();
   model._selectionProps = [];
+  if (!model.area) {
+    model.area = [0, 0, 0, 0];
+  }
 
+  macro.setGetArray(publicAPI, model, ['area'], 4);
   macro.setGet(publicAPI, model, ['_WebGPURenderWindow']);
   macro.moveToProtected(publicAPI, model, ['WebGPURenderWindow']);
 
@@ -490,4 +449,4 @@ export const newInstance = macro.newInstance(
 
 // ----------------------------------------------------------------------------
 
-export default { newInstance, extend };
+export default { newInstance, extend, newSourceData };
