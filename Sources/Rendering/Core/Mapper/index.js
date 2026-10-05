@@ -8,7 +8,7 @@ import Constants from 'vtk.js/Sources/Rendering/Core/Mapper/Constants';
 
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 
-import { PassTypes } from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
+import { PassTypes } from 'vtk.js/Sources/Rendering/Core/HardwareSelector/Constants';
 
 const { FieldAssociations } = vtkDataSet;
 
