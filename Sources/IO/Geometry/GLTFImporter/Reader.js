@@ -469,7 +469,13 @@ async function createPropertyFromGLTFMaterial(
 
     if (color != null) {
       property.setDiffuseColor(color[0], color[1], color[2]);
-      property.setOpacity(color[3]);
+      // An OPAQUE material ignores the alpha of its base color.
+      if (
+        material.alphaMode === ALPHA_MODE.MASK ||
+        material.alphaMode === ALPHA_MODE.BLEND
+      ) {
+        property.setOpacity(color[3]);
+      }
     }
 
     property.setMetallic(metallicFactor);
