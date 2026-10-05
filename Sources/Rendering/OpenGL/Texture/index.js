@@ -287,16 +287,17 @@ function vtkOpenGLTexture(publicAPI, model) {
   };
 
   //---------------------------------------------------------------------------
-  publicAPI.releaseGraphicsResources = (rwin) => {
+  publicAPI.releaseGraphicsResources = (rwin = model._openGLRenderWindow) => {
     if (rwin && model.handle) {
-      rwin.activateTexture(publicAPI);
-      rwin.deactivateTexture(publicAPI);
+      // the GL context can outlive a deleted render window
+      if (!rwin.isDeleted()) {
+        rwin.deactivateTexture(publicAPI);
+      }
       model.context.deleteTexture(model.handle);
       model._prevTexParams = null;
       model.handle = 0;
       model.numberOfDimensions = 0;
       model.target = 0;
-      model.internalFormat = 0;
       model.format = 0;
       model.openGLDataType = 0;
       model.components = 0;
@@ -310,6 +311,11 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.shaderProgram = null;
     }
   };
+
+  publicAPI.delete = macro.chain(
+    () => publicAPI.releaseGraphicsResources(),
+    publicAPI.delete
+  );
 
   //----------------------------------------------------------------------------
   publicAPI.bind = () => {

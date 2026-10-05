@@ -6,8 +6,8 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
 
-function createTexture(renderWindow) {
-  const texture = vtkOpenGLTexture.newInstance();
+function createTexture(gc, renderWindow) {
+  const texture = gc.registerResource(vtkOpenGLTexture.newInstance(), 1);
   texture.setOpenGLRenderWindow(renderWindow);
   texture.create2DFromRaw({
     width: 32,
@@ -19,22 +19,20 @@ function createTexture(renderWindow) {
   return texture;
 }
 
-function releaseTexture(texture, renderWindow) {
-  texture.releaseGraphicsResources(renderWindow);
-  texture.delete();
-}
-
 it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'releases owned resources without releasing borrowed attachments',
   () => {
     const gc = testUtils.createGarbageCollector();
     const { tracker, view, emptySceneObjects } = createTrackedRenderView(gc);
 
-    const borrowedTexture = createTexture(view);
+    const borrowedTexture = createTexture(gc, view);
     const borrowedTextureObjects = tracker.count();
     expect(borrowedTextureObjects).toBeGreaterThan(emptySceneObjects);
 
-    const framebuffer = vtkOpenGLFramebuffer.newInstance();
+    const framebuffer = gc.registerResource(
+      vtkOpenGLFramebuffer.newInstance(),
+      2
+    );
     framebuffer.setOpenGLRenderWindow(view);
     framebuffer.saveCurrentBindingsAndBuffers();
     framebuffer.create(32, 32);
@@ -61,7 +59,7 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     framebuffer.delete();
     expect(tracker.count()).toBe(borrowedTextureObjects);
 
-    releaseTexture(borrowedTexture, view);
+    borrowedTexture.delete();
     expect(tracker.count()).toBe(emptySceneObjects);
     gc.releaseResources();
   }
@@ -76,9 +74,12 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     const { view } = createTrackedRenderView(gc);
     const gl = view.getContext();
 
-    const texture0 = createTexture(view);
-    const texture2 = createTexture(view);
-    const framebuffer = vtkOpenGLFramebuffer.newInstance();
+    const texture0 = createTexture(gc, view);
+    const texture2 = createTexture(gc, view);
+    const framebuffer = gc.registerResource(
+      vtkOpenGLFramebuffer.newInstance(),
+      2
+    );
     framebuffer.setOpenGLRenderWindow(view);
     framebuffer.saveCurrentBindingsAndBuffers();
     framebuffer.create(32, 32);
@@ -99,8 +100,8 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
 
     framebuffer.restorePreviousBindingsAndBuffers();
     framebuffer.delete();
-    releaseTexture(texture0, view);
-    releaseTexture(texture2, view);
+    texture0.delete();
+    texture2.delete();
     gc.releaseResources();
   }
 );
@@ -113,7 +114,10 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     renderWindow.render();
     const gl = view.getContext();
 
-    const framebuffer = vtkOpenGLFramebuffer.newInstance();
+    const framebuffer = gc.registerResource(
+      vtkOpenGLFramebuffer.newInstance(),
+      2
+    );
     framebuffer.setOpenGLRenderWindow(view);
     framebuffer.create(32, 32);
     framebuffer.bind();
@@ -129,5 +133,34 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     );
 
     framebuffer.delete();
+  }
+);
+
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'releases owned attachments after the render window is deleted',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    const { view } = createTrackedRenderView(gc);
+    const gl = view.getContext();
+    const resources = testUtils.createGarbageCollector();
+    const borrowed = createTexture(resources, view);
+    const borrowedHandle = borrowed.getHandle();
+    const framebuffer = resources.registerResource(
+      vtkOpenGLFramebuffer.newInstance(),
+      2
+    );
+    framebuffer.setOpenGLRenderWindow(view);
+    framebuffer.create(32, 32);
+    framebuffer.populateFramebuffer();
+    const ownedHandle = framebuffer.getColorBuffers()[0].getHandle();
+    framebuffer.setColorBuffer(borrowed, 1);
+
+    gc.releaseResources();
+    framebuffer.delete();
+    expect(gl.isTexture(ownedHandle)).toBe(false);
+    expect(gl.isTexture(borrowedHandle)).toBe(true);
+    borrowed.delete();
+    expect(gl.isTexture(borrowedHandle)).toBe(false);
+    expect(gl.getError()).toBe(gl.NO_ERROR);
   }
 );
