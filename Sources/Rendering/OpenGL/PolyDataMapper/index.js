@@ -18,7 +18,7 @@ import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/Replacem
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactory';
 
-import { PassTypes } from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
+import { PassTypes } from 'vtk.js/Sources/Rendering/Core/HardwareSelector/Constants';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 import { Resolve } from 'vtk.js/Sources/Rendering/Core/Mapper/CoincidentTopologyHelper';
 

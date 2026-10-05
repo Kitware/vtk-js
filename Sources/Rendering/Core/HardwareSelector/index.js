@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 
 const { FieldAssociations } = vtkDataSet;
+const { vtkErrorMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // vtkHardwareSelector methods
@@ -15,6 +16,18 @@ function vtkHardwareSelector(publicAPI, model) {
   // raster based backends this method will capture the buffers. You can
   // call this once and then make multiple calls to generateSelection.
   publicAPI.getSourceDataAsync = async (renderer, fx1, fy1, fx2, fy2) => {};
+
+  // The backends call this before they render the selection. It checks
+  // that the view and the renderer are set, then gets the scene ready as
+  // vtkRenderWindow.render() does (each renderer gets a camera).
+  publicAPI.prepareCapture = (view, renderer) => {
+    if (!view || !renderer) {
+      vtkErrorMacro('Renderer and view must be set before calling Select.');
+      return false;
+    }
+    view.getRenderable().preRender();
+    return true;
+  };
 
   publicAPI.selectAsync = async (renderer, fx1, fy1, fx2, fy2) => {
     const srcData = await publicAPI.getSourceDataAsync(
