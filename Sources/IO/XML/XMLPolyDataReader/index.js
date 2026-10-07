@@ -73,8 +73,8 @@ function vtkXMLPolyDataReader(publicAPI, model) {
     const nbPieces = pieces.length;
 
     for (let outputIndex = 0; outputIndex < nbPieces; outputIndex++) {
-      // Create dataset
-      const polydata = vtkPolyData.newInstance();
+      const polydata =
+        model.output[outputIndex]?.initialize() || vtkPolyData.newInstance();
       const piece = pieces[outputIndex];
 
       // Points

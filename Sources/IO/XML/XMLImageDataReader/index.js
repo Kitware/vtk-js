@@ -34,12 +34,21 @@ function vtkXMLImageDataReader(publicAPI, model) {
         .getAttribute('Extent')
         .split(' ')
         .map((t) => Number(t));
-      const imageData = vtkImageData.newInstance({
-        origin,
-        spacing,
-        direction,
-        extent,
-      });
+      let imageData = model.output[outputIndex];
+      if (imageData != null) {
+        imageData = model.output[outputIndex];
+        imageData.setExtent(extent);
+        imageData.setOrigin(origin);
+        imageData.setSpacing(spacing);
+        imageData.setDirection(direction);
+      } else {
+        imageData = vtkImageData.newInstance({
+          origin,
+          spacing,
+          direction,
+          extent,
+        });
+      }
 
       // Fill data
       vtkXMLReader.processFieldData(
