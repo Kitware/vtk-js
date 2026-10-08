@@ -87,6 +87,63 @@ function checkRenderTargetSupport(gl, internalFormat, format, type) {
 }
 
 // ----------------------------------------------------------------------------
+// GL informations helpers
+// ----------------------------------------------------------------------------
+
+// Returns a factory of lazy getters for the parameters of a WebGL extension.
+// The extension is only requested (once) when one of the getters is first
+// called. This matters for extensions that are costly or noisy to request,
+// e.g. Firefox logs a deprecation warning whenever WEBGL_debug_renderer_info
+// is requested.
+function createLazyExtensionParameterGetter(gl, extensionName) {
+  let extension;
+  return (parameterName) => () => {
+    if (extension === undefined) {
+      extension = gl.getExtension(extensionName);
+    }
+    return extension && gl.getParameter(extension[parameterName]);
+  };
+}
+
+// Defines an enumerable `object[name]` property that is only evaluated with
+// `evaluate()` on first access, then cached as a regular writable value.
+function defineLazyProperty(object, name, evaluate) {
+  Object.defineProperty(object, name, {
+    get() {
+      const value = evaluate();
+      Object.defineProperty(object, name, {
+        value,
+        enumerable: true,
+        writable: true,
+      });
+      return value;
+    },
+    enumerable: true,
+    configurable: true,
+  });
+}
+
+// Converts a list of [label, key, value] entries into a { [key]: { label,
+// value } } map. A function value is evaluated lazily, on first read of the
+// entry value. Entries without a key are skipped.
+function buildGLInformations(params) {
+  const result = {};
+  while (params.length) {
+    const [label, key, value] = params.pop();
+    if (key) {
+      if (typeof value === 'function') {
+        const entry = { label };
+        defineLazyProperty(entry, 'value', value);
+        result[key] = entry;
+      } else {
+        result[key] = { label, value };
+      }
+    }
+  }
+  return result;
+}
+
+// ----------------------------------------------------------------------------
 // Monitor the usage of GL context across vtkOpenGLRenderWindow instances
 // ----------------------------------------------------------------------------
 
@@ -663,7 +720,14 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     // Float/halfFloat textures and multiple render targets are core in
     // WebGL2; only float color renderability still hangs off an extension.
     const glColorBufferFloat = gl.getExtension('EXT_color_buffer_float');
-    const glDebugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    // Firefox deprecated WEBGL_debug_renderer_info (RENDERER/VENDOR already
+    // report the unmasked strings there) and logs a warning every time the
+    // extension is requested, so only request it when the unmasked values
+    // are actually read.
+    const getDebugRendererInfoParameter = createLazyExtensionParameterGetter(
+      gl,
+      'WEBGL_debug_renderer_info'
+    );
     const glAnisotropic =
       gl.getExtension('EXT_texture_filter_anisotropic') ||
       gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
@@ -998,25 +1062,17 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       [
         'Unmasked Renderer',
         'UNMASKED_RENDERER',
-        glDebugRendererInfo &&
-          gl.getParameter(glDebugRendererInfo.UNMASKED_RENDERER_WEBGL),
+        getDebugRendererInfoParameter('UNMASKED_RENDERER_WEBGL'),
       ],
       [
         'Unmasked Vendor',
         'UNMASKED_VENDOR',
-        glDebugRendererInfo &&
-          gl.getParameter(glDebugRendererInfo.UNMASKED_VENDOR_WEBGL),
+        getDebugRendererInfoParameter('UNMASKED_VENDOR_WEBGL'),
       ],
       ['WebGL Version', 'WEBGL_VERSION', 2],
     ];
 
-    const result = {};
-    while (params.length) {
-      const [label, key, value] = params.pop();
-      if (key) {
-        result[key] = { label, value };
-      }
-    }
+    const result = buildGLInformations(params);
     model._glInformation = result;
     return result;
   };
