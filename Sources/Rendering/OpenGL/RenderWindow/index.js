@@ -663,7 +663,17 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     // Float/halfFloat textures and multiple render targets are core in
     // WebGL2; only float color renderability still hangs off an extension.
     const glColorBufferFloat = gl.getExtension('EXT_color_buffer_float');
-    const glDebugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    // Firefox deprecated WEBGL_debug_renderer_info (RENDERER/VENDOR already
+    // report the unmasked strings there) and logs a warning every time the
+    // extension is requested, so only request it when the unmasked values
+    // are actually read.
+    let glDebugRendererInfo;
+    const getUnmaskedParameter = (name) => () => {
+      if (glDebugRendererInfo === undefined) {
+        glDebugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      }
+      return glDebugRendererInfo && gl.getParameter(glDebugRendererInfo[name]);
+    };
     const glAnisotropic =
       gl.getExtension('EXT_texture_filter_anisotropic') ||
       gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
@@ -998,14 +1008,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       [
         'Unmasked Renderer',
         'UNMASKED_RENDERER',
-        glDebugRendererInfo &&
-          gl.getParameter(glDebugRendererInfo.UNMASKED_RENDERER_WEBGL),
+        getUnmaskedParameter('UNMASKED_RENDERER_WEBGL'),
       ],
       [
         'Unmasked Vendor',
         'UNMASKED_VENDOR',
-        glDebugRendererInfo &&
-          gl.getParameter(glDebugRendererInfo.UNMASKED_VENDOR_WEBGL),
+        getUnmaskedParameter('UNMASKED_VENDOR_WEBGL'),
       ],
       ['WebGL Version', 'WEBGL_VERSION', 2],
     ];
@@ -1014,7 +1022,26 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     while (params.length) {
       const [label, key, value] = params.pop();
       if (key) {
-        result[key] = { label, value };
+        if (typeof value === 'function') {
+          // lazily evaluated (and cached) on first access
+          const entry = { label };
+          Object.defineProperty(entry, 'value', {
+            get() {
+              const resolved = value();
+              Object.defineProperty(entry, 'value', {
+                value: resolved,
+                enumerable: true,
+                writable: true,
+              });
+              return resolved;
+            },
+            enumerable: true,
+            configurable: true,
+          });
+          result[key] = entry;
+        } else {
+          result[key] = { label, value };
+        }
       }
     }
     model._glInformation = result;
