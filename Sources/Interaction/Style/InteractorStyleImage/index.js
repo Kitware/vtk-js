@@ -90,16 +90,6 @@ function vtkInteractorStyleImage(publicAPI, model) {
   };
 
   //--------------------------------------------------------------------------
-  publicAPI.handleStartMouseWheel = () => {
-    publicAPI.startSlice();
-  };
-
-  //--------------------------------------------------------------------------
-  publicAPI.handleEndMouseWheel = () => {
-    publicAPI.endSlice();
-  };
-
-  //--------------------------------------------------------------------------
   publicAPI.handleMouseWheel = (callData) => {
     const camera = model.getRenderer(callData).getActiveCamera();
 
