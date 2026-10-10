@@ -2,10 +2,10 @@ import { Vector3 } from '../../../types';
 import { ViewTypes } from '../../Core/WidgetManager/Constants';
 
 // Different types of plane from ViewTypes:
-export type PlaneViewType =
-  | ViewTypes.YZ_PLANE
-  | ViewTypes.XZ_PLANE
-  | ViewTypes.XY_PLANE;
+export type PlaneViewType = (typeof ViewTypes)[
+  | 'YZ_PLANE'
+  | 'XZ_PLANE'
+  | 'XY_PLANE'];
 
 // 0, 1, 2 for X, Y, Z
 export type AxisIndex = 0 | 1 | 2;
@@ -13,20 +13,26 @@ export type AxisIndex = 0 | 1 | 2;
 // Should be X, Y, Z
 export type PlaneName = typeof planeNames extends (infer U)[] ? U : never;
 
-export declare enum ScrollingMethods {
-  MIDDLE_MOUSE_BUTTON = 0,
-  LEFT_MOUSE_BUTTON = 1,
-  RIGHT_MOUSE_BUTTON = 2,
-}
+export declare const ScrollingMethods: {
+  readonly MIDDLE_MOUSE_BUTTON: 0;
+  readonly LEFT_MOUSE_BUTTON: 1;
+  readonly RIGHT_MOUSE_BUTTON: 2;
+};
+
+export type ScrollingMethods =
+  (typeof ScrollingMethods)[keyof typeof ScrollingMethods];
 
 // Note: These strings are used in ResliceCursorWidget/behavior.js
 // as method's names
-export declare enum InteractionMethodsName {
-  TranslateAxis = 'translateAxis',
-  RotateLine = 'rotateLine',
-  TranslateCenter = 'translateCenter',
-  TranslateCenterAndUpdatePlanes = 'translateCenterAndUpdatePlanes',
-}
+export declare const InteractionMethodsName: {
+  readonly TranslateAxis: 'translateAxis';
+  readonly RotateLine: 'rotateLine';
+  readonly TranslateCenter: 'translateCenter';
+  readonly TranslateCenterAndUpdatePlanes: 'translateCenterAndUpdatePlanes';
+};
+
+export type InteractionMethodsName =
+  (typeof InteractionMethodsName)[keyof typeof InteractionMethodsName];
 
 export declare const defaultViewUpFromViewType: {
   [plane in PlaneViewType]: Vector3;

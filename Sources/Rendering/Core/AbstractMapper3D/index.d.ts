@@ -49,6 +49,18 @@ export interface vtkAbstractMapper3D extends vtkAbstractMapper {
    * @return {Number} The diagonal length of mapper bounding box.
    */
   getLength(): number;
+
+  /**
+   * Get the properties the rendering backends read their own settings from,
+   * keyed by backend name.
+   */
+  getViewSpecificProperties(): object;
+
+  /**
+   * Set the properties the rendering backends read their own settings from.
+   * @param viewSpecificProperties
+   */
+  setViewSpecificProperties(viewSpecificProperties: object): boolean;
 }
 
 /**

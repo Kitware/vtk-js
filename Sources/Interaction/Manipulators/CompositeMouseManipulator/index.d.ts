@@ -1,5 +1,6 @@
 import vtkRenderer from '../../../Rendering/Core/Renderer';
 import vtkRenderWindowInteractor from '../../../Rendering/Core/RenderWindowInteractor';
+import { Nullable } from '../../../types';
 
 export interface vtkCompositeMouseManipulator {
   /**
@@ -59,6 +60,20 @@ export interface vtkCompositeMouseManipulator {
    * @param interactor the interactor
    */
   onEndScroll(interactor: vtkRenderWindowInteractor): void;
+
+  /**
+   * Handles a scroll event.
+   * @param interactor the interactor
+   * @param renderer the renderer
+   * @param delta the scroll delta
+   * @param position the display position, when the interactor style caches one
+   */
+  onScroll(
+    interactor: vtkRenderWindowInteractor,
+    renderer: vtkRenderer,
+    delta: number,
+    position?: Nullable<{ x: number; y: number }>
+  ): void;
 
   /**
    * Is drag enabled.

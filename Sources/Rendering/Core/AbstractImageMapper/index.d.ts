@@ -74,7 +74,7 @@ export interface vtkAbstractImageMapper extends vtkAbstractMapper3D {
    * @param {RGBAColor} color specify the background color to use
    * in RGBA format as an array of 4 values. Values are copied.
    */
-  setBackgroundColorFrom(color: RGBAColor): boolean;
+  setBackgroundColorFrom(color: RGBAColor): void;
 
   /**
    *
@@ -125,7 +125,7 @@ export interface vtkAbstractImageMapper extends vtkAbstractMapper3D {
    *
    * @param customDisplayExtent
    */
-  setCustomDisplayExtentFrom(customDisplayExtent: number[]): boolean;
+  setCustomDisplayExtentFrom(customDisplayExtent: number[]): void;
 
   /**
    * Set the opacity texture width.

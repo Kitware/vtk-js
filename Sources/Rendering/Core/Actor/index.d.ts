@@ -34,7 +34,7 @@ export interface vtkActor extends vtkProp3D {
    * properties.
    * @return {vtkProperty} the backface property.
    */
-  getBackfaceProperty(): vtkProperty;
+  getBackfaceProperty(): Nullable<vtkProperty>;
 
   /**
    * Check whether the opaque is forced or not.

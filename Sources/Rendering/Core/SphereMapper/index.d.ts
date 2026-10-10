@@ -1,6 +1,9 @@
+import { Nullable } from '../../../types';
 import vtkMapper, { IMapperInitialValues } from '../Mapper';
 
 export interface ISphereInitialValues extends IMapperInitialValues {
+  scaleArray?: Nullable<string>;
+  scaleFactor?: number;
   radius?: number;
 }
 
@@ -13,7 +16,7 @@ export interface vtkSphereMapper extends vtkMapper {
   /**
    *
    */
-  getScaleArray(): any;
+  getScaleArray(): Nullable<string>;
 
   /**
    *
@@ -30,7 +33,7 @@ export interface vtkSphereMapper extends vtkMapper {
    *
    * @param scaleArray
    */
-  setScaleArray(scaleArray: any): boolean;
+  setScaleArray(scaleArray: Nullable<string>): boolean;
 
   /**
    * Factor multiplied with scale array elements. Radius is used when no scale array is given.

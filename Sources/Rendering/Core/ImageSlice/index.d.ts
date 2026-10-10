@@ -1,4 +1,4 @@
-import { Bounds } from '../../../types';
+import { Bounds, Nullable } from '../../../types';
 import vtkImageProperty, {
   IImagePropertyInitialValues,
 } from '../ImageProperty';
@@ -6,6 +6,8 @@ import vtkAbstractImageMapper from '../AbstractImageMapper';
 import vtkProp3D, { IProp3DInitialValues } from '../Prop3D';
 
 export interface IImageSliceInitialValues extends IProp3DInitialValues {
+  forceOpaque?: boolean;
+  forceTranslucent?: boolean;
   mapper?: vtkAbstractImageMapper;
   property?: vtkImageProperty;
   bounds?: Bounds;
@@ -38,7 +40,7 @@ export interface vtkImageSlice extends vtkProp3D {
   /**
    *
    */
-  getMapper(): vtkAbstractImageMapper;
+  getMapper(): Nullable<vtkAbstractImageMapper>;
 
   /**
    * Get the minimum X bound
@@ -112,6 +114,16 @@ export interface vtkImageSlice extends vtkProp3D {
    * @param {vtkAbstractImageMapper} mapper An instance that derives from vtkAbstractImageMapper.
    */
   setMapper(mapper: vtkAbstractImageMapper): boolean;
+
+  /**
+   * If true, render during the opaque pass even if the opacity value is below 1.0.
+   */
+  getForceOpaque(): boolean;
+
+  /**
+   * If true, render during the translucent pass even if the opacity value is 1.0.
+   */
+  getForceTranslucent(): boolean;
 
   /**
    *

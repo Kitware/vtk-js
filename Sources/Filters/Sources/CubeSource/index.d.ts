@@ -5,7 +5,7 @@ import { Bounds, Vector3 } from '../../../types';
 /**
  *
  */
-export interface ICircleSourceInitialValues {
+export interface ICubeSourceInitialValues {
   xLength?: number;
   yLength?: number;
   zLength?: number;
@@ -13,6 +13,8 @@ export interface ICircleSourceInitialValues {
   rotations?: Vector3;
   pointType?: string;
   generate3DTextureCoordinates?: boolean;
+  generateFaces?: boolean;
+  generateLines?: boolean;
 }
 
 type vtkCubeSourceBase = vtkObject &
@@ -29,14 +31,13 @@ type vtkCubeSourceBase = vtkObject &
 export interface vtkCubeSource extends vtkCubeSourceBase {
   /**
    * Get the center of the cube.
-   * @default [0.0, 0.0, 0.0]
    */
-  getCenter(): Vector3;
+  getCenter(): Vector3 | undefined;
 
   /**
    * Get the center of the cube.
    */
-  getCenterByReference(): Vector3;
+  getCenterByReference(): Vector3 | undefined;
 
   /**
    *
@@ -60,19 +61,22 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
    * Get the 4x4 transformation set to apply as a final trasformation to the output.
    * @param matrix
    */
-  getMatrix(): mat4;
+  getMatrix(): mat4 | undefined;
+
+  /**
+   * Get the 4x4 transformation set to apply as a final trasformation to the output.
+   */
+  getMatrixByReference(): mat4 | undefined;
 
   /**
    *
-   * @default [0.0, 0.0, 0.0]
    */
-  getRotations(): Vector3;
+  getRotations(): Vector3 | undefined;
 
   /**
    *
-   * @default [0.0, 0.0, 0.0]
    */
-  getRotationsByReference(): Vector3;
+  getRotationsByReference(): Vector3 | undefined;
 
   /**
    * Get the length of the cube in the x-direction.
@@ -115,13 +119,13 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
     yMax: number,
     zMin: number,
     zMax: number
-  ): boolean;
+  ): void;
 
   /**
    * Convenience methods allows creation of cube by specifying bounding box.
    * @param {Bounds} bounds The bounds for the cube.
    */
-  setBounds(bounds: Bounds): boolean;
+  setBounds(bounds: Bounds): void;
 
   /**
    * Set the center of the cube.
@@ -137,7 +141,7 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
    * @param center
    * @default [0, 0, 0]
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenterFrom(center: Vector3): void;
 
   /**
    *
@@ -166,6 +170,12 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
   setMatrix(matrix: mat4): boolean;
 
   /**
+   * Set a 4x4 transformation that will be applied as a final trasformation to the output.
+   * @param matrix
+   */
+  setMatrixFrom(matrix: mat4): void;
+
+  /**
    * Float array of size 3 representing the angles, in degrees, of rotation for the cube.
    * @param xAngle
    * @param yAngle
@@ -177,7 +187,7 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
    *
    * @param {Vector3} rotations
    */
-  setRotationsFrom(rotations: Vector3): boolean;
+  setRotationsFrom(rotations: Vector3): void;
 
   /**
    * Set the length of the cube in the x-direction.
@@ -203,20 +213,20 @@ export interface vtkCubeSource extends vtkCubeSourceBase {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {ICircleSourceInitialValues} [initialValues] (default: {})
+ * @param {ICubeSourceInitialValues} [initialValues] (default: {})
  */
 export function extend(
   publicAPI: object,
   model: object,
-  initialValues?: ICircleSourceInitialValues
+  initialValues?: ICubeSourceInitialValues
 ): void;
 
 /**
  * Method used to create a new instance of vtkCubeSource.
- * @param {ICircleSourceInitialValues} [initialValues] for pre-setting some of its content
+ * @param {ICubeSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(
-  initialValues?: ICircleSourceInitialValues
+  initialValues?: ICubeSourceInitialValues
 ): vtkCubeSource;
 
 /**

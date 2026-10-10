@@ -1,11 +1,10 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { ExtractionMode } from './Constants';
 
-export enum ExtractionMode {
-  ExtractionMode_ALL,
-  ExtractionMode_LARGEST,
-  ExtractionMode_SMALLEST,
-  ExtractionMode_CUSTOM,
-}
+/**
+ * The type is public; the value is reached through the Constants module.
+ */
+export type { ExtractionMode };
 
 /**
  *
@@ -45,18 +44,38 @@ export interface vtkBFSConnectivityFilter extends vtkBFSConnectivityFilterBase {
    * Set the extractionMode to extract the required connected regions
    * @param {ExtractionMode} extractionMode
    */
-  setExtractionMode(extractionMode: ExtractionMode): void;
+  setExtractionMode(extractionMode: ExtractionMode): boolean;
+
+  /**
+   * Set the ExtractionMode to ExtractionMode_ALL.
+   */
+  setExtractionModeToAll(): void;
+
+  /**
+   * Set the ExtractionMode to ExtractionMode_LARGEST.
+   */
+  setExtractionModeToLargest(): void;
+
+  /**
+   * Set the ExtractionMode to ExtractionMode_SMALLEST.
+   */
+  setExtractionModeToSmallest(): void;
+
+  /**
+   * Set the ExtractionMode to ExtractionMode_CUSTOM.
+   */
+  setExtractionModeToCustom(): void;
 
   /**
    * Set the index to extract regions. should be 0 ~ regionsCount-1.
    * @param {Number} extractionIndex
    */
-  setExtractionIndex(extractionIndex: number): void;
+  setExtractionIndex(extractionIndex: number): boolean;
 
   /**
-   * @param {Number} regionsCount
+   * No-op. RegionsCount is computed internally and cannot be set.
    */
-  setRegionsCount(regionsCount: number): void;
+  setRegionsCount(): void;
 }
 
 /**

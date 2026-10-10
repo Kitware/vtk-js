@@ -3,7 +3,7 @@ import vtkCoordinate from '../Coordinate';
 import vtkMapper from '../Mapper';
 import vtkProperty2D, { IProperty2DInitialValues } from '../Property2D';
 import vtkMapper2D from '../Mapper2D';
-import { Bounds } from '../../../types';
+import { Bounds, Nullable } from '../../../types';
 
 /**
  *
@@ -39,6 +39,17 @@ export interface vtkActor2D extends vtkProp {
   getProperty(): vtkProperty2D;
 
   /**
+   * Create the property object if it does not exist yet and return it.
+   */
+  ensureProperty(): vtkProperty2D;
+
+  /**
+   * Set the property object that controls this actor's surface properties.
+   * @param {vtkProperty2D} property
+   */
+  setProperty(property: vtkProperty2D): boolean;
+
+  /**
    * Create a new property suitable for use with this type of Actor.
    * @param {IProperty2DInitialValues} [initialValues] (default: {})
    */
@@ -52,7 +63,7 @@ export interface vtkActor2D extends vtkProp {
   /**
    * Gets the 2D mapper.
    */
-  getMapper(): vtkMapper2D;
+  getMapper(): Nullable<vtkMapper2D>;
 
   /**
    * Set the layer number for this 2D actor.
@@ -63,7 +74,7 @@ export interface vtkActor2D extends vtkProp {
    * they were added to the renderer via `addActor` or `addActor2D`.
    * By default, each actor2D has a layer number of 0.
    */
-  setLayerNumber(layer: number): void;
+  setLayerNumber(layer: number): boolean;
 
   /**
    * Get the layer number for this 2D actor.
@@ -114,7 +125,7 @@ export interface vtkActor2D extends vtkProp {
    * Get the bounds as [xmin, xmax, ymin, ymax, zmin, zmax].
    * @return {Bounds} The bounds for the mapper.
    */
-  getBounds(): Bounds;
+  getBounds(): Bounds | [];
 
   /**
    * Return the actual vtkCoordinate reference that the mapper should use

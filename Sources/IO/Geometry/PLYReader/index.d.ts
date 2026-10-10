@@ -42,7 +42,7 @@ export interface vtkPLYReader extends vtkPLYReaderBase {
   /**
    *
    */
-  getBaseURL(): string;
+  getBaseURL(): string | undefined;
 
   /**
    *
@@ -66,7 +66,7 @@ export interface vtkPLYReader extends vtkPLYReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    * Load the object data.

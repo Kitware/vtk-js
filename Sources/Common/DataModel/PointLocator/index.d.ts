@@ -25,6 +25,17 @@ interface IFindClosestPointResult {
 
 export interface vtkPointLocator extends vtkIncrementalPointLocator {
   /**
+   * Build the locator from the input dataset.
+   */
+  buildLocator(): void;
+
+  /**
+   * Compute the performance factors (bucket widths, offsets and divisions)
+   * derived from the current bounds and divisions.
+   */
+  computePerformanceFactors(): void;
+
+  /**
    * Find the closest inserted point to the given coordinates.
    *
    * @param {Vector3} x The query point
@@ -65,7 +76,23 @@ export interface vtkPointLocator extends vtkIncrementalPointLocator {
    * @param {vtkPolyData} polydata The polydata to generate representation for
    * @returns
    */
-  generateRepresentation(polydata: vtkPolyData): boolean;
+  generateRepresentation(polydata: vtkPolyData): void;
+
+  /**
+   * Get the flat bucket index for a given point.
+   *
+   * @param {Vector3} point The point coordinates
+   * @returns {Number} The bucket index
+   */
+  getBucketIndex(point: Vector3): number;
+
+  /**
+   * Get the (i, j, k) bucket indices for a given point.
+   *
+   * @param {Vector3} point The point coordinates
+   * @returns {Vector3} The bucket indices, clamped to the locator divisions
+   */
+  getBucketIndices(point: Vector3): Vector3;
 
   /**
    * Get the number of points per bucket.
@@ -87,6 +114,11 @@ export interface vtkPointLocator extends vtkIncrementalPointLocator {
    * @returns {Nullable<vtkPoints>} The vtkPoints object containing the points.
    */
   getPoints(): Nullable<vtkPoints>;
+
+  /**
+   * Release the points and free the search structure.
+   */
+  initialize(): void;
 
   /**
    * Initialize point insertion.
@@ -141,6 +173,18 @@ export interface vtkPointLocator extends vtkIncrementalPointLocator {
   isInsertedPoint(x: Vector3): number;
 
   /**
+   * Get the divisions of the point locator.
+   * @default [50, 50, 50]
+   */
+  getDivisions(): Vector3;
+
+  /**
+   * Get the divisions of the point locator.
+   * @default [50, 50, 50]
+   */
+  getDivisionsByReference(): Vector3;
+
+  /**
    * Set the divisions of the point locator.
    * @param {Vector3} divisions The number of divisions in each dimension.
    * @returns {Boolean} True if the divisions were set successfully, false otherwise.
@@ -155,6 +199,12 @@ export interface vtkPointLocator extends vtkIncrementalPointLocator {
    * @returns {Boolean} True if the divisions were set successfully, false otherwise.
    */
   setDivisions(x: number, y: number, z: number): boolean;
+
+  /**
+   * Set the divisions of the point locator.
+   * @param {Vector3} divisions The number of divisions in each dimension.
+   */
+  setDivisionsFrom(divisions: Vector3): void;
 
   /**
    * Set the number of points per bucket.

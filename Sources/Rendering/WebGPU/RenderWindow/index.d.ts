@@ -1,152 +1,212 @@
-import { vtkObject, vtkSubscription } from '../../../interfaces';
-import { Nullable } from '../../../types';
-import { vtkViewNode } from '../../SceneGraph/ViewNode';
-import { vtkWebGPUConfiguration } from '../Configuration';
+/// <reference types="@webgpu/types" />
 
-export interface IWebGPURenderWindowInitialValues {
+import { Nullable, Size, Vector2 } from '../../../types';
+import { vtkSubscription } from '../../../interfaces';
+import {
+  IRenderWindowViewNodeInitialValues,
+  vtkRenderWindowViewNode,
+} from '../../SceneGraph/RenderWindowViewNode';
+import { vtkViewNode } from '../../SceneGraph/ViewNode';
+import vtkRenderPass from '../../SceneGraph/RenderPass';
+import vtkRenderer from '../../Core/Renderer';
+import vtkViewStream from '../../../IO/Core/ImageStream/ViewStream';
+import vtkWebGPUDevice from '../Device';
+import { vtkWebGPUConfiguration } from '../Configuration';
+import vtkWebGPUViewNodeFactory from '../ViewNodeFactory';
+
+export interface IWebGPURenderWindowInitialValues extends IRenderWindowViewNodeInitialValues {
   initialized?: boolean;
-  context?: any;
-  webGPUConfiguration?: vtkWebGPUConfiguration;
-  canvas?: HTMLCanvasElement;
+  initializing?: boolean;
+  handlingDeviceLost?: boolean;
+  deviceGeneration?: number;
+  deviceLostInfo?: Nullable<GPUDeviceLostInfo>;
+  context?: Nullable<GPUCanvasContext>;
+  adapter?: Nullable<GPUAdapter>;
+  device?: Nullable<vtkWebGPUDevice>;
+  canvas?: Nullable<HTMLCanvasElement>;
+  cursorVisibility?: boolean;
   cursor?: string;
-  useOffScreen?: boolean;
+  containerSize?: Nullable<Size>;
+  renderPasses?: vtkRenderPass[];
+  notifyStartCaptureImage?: boolean;
   imageFormat?: string;
+  useOffScreen?: boolean;
   useBackgroundImage?: boolean;
+  nextPropID?: number;
   xrSupported?: boolean;
-  presentationFormat?: Nullable<string>;
+  presentationFormat?: Nullable<GPUTextureFormat>;
+  webGPUConfiguration?: Nullable<vtkWebGPUConfiguration>;
   multiSample?: 1 | 4;
-  size?: [number, number];
+}
+
+export interface IWebGPUCaptureOptions {
+  resetCamera?: boolean | ((options: { renderer: vtkRenderer }) => void);
+  size?: Nullable<Vector2>;
+  scale?: number;
 }
 
 /**
- * vtkWebGPURenderWindow is designed to view/render a vtkRenderWindow
- * using the WebGPU API.
+ * The payload of the deviceLost event.
  */
-export interface vtkWebGPURenderWindow extends vtkViewNode {
-  // -------------------------------------------------------------------
-  // Explicitly defined methods on publicAPI
-  // -------------------------------------------------------------------
+export interface IWebGPUDeviceLostEvent {
+  reason: GPUDeviceLostReason;
+  message: string;
 
   /**
-   * Get the view-node factory used to create WebGPU scene-graph nodes.
+   * False when the device was lost because it was destroyed, in which case no
+   * new device is acquired.
    */
-  getViewNodeFactory(): any;
+  recoverable: boolean;
+}
+
+/**
+ * The payload of the windowResize event.
+ */
+export interface IWebGPUWindowResizeEvent {
+  width: number;
+  height: number;
+}
+
+/**
+ * The pixels read back from the color texture of the forward pass.
+ */
+export interface IWebGPUPixels {
+  width: number;
+  height: number;
 
   /**
-   * Unconfigure and reconfigure the swap chain. Called automatically when
-   * the canvas size changes.
+   * The width, in texels, of the readback buffer. Rounded up so that a row is
+   * a multiple of 256 bytes, as WebGPU requires.
+   */
+  colorBufferWidth: number;
+  colorBufferSizeInBytes: number;
+
+  /**
+   * The RGBA values of the image, tightly packed at `width` texels per row.
+   */
+  colorValues: Uint8ClampedArray;
+}
+
+export interface vtkWebGPURenderWindow extends vtkRenderWindowViewNode {
+  /**
+   * Get the factory creating the WebGPU view nodes of this render window.
+   */
+  getViewNodeFactory(): vtkWebGPUViewNodeFactory;
+
+  /**
+   * Reconfigure the canvas context for the current device and size.
    */
   recreateSwapChain(): void;
 
   /**
-   * Get the current swap-chain texture from the canvas context.
+   * Get the texture the canvas context is presenting this frame.
    */
-  getCurrentTexture(): any;
+  getCurrentTexture(): GPUTexture;
 
   /**
-   * Build pass callback invoked by the scene-graph traversal.
-   * @param prepass Whether this is the pre-pass (`true`) or post-pass (`false`).
+   * Builds myself: adopt the renderers of the renderable as children and, on
+   * the second visit, create the command encoder of the frame.
+   * @param {Boolean} prepass
    */
   buildPass(prepass: boolean): void;
 
   /**
-   * Initialize the render window. Triggers async GPU adapter/device
-   * creation; fires the `initialized` event on completion.
+   * Start acquiring the adapter, the device and the canvas context, unless
+   * that is already under way. The initialized event fires once they are
+   * available.
    */
   initialize(): void;
 
   /**
-   * Set the container element for the render window.
-   * @param el The HTML element to use as the container, or `null` to detach.
+   * Move the canvas into a container element.
+   * @param {HTMLElement} el The container element.
    */
   setContainer(el: Nullable<HTMLElement>): void;
 
   /**
-   * Get the current container element.
+   * Get the container element.
    */
   getContainer(): Nullable<HTMLElement>;
 
   /**
-   * Get the size of the container element in pixels.
-   * @returns [width, height]
+   * Get the size of the container element, falling back to the size of the
+   * render window when there is no container.
    */
-  getContainerSize(): [number, number];
+  getContainerSize(): Vector2;
 
   /**
-   * Get the framebuffer size.
-   * @returns [width, height]
+   * Get the frame buffer size.
    */
-  getFramebufferSize(): [number, number];
+  getFramebufferSize(): Vector2;
 
   /**
-   * Create the WebGPU 3D context asynchronously. Initializes the
-   * configuration, which supplies the adapter and device, then configures the
-   * canvas context.
+   * Request the adapter and the device, watch the device for loss, and get
+   * the WebGPU context of the canvas. Resolves once the context is ready, or
+   * early when the render window was deleted while waiting.
    */
-  create3DContextAsync(): Promise<boolean>;
+  create3DContextAsync(): Promise<void>;
 
   /**
-   * Release all GPU resources and clean up the rendering context.
+   * Release the resources of the render passes and of every view node, and
+   * drop the adapter, device and context. The render window initializes again
+   * on the next traversal.
    */
   releaseGraphicsResources(): void;
 
   /**
-   * Set the background image element.
-   * @param img The image element.
+   * @param {HTMLImageElement} img The background image.
    */
   setBackgroundImage(img: HTMLImageElement): void;
 
   /**
-   * Enable or disable rendering of a background image behind the scene.
-   * @param value Whether to use the background image.
+   * Add or remove the background image from the container.
+   * @param {Boolean} value
    */
   setUseBackgroundImage(value: boolean): void;
 
   /**
-   * Capture the next rendered frame as an image.
-   * @param format The image format (default: 'image/png').
-   * @param opts Options for capture.
-   * @param opts.resetCamera Whether to reset the camera before capture.
-   * @param opts.size Override the render size as [width, height].
-   * @param opts.scale Scale factor for the render size.
+   * Capture a screenshot of the contents of this render window. The options
+   * object can include a `size` array (`[w, h]`) or a `scale` floating point
+   * value, as well as a `resetCamera` boolean. Returns a promise that
+   * resolves to the captured screenshot, or null when the render window was
+   * already deleted.
+   * @param {String} format
+   * @param {IWebGPUCaptureOptions} options
    */
   captureNextImage(
     format?: string,
-    opts?: { resetCamera?: boolean; size?: [number, number]; scale?: number }
-  ): Promise<string>;
+    options?: IWebGPUCaptureOptions
+  ): Nullable<Promise<string>>;
 
   /**
-   * Traverse all registered render passes.
+   * Traverse the render passes, submitting the command encoder of the frame
+   * when they are done. Queues the traversal until the device is available
+   * when the render window is not initialized yet.
    */
   traverseAllPasses(): void;
 
   /**
-   * Set a view stream for remote rendering.
-   * @param stream The view stream instance.
+   * @param {vtkViewStream} stream The vtkViewStream instance.
    */
-  setViewStream(stream: any): boolean;
+  setViewStream(stream: vtkViewStream): boolean;
 
   /**
-   * Get a unique prop ID for hardware selection.
+   * Get an id no other prop of this render window uses, for hardware
+   * selection.
    */
   getUniquePropID(): number;
 
   /**
-   * Get a prop (actor) by its hardware-selection ID.
-   * @param id The prop ID.
-   * @returns The matching prop, or `null` if not found.
+   * Get the view node of the prop holding an id, or null when none does.
+   * @param {Number} id
    */
-  getPropFromID(id: number): vtkObject | null;
+  getPropFromID(id: number): Nullable<vtkViewNode>;
 
   /**
-   * Read pixels from the current framebuffer asynchronously.
-   * Returns an object with `colorValues` (Uint8ClampedArray), `width`, and `height`.
+   * Read the color texture of the forward pass back into a tightly packed
+   * RGBA array.
    */
-  getPixelsAsync(): Promise<{
-    colorValues: Uint8ClampedArray;
-    width: number;
-    height: number;
-  }>;
+  getPixelsAsync(): Promise<IWebGPUPixels>;
 
   /**
    * Create a hardware selector bound to this render window.
@@ -154,223 +214,224 @@ export interface vtkWebGPURenderWindow extends vtkViewNode {
   createSelector(): any;
 
   /**
-   * Set the size of the render window.
-   * @param width Width in pixels.
-   * @param height Height in pixels.
+   * Sets the pixel width and height of the rendered image, and fires the
+   * windowResizeEvent when they changed.
+   * @param {Vector2} size
    */
-  setSize(width: number, height: number): boolean;
+  setSize(size: Vector2): boolean;
 
   /**
-   * Controls the number of MSAA samples per pixel.
-   *
-   * - **Default:** `1` (no anti-aliasing)
-   *
-   * @param count The sample count (`1` or `4`).
-   * @returns `true` if the value changed, `false` otherwise.
+   * @param {Number} x
+   * @param {Number} y
    */
-  setMultiSample(count: 1 | 4): boolean;
-
-  // -------------------------------------------------------------------
-  // macro.get (getter-only)
-  // -------------------------------------------------------------------
+  setSize(x: number, y: number): boolean;
 
   /**
-   * Get the WebGPU command encoder for the current frame.
    */
-  getCommandEncoder(): any;
+  getSize(): Vector2;
 
   /**
-   * Get whether a background image is being used.
    */
-  getUseBackgroundImage(): boolean;
+  getSizeByReference(): Vector2;
 
   /**
-   * Get whether XR (WebXR) is supported.
+   * @param {Vector2} size
    */
-  getXrSupported(): boolean;
+  setSizeFrom(size: Vector2): void;
 
   /**
-   * Get the current MSAA sample count.
+   * Get the command encoder of the frame being built.
    */
-  getMultiSample(): 1 | 4;
-
-  // -------------------------------------------------------------------
-  // macro.setGet
-  // -------------------------------------------------------------------
+  getCommandEncoder(): Nullable<GPUCommandEncoder>;
 
   /**
-   * Get whether the render window has been initialized.
+   * Get the information of the last device loss, or null when the device was
+   * never lost or was reacquired.
    */
-  getInitialized(): boolean;
+  getDeviceLostInfo(): Nullable<GPUDeviceLostInfo>;
 
   /**
-   * Set the initialized state.
-   * @param initialized Whether initialized.
+   * Get the device this render window renders with.
    */
-  setInitialized(initialized: boolean): boolean;
+  getDevice(): Nullable<vtkWebGPUDevice>;
 
   /**
-   * Get the WebGPU canvas context.
+   * Get the configuration that supplies the adapter and device.
    */
-  getContext(): any;
+  getWebGPUConfiguration(): vtkWebGPUConfiguration;
 
   /**
-   * Set the WebGPU canvas context.
-   * @param context The GPU canvas context.
-   */
-  setContext(context: any): boolean;
-
-  /**
-   * Get the current canvas element.
-   */
-  getCanvas(): HTMLCanvasElement;
-
-  /**
-   * Set the canvas element.
-   * @param canvas The canvas element.
-   */
-  setCanvas(canvas: HTMLCanvasElement): boolean;
-
-  /**
-   * Get the vtkWebGPUDevice that holds resource caches for this
-   * render window, or null before initialization.
-   *
-   * One instance of this wrapper exists for each native device. Thus, render
-   * windows that share a configuration also share this object. Use
-   * `getWebGPUConfiguration().getDevice()` to get the native `GPUDevice`.
-   */
-  getDevice(): any;
-
-  /**
-   * Set the configuration that supplies the adapter and the device.
-   *
-   * Set this before initialization. Render windows that share a configuration
-   * share one device, and thus one set of vtk.js resource caches. Set null to
-   * go back to a configuration that this render window creates and owns.
-   *
-   * @param configuration the configuration to use, or null
-   * @returns true if the value changed
+   * Set the configuration before initialization. Passing null creates an
+   * internally owned configuration.
    */
   setWebGPUConfiguration(
     configuration: Nullable<vtkWebGPUConfiguration>
   ): boolean;
 
   /**
-   * Get the configuration that supplies the adapter and the device.
-   *
-   * A render window always has a configuration. Unless the application gives
-   * one, the render window creates and owns it, and deletes it with itself.
+   * Set the device this render window renders with.
+   * @param {vtkWebGPUDevice} device
    */
-  getWebGPUConfiguration(): vtkWebGPUConfiguration;
+  setDevice(device: Nullable<vtkWebGPUDevice>): boolean;
 
   /**
-   * Get the render passes.
+   * Get the texture format the canvas context is configured with.
    */
-  getRenderPasses(): any[];
+  getPresentationFormat(): Nullable<GPUTextureFormat>;
 
   /**
-   * Set the render passes.
-   * @param passes Array of render passes.
+   * Get the number of samples per pixel.
    */
-  setRenderPasses(passes: any[]): boolean;
+  getMultiSample(): 1 | 4;
 
   /**
-   * Get whether image capture notification is enabled.
+   * Set the number of samples per pixel. Supported values are 1 and 4.
+   */
+  setMultiSample(count: 1 | 4): boolean;
+
+  /**
+   * Whether the background image is attached to the container.
+   */
+  getUseBackgroundImage(): boolean;
+
+  /**
+   */
+  getXrSupported(): boolean;
+
+  /**
+   * Whether the device and the canvas context are ready.
+   */
+  getInitialized(): boolean;
+
+  /**
+   * @param {Boolean} initialized
+   */
+  setInitialized(initialized: boolean): boolean;
+
+  /**
+   * Get the WebGPU context of the canvas.
+   */
+  getContext(): Nullable<GPUCanvasContext>;
+
+  /**
+   * @param {GPUCanvasContext} context
+   */
+  setContext(context: Nullable<GPUCanvasContext>): boolean;
+
+  /**
+   * Get the canvas rendered into.
+   */
+  getCanvas(): Nullable<HTMLCanvasElement>;
+
+  /**
+   * @param {HTMLCanvasElement} canvas
+   */
+  setCanvas(canvas: Nullable<HTMLCanvasElement>): boolean;
+
+  /**
+   * Get the render passes traversed on every render.
+   */
+  getRenderPasses(): vtkRenderPass[];
+
+  /**
+   * @param {vtkRenderPass[]} renderPasses
+   */
+  setRenderPasses(renderPasses: vtkRenderPass[]): boolean;
+
+  /**
+   * Whether the image ready event fires once the frame is done.
    */
   getNotifyStartCaptureImage(): boolean;
 
   /**
-   * Set whether image capture notification is enabled.
-   * @param notify Whether to notify on capture start.
+   * @param {Boolean} notifyStartCaptureImage
    */
-  setNotifyStartCaptureImage(notify: boolean): boolean;
+  setNotifyStartCaptureImage(notifyStartCaptureImage: boolean): boolean;
 
   /**
-   * Get the current cursor style.
+   * Get the CSS cursor of the container.
    */
   getCursor(): string;
 
   /**
-   * Set the cursor style.
-   * @param cursor CSS cursor value.
+   * @param {String} cursor
    */
   setCursor(cursor: string): boolean;
 
   /**
-   * Get whether off-screen rendering is enabled.
+   * Whether the canvas is hidden.
    */
   getUseOffScreen(): boolean;
 
   /**
-   * Set whether to use off-screen rendering.
-   * @param useOffScreen Whether to render off-screen.
+   * @param {Boolean} useOffScreen
    */
   setUseOffScreen(useOffScreen: boolean): boolean;
 
   /**
-   * Get the presentation texture format used by the swap chain.
-   */
-  getPresentationFormat(): string | null;
-
-  // -------------------------------------------------------------------
-  // macro.setGetArray
-  // -------------------------------------------------------------------
-
-  /**
-   * Get the current render window size.
-   * @returns [width, height]
-   */
-  getSize(): [number, number];
-
-  // -------------------------------------------------------------------
-  // macro.event
-  // -------------------------------------------------------------------
-
-  /**
-   * Register a callback for when a captured image is ready.
-   * @param callback Called with the image data URL string.
-   */
-  onImageReady(callback: (imageURL: string) => void): vtkSubscription;
-
-  /**
-   * Programmatically fire the imageReady event.
-   * @param imageURL The image data URL.
+   * Call any registered callbacks with the captured image URL.
+   * @param {String} imageURL
    */
   invokeImageReady(imageURL: string): void;
 
   /**
-   * Register a callback for when the render window has finished initializing.
-   * @param callback Called once GPU context creation is complete.
+   * Register a callback to be called whenever a captured image becomes ready.
+   * @param callback
    */
-  onInitialized(callback: () => void): vtkSubscription;
+  onImageReady(
+    callback: (imageURL: string) => any,
+    priority?: number
+  ): vtkSubscription;
 
   /**
-   * Programmatically fire the initialized event.
+   * Call any registered callbacks once the device and the context are ready.
    */
   invokeInitialized(): void;
 
   /**
-   * Register a callback for window resize events.
-   * @param callback Called with `{ width, height }` when the window is resized.
+   * Register a callback to be called once the device and the context are
+   * ready.
+   * @param callback
    */
-  onWindowResizeEvent(
-    callback: (event: { width: number; height: number }) => void
+  onInitialized(callback: () => any, priority?: number): vtkSubscription;
+
+  /**
+   * Call any registered callbacks with the reason the device was lost.
+   * @param {IWebGPUDeviceLostEvent} event
+   */
+  invokeDeviceLost(event: IWebGPUDeviceLostEvent): void;
+
+  /**
+   * Register a callback to be called whenever the device is lost.
+   * @param callback
+   */
+  onDeviceLost(
+    callback: (event: IWebGPUDeviceLostEvent) => any,
+    priority?: number
   ): vtkSubscription;
 
   /**
-   * Programmatically fire the windowResizeEvent.
-   * @param event The resize event payload.
+   * Call any registered callbacks whenever setSize() changes the size.
+   * @param {IWebGPUWindowResizeEvent} size
    */
-  invokeWindowResizeEvent(event: { width: number; height: number }): void;
+  invokeWindowResizeEvent(size: IWebGPUWindowResizeEvent): void;
+
+  /**
+   * Register a callback to be called whenever setSize() changes the size.
+   * @param callback
+   */
+  onWindowResizeEvent(
+    callback: (size: IWebGPUWindowResizeEvent) => any,
+    priority?: number
+  ): vtkSubscription;
 }
 
 /**
- * Method used to decorate a given object (publicAPI+model) with
- * vtkWebGPURenderWindow characteristics.
+ * Method used to decorate a given object (publicAPI+model) with vtkWebGPURenderWindow characteristics.
  *
- * @param publicAPI object on which methods will be bound (public)
- * @param model object on which data structure will be bound (protected)
- * @param initialValues (default: {})
+ * @param publicAPI object on which methods will be bounds (public)
+ * @param model object on which data structure will be bounds (protected)
+ * @param {IWebGPURenderWindowInitialValues} [initialValues] (default: {})
  */
 export function extend(
   publicAPI: object,
@@ -380,15 +441,18 @@ export function extend(
 
 /**
  * Method used to create a new instance of vtkWebGPURenderWindow.
- * @param initialValues Initial property values.
+ * @param {IWebGPURenderWindowInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(
   initialValues?: IWebGPURenderWindowInitialValues
 ): vtkWebGPURenderWindow;
 
 /**
- * vtkWebGPURenderWindow is designed to view/render a vtkRenderWindow
- * using the WebGPU API.
+ * WebGPU rendering window
+ *
+ * vtkWebGPURenderWindow is designed to view/render a vtkRenderWindow with the
+ * WebGPU backend. It owns the canvas, the adapter and the device, and it
+ * reacquires them when the device is lost.
  */
 export declare const vtkWebGPURenderWindow: {
   newInstance: typeof newInstance;

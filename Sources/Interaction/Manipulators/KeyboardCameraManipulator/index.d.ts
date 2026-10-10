@@ -1,4 +1,4 @@
-import { Vector3 } from '../../../types';
+import { Vector3, Nullable } from '../../../types';
 import { vtkObject } from '../../../interfaces';
 import vtkCompositeKeyboardManipulator from '../CompositeKeyboardManipulator';
 import vtkRenderWindowInteractor from '../../../Rendering/Core/RenderWindowInteractor';
@@ -7,6 +7,105 @@ import vtkRenderer from '../../../Rendering/Core/Renderer';
 
 export interface vtkKeyboardCameraManipulator
   extends vtkObject, vtkCompositeKeyboardManipulator {
+  /**
+   * Get the movement speed.
+   */
+  getMovementSpeed(): Nullable<number>;
+
+  /**
+   * Set the movement speed.
+   * @param speed
+   */
+  setMovementSpeed(speed: number): boolean;
+
+  /**
+   * Get the keys that trigger a forward movement.
+   */
+  getMoveForwardKeys(): KeyboardEvent['key'][];
+
+  /**
+   * Set the keys that trigger a forward movement.
+   * @param keys
+   */
+  setMoveForwardKeys(keys: KeyboardEvent['key'][]): boolean;
+
+  /**
+   * Get the keys that trigger a leftward movement.
+   */
+  getMoveLeftKeys(): KeyboardEvent['key'][];
+
+  /**
+   * Set the keys that trigger a leftward movement.
+   * @param keys
+   */
+  setMoveLeftKeys(keys: KeyboardEvent['key'][]): boolean;
+
+  /**
+   * Get the keys that trigger a backward movement.
+   */
+  getMoveBackwardKeys(): KeyboardEvent['key'][];
+
+  /**
+   * Set the keys that trigger a backward movement.
+   * @param keys
+   */
+  setMoveBackwardKeys(keys: KeyboardEvent['key'][]): boolean;
+
+  /**
+   * Get the keys that trigger a rightward movement.
+   */
+  getMoveRightKeys(): KeyboardEvent['key'][];
+
+  /**
+   * Set the keys that trigger a rightward movement.
+   * @param keys
+   */
+  setMoveRightKeys(keys: KeyboardEvent['key'][]): boolean;
+
+  /**
+   * Get the keys that trigger an upward movement.
+   */
+  getMoveUpKeys(): KeyboardEvent['key'][];
+
+  /**
+   * Set the keys that trigger an upward movement.
+   * @param keys
+   */
+  setMoveUpKeys(keys: KeyboardEvent['key'][]): boolean;
+
+  /**
+   * Get the keys that trigger a downward movement.
+   */
+  getMoveDownKeys(): KeyboardEvent['key'][];
+
+  /**
+   * Set the keys that trigger a downward movement.
+   * @param keys
+   */
+  setMoveDownKeys(keys: KeyboardEvent['key'][]): boolean;
+
+  /**
+   * Get the interactor associated with the current movement.
+   */
+  getInteractor(): Nullable<vtkRenderWindowInteractor>;
+
+  /**
+   * Set the interactor associated with the current movement.
+   * @param interactor
+   */
+  setInteractor(interactor: vtkRenderWindowInteractor): boolean;
+
+  /**
+   * Get the renderer associated with the current movement.
+   */
+  getRenderer(): Nullable<vtkRenderer>;
+
+  /**
+   * Set the renderer associated with the current movement.
+   * @param renderer
+   */
+  setRenderer(renderer: vtkRenderer): boolean;
+
   /**
    * Returns whether a movement is ongoing.
    */
@@ -37,7 +136,10 @@ export interface vtkKeyboardCameraManipulator
    * @param key the movedkey
    * @param camera the camera
    */
-  getDirectionFromKey(key: KeyboardEvent['key'], camera: vtkCamera): Vector3;
+  getDirectionFromKey(
+    key: KeyboardEvent['key'],
+    camera: vtkCamera
+  ): Vector3 | undefined;
 
   /**
    * Moves the given camera, in the given direction, at the given speed.
@@ -85,6 +187,8 @@ export interface vtkKeyboardCameraManipulator
 }
 
 export interface IKeyboardCameraManipulatorInitialValues {
+  interactor?: vtkRenderWindowInteractor;
+  renderer?: vtkRenderer;
   movementSpeed?: number;
   moveForwardKeys?: KeyboardEvent['key'][];
   moveLeftKeys?: KeyboardEvent['key'][];

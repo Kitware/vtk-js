@@ -37,6 +37,17 @@ export interface vtkCompositeCameraManipulator {
   getDisplayCenter(): Vector2;
 
   /**
+   * Gets the display center array by reference.
+   */
+  getDisplayCenterByReference(): Vector2;
+
+  /**
+   * Sets the display center from another array, without a copy.
+   * @param center
+   */
+  setDisplayCenterFrom(center: Vector2): void;
+
+  /**
    * Sets the center.
    * @param center
    */
@@ -47,6 +58,17 @@ export interface vtkCompositeCameraManipulator {
    * Gets the center.
    */
   getCenter(): Vector3;
+
+  /**
+   * Gets the center array by reference.
+   */
+  getCenterByReference(): Vector3;
+
+  /**
+   * Sets the center from another array, without a copy.
+   * @param center
+   */
+  setCenterFrom(center: Vector3): void;
 }
 
 export interface ICompositeCameraManipulatorInitialValues {

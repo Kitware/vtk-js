@@ -6,6 +6,7 @@ import { Bounds, Nullable, Vector3, Range } from '../../../types';
  *
  */
 export interface ICameraInitialValues {
+  modelTransformMatrix?: mat4;
   position?: number[];
   focalPoint?: number[];
   viewUp?: number[];
@@ -95,9 +96,9 @@ export interface vtkCamera extends vtkObject {
   elevation(angle: number): void;
 
   /**
-   * Not implemented yet
+   * @param {mat4} matrix The matrix to fill with the camera light transform.
    */
-  getCameraLightTransformMatrix(): void;
+  getCameraLightTransformMatrix(matrix: mat4): mat4;
 
   /**
    * Get the location of the near and far clipping planes along the direction
@@ -323,7 +324,7 @@ export interface vtkCamera extends vtkObject {
    * This matrix could be used for model related transformations such as scale, shear, rotations and translations.
    * @returns {mat4} mat The value of the model transform matrix.
    */
-  getModelTransformMatrix(): mat4;
+  getModelTransformMatrix(): Nullable<mat4>;
 
   /**
    * Get the ViewPlaneNormal.
@@ -410,7 +411,7 @@ export interface vtkCamera extends vtkObject {
    * of projection.
    * @param {Range} clippingRange
    */
-  setClippingRangeFrom(clippingRange: Range): boolean;
+  setClippingRangeFrom(clippingRange: Range): void;
 
   /**
    * Used to handle convert js device orientation angles
@@ -439,7 +440,7 @@ export interface vtkCamera extends vtkObject {
     beta: number,
     gamma: number,
     screen: number
-  ): boolean;
+  ): void;
 
   /**
    * Set the direction of projection.
@@ -447,7 +448,7 @@ export interface vtkCamera extends vtkObject {
    * @param {Number} y The y coordinate.
    * @param {Number} z The z coordinate.
    */
-  setDirectionOfProjection(x: number, y: number, z: number): boolean;
+  setDirectionOfProjection(x: number, y: number, z: number): void;
 
   /**
    * Move the focal point so that it is the specified distance from the camera
@@ -456,7 +457,7 @@ export interface vtkCamera extends vtkObject {
    * This distance must be positive.
    * @param {Number} distance The value of the distance.
    */
-  setDistance(distance: number): boolean;
+  setDistance(distance: number): void;
 
   /**
    * Set the focal of the camera in world coordinates.
@@ -465,12 +466,6 @@ export interface vtkCamera extends vtkObject {
    * @param {Number} z The z coordinate.
    */
   setFocalPoint(x: number, y: number, z: number): boolean;
-
-  /**
-   * Set the focal of the camera in world coordinates.
-   * @param {Vector3} focalPoint
-   */
-  setFocalPointFrom(focalPoint: Vector3): boolean;
 
   /**
    * Set the value of the FreezeDolly instance variable.
@@ -492,7 +487,7 @@ export interface vtkCamera extends vtkObject {
    * @param {Number} alpha The aplha angle value.
    * @param {Number} beta The beta angle value.
    */
-  setObliqueAngles(alpha: number, beta: number): boolean;
+  setObliqueAngles(alpha: number, beta: number): void;
 
   /**
    * Set the value of the OrientationWXYZ.
@@ -501,7 +496,7 @@ export interface vtkCamera extends vtkObject {
    * @param {Number} y The y coordinate.
    * @param {Number} z The z coordinate.
    */
-  setOrientationWXYZ(degrees: number, x: number, y: number, z: number): boolean;
+  setOrientationWXYZ(degrees: number, x: number, y: number, z: number): void;
 
   /**
    * Set the value of the ParallelProjection.
@@ -533,7 +528,7 @@ export interface vtkCamera extends vtkObject {
    * Set the value of the physicalTranslation.
    * @param {Number[]} physicalTranslation The value of the physicalTranslation.
    */
-  setPhysicalTranslationFrom(physicalTranslation: number[]): boolean;
+  setPhysicalTranslationFrom(physicalTranslation: number[]): void;
 
   /**
    *
@@ -547,7 +542,7 @@ export interface vtkCamera extends vtkObject {
    *
    * @param {Number[]} physicalViewNorth
    */
-  setPhysicalViewNorthFrom(physicalViewNorth: number[]): boolean;
+  setPhysicalViewNorthFrom(physicalViewNorth: number[]): void;
 
   /**
    *
@@ -561,7 +556,7 @@ export interface vtkCamera extends vtkObject {
    *
    * @param {Number[]} physicalViewUp
    */
-  setPhysicalViewUpFrom(physicalViewUp: number[]): boolean;
+  setPhysicalViewUpFrom(physicalViewUp: number[]): void;
 
   /**
    * Set the position of the camera in world coordinates.
@@ -594,7 +589,7 @@ export interface vtkCamera extends vtkObject {
    * @todo Not implemented yet
    * @param {Number} angle The value of the roll angle.
    */
-  setRoll(angle: number): boolean;
+  setRoll(angle: number): void;
 
   /**
    * Set top left corner point of the screen.
@@ -618,7 +613,7 @@ export interface vtkCamera extends vtkObject {
    * Set top left corner point of the screen.
    * @param {Vector3} screenBottomLeft The screenBottomLeft coordiante.
    */
-  setScreenBottomLeftFrom(screenBottomLeft: Vector3): boolean;
+  setScreenBottomLeftFrom(screenBottomLeft: Vector3): void;
 
   /**
    *
@@ -638,7 +633,7 @@ export interface vtkCamera extends vtkObject {
    * Set bottom right corner point of the screen.
    * @param {Vector3} screenBottomRight The screenBottomRight coordiante.
    */
-  setScreenBottomRightFrom(screenBottomRight: Vector3): boolean;
+  setScreenBottomRightFrom(screenBottomRight: Vector3): void;
 
   /**
    * Set top right corner point of the screen.
@@ -662,7 +657,7 @@ export interface vtkCamera extends vtkObject {
    * Set top right corner point of the screen.
    * @param {Vector3} screenTopRight The screenTopRight coordiante.
    */
-  setScreenTopRightFrom(screenTopRight: Vector3): boolean;
+  setScreenTopRightFrom(screenTopRight: Vector3): void;
 
   /**
    * Set the distance between clipping planes.
@@ -671,13 +666,13 @@ export interface vtkCamera extends vtkObject {
    * 'thickness' beyond the near clipping plane.
    * @param {Number} thickness
    */
-  setThickness(thickness: number): boolean;
+  setThickness(thickness: number): void;
 
   /**
    *
    * @param {Number} thickness The value of the thickness.
    */
-  setThicknessFromFocalPoint(thickness: number): boolean;
+  setThicknessFromFocalPoint(thickness: number): void;
 
   /**
    * Set the value of the useHorizontalViewAngle.
@@ -744,7 +739,7 @@ export interface vtkCamera extends vtkObject {
    * Set the view up direction for the camera.
    * @param {Vector3} viewUp The viewUp coordinate.
    */
-  setViewUpFrom(viewUp: Vector3): boolean;
+  setViewUpFrom(viewUp: Vector3): void;
 
   /**
    * Set the center of the window in viewport coordinates.
@@ -763,7 +758,7 @@ export interface vtkCamera extends vtkObject {
    * Set the center of the window in viewport coordinates from an array.
    * @param {Range} windowCenter
    */
-  setWindowCenterFrom(windowCenter: Range): boolean;
+  setWindowCenterFrom(windowCenter: Range): void;
 
   /**
    *
@@ -815,6 +810,33 @@ export function newInstance(initialValues?: ICameraInitialValues): vtkCamera;
  * complex methods allow the manipulation of the computer graphics model
  * including view up vector, clipping planes, and camera perspective.
  */
+export declare const DEFAULT_VALUES: Readonly<{
+  position: number[];
+  focalPoint: number[];
+  viewUp: number[];
+  directionOfProjection: number[];
+  parallelProjection: boolean;
+  useHorizontalViewAngle: boolean;
+  viewAngle: number;
+  parallelScale: number;
+  clippingRange: number[];
+  windowCenter: number[];
+  viewPlaneNormal: number[];
+  useOffAxisProjection: boolean;
+  screenBottomLeft: number[];
+  screenBottomRight: number[];
+  screenTopRight: number[];
+  freezeFocalPoint: boolean;
+  projectionMatrix: null;
+  viewMatrix: null;
+  modelTransformMatrix: null;
+  cameraLightTransform: mat4;
+  physicalTranslation: number[];
+  physicalScale: number;
+  physicalViewUp: number[];
+  physicalViewNorth: number[];
+}>;
+
 export declare const vtkCamera: {
   newInstance: typeof newInstance;
   extend: typeof extend;

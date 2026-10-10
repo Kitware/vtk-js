@@ -92,6 +92,12 @@ export interface vtkTextProperty extends vtkProperty2D {
   setBackgroundColor(backgroundColor: RGBColor): boolean;
 
   /**
+   * Set the background color.
+   * @param {RGBColor} backgroundColor The background color to set.
+   */
+  setBackgroundColorFrom(backgroundColor: RGBColor): void;
+
+  /**
    * Set the fill style.
    * @param {string} fillStyle The fill style to set.
    */
@@ -109,7 +115,7 @@ export interface vtkTextProperty extends vtkProperty2D {
    * Set the font color.
    * @param {RGBColor} fontColor The font color to set.
    */
-  setFontColorFrom(fontColor: RGBColor): boolean;
+  setFontColorFrom(fontColor: RGBColor): void;
 
   /**
    * Set the font family.
@@ -122,9 +128,9 @@ export interface vtkTextProperty extends vtkProperty2D {
    * Scales the font size based on the given resolution.
    * Dividing by 1.8 ensures the font size is proportionate and not too large.
    * The value 1.8 is a chosen scaling factor for visual balance.
-   * @param {number} resolution The resolution to set.
+   * @param {Function} fontSizeScale The font size scale function to set.
    */
-  setFontSizeScale(resolution: number): number;
+  setFontSizeScale(fontSizeScale: (resolution: number) => number): boolean;
 
   /**
    * Set the font style.
@@ -156,7 +162,7 @@ export interface vtkTextProperty extends vtkProperty2D {
    * Set the shadow color.
    * @param {RGBColor} shadowColor The shadow color to set.
    */
-  setShadowColorFrom(shadowColor: RGBColor): boolean;
+  setShadowColorFrom(shadowColor: RGBColor): void;
 
   /**
    * Set the shadow offset from x and y values.
@@ -169,7 +175,7 @@ export interface vtkTextProperty extends vtkProperty2D {
    * Set the shadow offset.
    * @param {Array} shadowOffset The shadow offset to set, as an array of [x, y].
    */
-  setShadowOffsetFrom(shadowOffset: [number, number]): boolean;
+  setShadowOffsetFrom(shadowOffset: [number, number]): void;
 }
 
 /**

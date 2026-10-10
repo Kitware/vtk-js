@@ -20,6 +20,11 @@ export interface vtkTransform extends vtkObject {
 
   /**
    * @see getMatrix
+   */
+  getMatrixByReference(): mat4;
+
+  /**
+   * @see getMatrix
    * @param {mat4} matrix
    */
   setMatrix(matrix: mat4): boolean;
@@ -62,6 +67,12 @@ export interface vtkTransform extends vtkObject {
     e32: number,
     e33: number
   ): boolean;
+
+  /**
+   * @see getMatrix
+   * @param {mat4} matrix
+   */
+  setMatrixFrom(matrix: mat4): void;
 
   /**
    * The value of preMultiplyFlag indicates how matrix multiplications should occur.

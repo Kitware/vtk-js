@@ -14,9 +14,7 @@ export interface vtkGestureCameraManipulator
 export interface IGestureCameraManipulatorInitialValues
   extends
     ICompositeCameraManipulatorInitialValues,
-    ICompositeGestureManipulatorInitialValues {
-  flipDirection?: boolean;
-}
+    ICompositeGestureManipulatorInitialValues {}
 
 export function newInstance(
   initialValues?: IGestureCameraManipulatorInitialValues

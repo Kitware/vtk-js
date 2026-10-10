@@ -1,4 +1,4 @@
-import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes';
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
 
@@ -122,7 +122,7 @@ export interface vtkArcSource extends vtkArcSourceBase {
    * Set the first point of the arc by reference.
    * @param {Vector3} point1 The first point's coordinates.
    */
-  setPoint1From(point1: Vector3): boolean;
+  setPoint1From(point1: Vector3): void;
 
   /**
    * Set the second point of the arc.
@@ -134,7 +134,7 @@ export interface vtkArcSource extends vtkArcSourceBase {
    * Set the second point of the arc by reference.
    * @param {Vector3} point2 The second point's coordinates.
    */
-  setPoint2From(point2: Vector3): boolean;
+  setPoint2From(point2: Vector3): void;
 
   /**
    * Set the center of the arc.
@@ -146,7 +146,7 @@ export interface vtkArcSource extends vtkArcSourceBase {
    * Set the center of the arc by reference.
    * @param {Vector3} center The center point's coordinates.
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenterFrom(center: Vector3): void;
 
   /**
    * Set the normal vector of the arc.
@@ -158,7 +158,7 @@ export interface vtkArcSource extends vtkArcSourceBase {
    * Set the normal vector of the arc by reference.
    * @param {Vector3} normal The normal vector's coordinates.
    */
-  setNormalFrom(normal: Vector3): boolean;
+  setNormalFrom(normal: Vector3): void;
 
   /**
    * Set the polar vector of the arc.
@@ -170,7 +170,7 @@ export interface vtkArcSource extends vtkArcSourceBase {
    * Set the polar vector of the arc by reference.
    * @param {Vector3} polarVector The polar vector's coordinates.
    */
-  setPolarVectorFrom(polarVector: Vector3): boolean;
+  setPolarVectorFrom(polarVector: Vector3): void;
 
   /**
    * Set the angle of the arc.

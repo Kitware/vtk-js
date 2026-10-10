@@ -9,8 +9,8 @@ import vtkSelectionNode from '../../../Common/DataModel/SelectionNode';
 import vtkWidgetRepresentation from '../../Representations/WidgetRepresentation';
 import vtkWidgetState from '../WidgetState';
 import { vtkObject } from '../../../interfaces';
-import { CaptureOn, ViewTypes } from './Constants';
-import { Nullable } from '../../../types';
+import Constants, { CaptureOn, ViewTypes } from './Constants';
+import { Nullable, Vector3 } from '../../../types';
 
 export interface IDisplayScaleParams {
   dispHeightFactor: number;
@@ -54,7 +54,7 @@ export function extractRenderingComponents(
  * `coord`, you would compute `30 * getPixelWorldHeightAtCoord(coord)`.
  */
 export function getPixelWorldHeightAtCoord(
-  coord: [],
+  coord: Vector3,
   displayScaleParams: IDisplayScaleParams
 ): number;
 
@@ -87,8 +87,11 @@ export interface vtkWidgetManager extends vtkObject {
 
   /**
    * Get the current selection.
+   *
+   * Null until a capture has run, and reset to null on every
+   * getSelectedDataForXY call, so it stays null while picking is disabled.
    */
-  getSelections(): vtkSelectionNode[];
+  getSelections(): Nullable<vtkSelectionNode[]>;
 
   /**
    * Get all the underlying widgets.
@@ -105,7 +108,7 @@ export interface vtkWidgetManager extends vtkObject {
   /**
    * Get the view id.
    */
-  getViewId(): string;
+  getViewId(): string | null;
 
   /**
    * Returns true if picking is enabled, false otherwise.
@@ -138,6 +141,8 @@ export interface vtkWidgetManager extends vtkObject {
    * Register a widget on the widget manager instance.
    * Please note that one should link the widget manager to a view before calling this method.
    *
+   * Returns null if the widget manager has no renderer yet.
+   *
    * @param {vtkAbstractWidgetFactory} widget The abstract widget factory.
    * @param {ViewTypes} [viewType]
    * @param {Object} [initialValues]
@@ -146,9 +151,11 @@ export interface vtkWidgetManager extends vtkObject {
     widget: WidgetFactory,
     viewType?: ViewTypes,
     initialValues?: object
-  ): WidgetFactory extends vtkAbstractWidgetFactory<infer WidgetInstance>
-    ? WidgetInstance
-    : never;
+  ): Nullable<
+    WidgetFactory extends vtkAbstractWidgetFactory<infer WidgetInstance>
+      ? WidgetInstance
+      : never
+  >;
 
   /**
    * Unregister all widgets from the widget manager.
@@ -168,12 +175,18 @@ export interface vtkWidgetManager extends vtkObject {
    * @param {Number} x
    * @param {Number} y
    */
-  getSelectedDataForXY(x: number, y: number): Promise<ISelectedData>;
+  getSelectedDataForXY(
+    x: number,
+    y: number
+  ): Promise<ISelectedData | Record<string, never>>;
 
   /**
    * The all currently selected data.
+   *
+   * Empty when nothing is selected, or when the selected prop resolves to no
+   * widget and representation. Narrow with `'widget' in result`.
    */
-  getSelectedData(): ISelectedData | {};
+  getSelectedData(): ISelectedData | Record<string, never>;
 
   /**
    * Given the focus to the given widget instance.
@@ -236,6 +249,8 @@ export function newInstance(
 export declare const vtkWidgetManager: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  Constants: typeof Constants;
+  getPixelWorldHeightAtCoord: typeof getPixelWorldHeightAtCoord;
 };
 
 export default vtkWidgetManager;

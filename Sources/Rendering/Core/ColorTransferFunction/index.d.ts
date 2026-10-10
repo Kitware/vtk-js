@@ -1,6 +1,31 @@
 import vtkDataArray from '../../../Common/Core/DataArray';
-import vtkScalarsToColors from '../../../Common/Core/ScalarsToColors';
+import vtkScalarsToColors, {
+  IScalarsToColorsInitialValues,
+} from '../../../Common/Core/ScalarsToColors';
+import { vtkObject } from '../../../interfaces';
+import { RGBAColor } from '../../../types';
 import { ColorSpace, Scale } from './Constants';
+
+export interface IColorTransferFunctionNode {
+  x: number;
+  r: number;
+  g: number;
+  b: number;
+  midpoint: number;
+  sharpness: number;
+}
+
+export interface IColorTransferFunctionInitialValues extends IScalarsToColorsInitialValues {
+  aboveRangeColor?: RGBAColor;
+  belowRangeColor?: RGBAColor;
+  colorSpace?: ColorSpace;
+  discretize?: boolean;
+  nanColor?: RGBAColor;
+  numberOfValues?: number;
+  scale?: Scale;
+  useAboveRangeColor?: boolean;
+  useBelowRangeColor?: boolean;
+}
 
 export interface vtkColorTransferFunction extends vtkScalarsToColors {
   /**
@@ -115,7 +140,7 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
    * the nodes can end up unsorted, the cached range stale, and the change
    * will not propagate through the pipeline.
    */
-  getDataPointer(): any[];
+  getDataPointer(): IColorTransferFunctionNode[];
 
   /**
    * Set nodes directly
@@ -123,7 +148,7 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
    *
    * @returns true if a change happen
    */
-  setNodes(nodes: any): boolean;
+  setNodes(nodes: IColorTransferFunctionNode[]): boolean;
 
   /**
    * Sort the vector in increasing order, then fill in
@@ -189,6 +214,9 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
    */
   getBlueValue(x: number): number;
 
+  /** Return whether logarithmic scaling is selected. */
+  logScaleEnabled(): boolean;
+
   /**
    * Get a table of RGB colors at regular intervals along the function
    * @param {Number} xStart The index of the first point.
@@ -208,8 +236,8 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
     xStart: number,
     xEnd: number,
     size: number,
-    withAlpha: boolean
-  ): Float32Array;
+    withAlpha?: boolean
+  ): Uint8Array;
 
   /**
    * Construct a color transfer function from a vtkDataArray.
@@ -334,7 +362,7 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
    * Set the color space of the color transfer function.
    * @param {ColorSpace} colorSpace
    */
-  setColorSpace(colorSpace: ColorSpace): void;
+  setColorSpace(colorSpace: ColorSpace): boolean;
 
   /**
    * Get the scale of the color transfer function.
@@ -346,7 +374,146 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
    * Set the scale of the color transfer function.
    * @param {Scale} scale
    */
-  setScale(scale: Scale): void;
+  setScale(scale: Scale): boolean;
+
+  /**
+   * The timestamp of the last color table build.
+   */
+  getBuildTime(): vtkObject;
+
+  /**
+   * Get the color used for NaN values.
+   */
+  getNanColor(): RGBAColor;
+
+  /**
+   * Get the color used for NaN values, without copying it out of the model.
+   */
+  getNanColorByReference(): RGBAColor;
+
+  /**
+   * Set the color used for NaN values.
+   * @param {RGBAColor} nanColor
+   */
+  setNanColor(nanColor: RGBAColor): boolean;
+
+  /**
+   * Set the color used for NaN values.
+   */
+  setNanColor(r: number, g: number, b: number, a: number): boolean;
+
+  /**
+   * Copy the four components of the given color into the NaN color without
+   * marking the function modified.
+   */
+  setNanColorFrom(nanColor: RGBAColor): void;
+
+  /**
+   * Get the color used for values below the mapping range.
+   * @see getUseBelowRangeColor
+   */
+  getBelowRangeColor(): RGBAColor;
+
+  /**
+   * Get the below range color, without copying it out of the model.
+   */
+  getBelowRangeColorByReference(): RGBAColor;
+
+  /**
+   * Set the color used for values below the mapping range.
+   * @param {RGBAColor} belowRangeColor
+   */
+  setBelowRangeColor(belowRangeColor: RGBAColor): boolean;
+
+  /**
+   * Set the color used for values below the mapping range.
+   */
+  setBelowRangeColor(r: number, g: number, b: number, a: number): boolean;
+
+  /**
+   * Copy the four components of the given color into the below range color
+   * without marking the function modified.
+   */
+  setBelowRangeColorFrom(belowRangeColor: RGBAColor): void;
+
+  /**
+   * Get the color used for values above the mapping range.
+   * @see getUseAboveRangeColor
+   */
+  getAboveRangeColor(): RGBAColor;
+
+  /**
+   * Get the above range color, without copying it out of the model.
+   */
+  getAboveRangeColorByReference(): RGBAColor;
+
+  /**
+   * Set the color used for values above the mapping range.
+   * @param {RGBAColor} aboveRangeColor
+   */
+  setAboveRangeColor(aboveRangeColor: RGBAColor): boolean;
+
+  /**
+   * Set the color used for values above the mapping range.
+   */
+  setAboveRangeColor(r: number, g: number, b: number, a: number): boolean;
+
+  /**
+   * Copy the four components of the given color into the above range color
+   * without marking the function modified.
+   */
+  setAboveRangeColorFrom(aboveRangeColor: RGBAColor): void;
+
+  /**
+   * Whether values below the mapping range are mapped to the below range color
+   * rather than clamped to the first node.
+   * @default false
+   */
+  getUseBelowRangeColor(): boolean;
+
+  /**
+   * @param {Boolean} useBelowRangeColor
+   * @see getUseBelowRangeColor
+   */
+  setUseBelowRangeColor(useBelowRangeColor: boolean): boolean;
+
+  /**
+   * Whether values above the mapping range are mapped to the above range color
+   * rather than clamped to the last node.
+   * @default false
+   */
+  getUseAboveRangeColor(): boolean;
+
+  /**
+   * @param {Boolean} useAboveRangeColor
+   * @see getUseAboveRangeColor
+   */
+  setUseAboveRangeColor(useAboveRangeColor: boolean): boolean;
+
+  /**
+   * Whether the function is discretized into `numberOfValues` colors when it is
+   * used to build a table.
+   * @default false
+   */
+  getDiscretize(): boolean;
+
+  /**
+   * @param {Boolean} discretize
+   * @see getDiscretize
+   */
+  setDiscretize(discretize: boolean): boolean;
+
+  /**
+   * The number of colors the discretized function is built with.
+   * @default 256
+   */
+  getNumberOfValues(): number;
+
+  /**
+   * @param {Number} numberOfValues
+   * @see getNumberOfValues
+   */
+  setNumberOfValues(numberOfValues: number): boolean;
 }
 
 /**
@@ -359,14 +526,16 @@ export interface vtkColorTransferFunction extends vtkScalarsToColors {
 export function extend(
   publicAPI: object,
   model: object,
-  initialValues?: object
+  initialValues?: IColorTransferFunctionInitialValues
 ): void;
 
 /**
  * Method use to create a new instance of vtkColorTransferFunction
  * @param {object} [initialValues] for pre-setting some of its content
  */
-export function newInstance(initialValues?: object): vtkColorTransferFunction;
+export function newInstance(
+  initialValues?: IColorTransferFunctionInitialValues
+): vtkColorTransferFunction;
 
 /**
  * vtkColorTransferFunction is a color mapping in RGB or HSV space that

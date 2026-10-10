@@ -156,11 +156,33 @@ export interface vtkInteractorStyleTrackballCamera extends vtkInteractorStyle {
    * @param factor factor
    */
   dollyByFactor(renderer: vtkRenderer, factor: number): void;
+
+  /**
+   * Gets the motion factor.
+   */
+  getMotionFactor(): number;
+
+  /**
+   * Sets the motion factor.
+   * @param factor motion factor
+   */
+  setMotionFactor(factor: number): boolean;
+
+  /**
+   * Gets the zoom factor.
+   */
+  getZoomFactor(): number;
+
+  /**
+   * Sets the zoom factor.
+   * @param factor zoom factor
+   */
+  setZoomFactor(factor: number): boolean;
 }
 
 export interface IInteractorStyleTrackballCameraInitialValues {
-  motionFactor: number;
-  zoomFactor: number;
+  motionFactor?: number;
+  zoomFactor?: number;
 }
 
 export function newInstance(

@@ -145,7 +145,7 @@ declare function buildFromRadian(): Transform;
  * initialized with the Identity Matrix.
  *
  */
-export declare const vtkMatrixBuilder: {
+declare const vtkMatrixBuilder: {
   buildFromDegree: typeof buildFromDegree;
   buildFromRadian: typeof buildFromRadian;
 };

@@ -19,7 +19,7 @@ export interface vtkContourTriangulator extends vtkContourTriangulatorBase {
    * @param {any} inData
    * @param {any} outData
    */
-  requestData(inData: any, outData: any): void;
+  requestData(inData: any, outData: any): boolean;
 
   /**
    * Sets the behavior of the filter regarding polys.
@@ -65,20 +65,16 @@ export interface vtkContourTriangulator extends vtkContourTriangulatorBase {
  * @param {Boolean} [triangulatePolys] (default: true) If set to true
  * the resulting polygons will be triangulated, otherwise the polygons
  * themselves will be added to the output.
- * @param {Boolean} [diagnoseOnTriangulationError] (default: false)
- * If this option is set to true and there was a triangulation error
- * this will add the polys as outlines to the output.
  * @returns {Boolean} Returns true if triangulation was successful,
  * false otherwise.
  */
-export function triangulateContours(
+declare function triangulateContours(
   polyData: vtkPolyData,
   firstLine: number,
   numLines: number,
   polys: vtkCellArray,
   normal: Nullable<Vector3>,
-  triangulatePolys?: boolean,
-  diagnoseOnTriangulationError?: boolean
+  triangulatePolys?: boolean
 ): boolean;
 
 /**
@@ -93,7 +89,7 @@ export function triangulateContours(
  * @returns {Boolean} Returns true if triangulation was successful,
  * false otherwise.
  */
-export function triangulatePolygon(
+declare function triangulatePolygon(
   polygon: Array<number> | TypedArray,
   points: vtkPoints,
   triangles: vtkCellArray
@@ -132,5 +128,10 @@ export declare const vtkContourTriangulator: {
   triangulateContours: typeof triangulateContours;
   triangulatePolygon: typeof triangulatePolygon;
 };
+
+export declare const STATIC: Readonly<{
+  triangulateContours: typeof triangulateContours;
+  triangulatePolygon: typeof triangulatePolygon;
+}>;
 
 export default vtkContourTriangulator;

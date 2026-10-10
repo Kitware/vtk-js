@@ -1,4 +1,5 @@
 import { vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkActor from '../Actor';
 import vtkActor2D from '../Actor2D';
 import vtkTexture from '../Texture';
@@ -6,6 +7,7 @@ import vtkVolume from '../Volume';
 import { CoordinateSystem } from './Constants';
 
 export interface IPropInitialValues {
+  coordinateSystem?: CoordinateSystem;
   visibility?: boolean;
   pickable?: boolean;
   dragable?: boolean;
@@ -18,6 +20,9 @@ export interface IPropInitialValues {
 }
 
 export interface vtkProp extends vtkObject {
+  /** Process selector pixel buffers for this prop during hardware picking. */
+  processSelectorPixelBuffers(selector: any, pixelOffsets: number[]): void;
+
   /**
    *
    * @param estimatedRenderTime
@@ -96,7 +101,7 @@ export interface vtkProp extends vtkObject {
   /**
    *
    */
-  getRendertimemultiplier(): number;
+  getRenderTimeMultiplier(): number;
 
   /**
    * The value is returned in seconds. For simple geometry the accuracy may not be great
@@ -114,7 +119,7 @@ export interface vtkProp extends vtkObject {
   /**
    *
    */
-  getNestedProps(): any;
+  getNestedProps(): Nullable<vtkProp[]>;
 
   /**
    * Return parent prop set by setParentProp
@@ -186,7 +191,7 @@ export interface vtkProp extends vtkObject {
    * Not all mappers support all coordinate systems.
    * @param {CoordinateSystem} coordinateSystem
    */
-  setCoordinateSystem(coordinateSystem: CoordinateSystem): void;
+  setCoordinateSystem(coordinateSystem: CoordinateSystem): boolean;
 
   /**
    * Indicate that this prop's data should be in world coordinates.
@@ -194,7 +199,7 @@ export interface vtkProp extends vtkObject {
    * userMatrix the resulting values will be treated as in world coordinates.
    * Not all mappers support all coordinate systems.
    */
-  setCoordinateSystemToWorld(): void;
+  setCoordinateSystemToWorld(): boolean;
 
   /**
    * Indicate that this prop's data should be in display coordinates.
@@ -204,7 +209,7 @@ export interface vtkProp extends vtkObject {
    * and a z range of -1 at the near plane and 1 at the far.
    * Not all mappers support all coordinate systems.
    */
-  setCoordinateSystemToDisplay(): void;
+  setCoordinateSystemToDisplay(): boolean;
 
   /**
    * Set whether prop is dragable.
@@ -230,7 +235,7 @@ export interface vtkProp extends vtkObject {
    * @see combineDragable
    * @default null
    */
-  setParentProp(parentProp: vtkProp): void;
+  setParentProp(parentProp: vtkProp): boolean;
 
   /**
    * Set whether prop is pickable.
@@ -307,5 +312,6 @@ export function newInstance(initialValues?: IPropInitialValues): vtkProp;
 export declare const vtkProp: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  CoordinateSystem: typeof CoordinateSystem;
 };
 export default vtkProp;

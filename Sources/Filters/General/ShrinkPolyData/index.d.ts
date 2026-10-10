@@ -1,6 +1,5 @@
-import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes';
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
-import { Vector3 } from '../../../types';
 
 /**
  *
@@ -28,22 +27,7 @@ export interface vtkShrinkPolyData extends vtkShrinkPolyDataBase {
    * Set the shrink factor.
    * @param {Number} shrinkFactor
    */
-  setShrinkFactor(shrinkFactor: number): boolean;
-
-  /**
-   * Shrink two points towards their midpoint by a shrink factor.
-   * @param {Vector3} p1 - The [x, y, z] coordinates of the first point
-   * @param {Vector3} p2 - The [x, y, z] coordinates of the second point
-   * @param {number} shrinkFactor - The shrink factor (0.0 to 1.0)
-   * @param {Number[]} [shrunkPoints] - Optional array to store the shrunk points
-   * @returns {Number[]} Array containing the two new points
-   */
-  shrinkLine(
-    p1: Vector3,
-    p2: Vector3,
-    shrinkFactor: number,
-    shrunkPoints?: number[]
-  ): number[];
+  setShrinkFactor(shrinkFactor: number): void;
 }
 
 /**

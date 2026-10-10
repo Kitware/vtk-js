@@ -16,12 +16,13 @@ export interface vtkResliceRepresentationProxy extends vtkAbstractRepresentation
   getInterpolationType(): number;
   setOutlineLineWidth(lineWidth: number): boolean;
   getOutlineLineWidth(): number;
+  setOutlineColor(r: number, g: number, b: number): boolean;
   setOutlineColor(color: RGBColor): boolean;
   getOutlineColor(): RGBColor;
   setOutlineVisibility(visibility: boolean): boolean;
   getOutlineVisibility(): boolean;
   setSlabType(type: number): boolean;
-  getSlabtype(): number;
+  getSlabType(): number;
   setSlicePlane(plane: vtkPlane): boolean;
   getSlicePlane(): vtkPlane;
   setSlicePolyData(polydata: vtkPolyData): boolean;
@@ -32,5 +33,18 @@ export interface vtkResliceRepresentationProxy extends vtkAbstractRepresentation
   getSlabTrapezoidIntegration(): number;
 }
 
-declare const _default: vtkResliceRepresentationProxy;
-export default _default;
+export function extend(
+  publicAPI: object,
+  model: object,
+  initialValues?: object
+): void;
+
+export function newInstance(
+  initialValues?: object
+): vtkResliceRepresentationProxy;
+
+declare const vtkResliceRepresentationProxy: {
+  newInstance: typeof newInstance;
+  extend: typeof extend;
+};
+export default vtkResliceRepresentationProxy;

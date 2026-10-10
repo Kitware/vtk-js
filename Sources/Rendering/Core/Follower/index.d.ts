@@ -1,5 +1,6 @@
 import vtkActor, { IActorInitialValues } from '../Actor';
 import vtkCamera from '../Camera';
+import { Nullable } from '../../../types';
 
 /**
  *
@@ -22,7 +23,7 @@ export interface vtkFollower extends vtkActor {
   /**
    * Get the camera to follow.
    */
-  getCamera(): vtkCamera;
+  getCamera(): Nullable<vtkCamera>;
 
   /**
    * Check whether the view up vector is used.
@@ -57,6 +58,12 @@ export interface vtkFollower extends vtkActor {
    * @param {Number[]} viewUp The view up vector.
    */
   setViewUp(viewUp: number[]): boolean;
+
+  /**
+   * Set the viewUp vector from an array.
+   * @param {Number[]} viewUp The view up vector.
+   */
+  setViewUpFrom(viewUp: number[]): void;
 }
 
 /**

@@ -6,12 +6,14 @@ import {
   IScalarColoringInitialValues,
   TScalarColoringWithout,
 } from '../Mapper/ScalarColoringHelper';
+import { Nullable } from '../../../types';
+import { vtkCoordinate } from '../Coordinate';
 
 export { ColorMode, GetArray, ScalarMode } from '../Mapper/Constants';
 
 export interface IMapper2DInitialValues
   extends IAbstractMapperInitialValues, IScalarColoringInitialValues {
-  customShaderAttributes?: any;
+  customShaderAttributes?: string[];
   renderTime?: number;
   static?: boolean;
 }
@@ -31,7 +33,7 @@ export interface vtkMapper2D
    *
    * @default []
    */
-  getCustomShaderAttributes(): any;
+  getCustomShaderAttributes(): string[];
 
   /**
    *
@@ -46,7 +48,7 @@ export interface vtkMapper2D
   /**
    * Get the transformCoordinate.
    */
-  getTransformCoordinate(): any;
+  getTransformCoordinate(): Nullable<vtkCoordinate>;
 
   /**
    * Check whether the mapper’s data is static.
@@ -74,7 +76,7 @@ export interface vtkMapper2D
   /**
    * Set the transformCoordinate.
    */
-  setTransformCoordinate(coordinate: any): boolean;
+  setTransformCoordinate(coordinate: Nullable<vtkCoordinate>): boolean;
 
   /**
    * Turn on/off flag to control whether the mapper’s data is static. Static data

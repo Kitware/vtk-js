@@ -12,7 +12,7 @@ export interface vtkPointSet extends vtkDataSet {
    * Empty the points and initialize the data set and .
    * @see vtkDataSet::initialize()
    */
-  initialize(): void;
+  initialize(): vtkPointSet;
 
   /**
    * Compute the (X, Y, Z) bounds of the data.

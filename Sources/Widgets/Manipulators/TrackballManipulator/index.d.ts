@@ -56,7 +56,7 @@ export function trackballRotate(
   direction: Vector3,
   renderer: any,
   glRenderWindow: any
-): void;
+): Float64Array;
 
 /**
  * vtkTrackballManipulator.

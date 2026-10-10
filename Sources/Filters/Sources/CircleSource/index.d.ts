@@ -96,7 +96,7 @@ export interface vtkCircleSource extends vtkCircleSourceBase {
    * Set the direction for the circle.
    * @param {Vector3} direction The direction coordinates.
    */
-  setDirectionFrom(direction: Vector3): boolean;
+  setDirectionFrom(direction: Vector3): void;
 
   /**
    * Set the center of the circle.
@@ -112,7 +112,7 @@ export interface vtkCircleSource extends vtkCircleSourceBase {
    * @param {Vector3} center
    * @default [0, 0, 0]
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenterFrom(center: Vector3): void;
 
   /**
    *

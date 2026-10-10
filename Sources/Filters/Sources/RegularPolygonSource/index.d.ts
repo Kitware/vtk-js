@@ -1,11 +1,11 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
-import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes';
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 
 /**
  *
  */
-export interface IPlaneSourceInitialValues {
+export interface IRegularPolygonSourceInitialValues {
   numberOfSides?: number;
   center?: Vector3;
   normal?: Vector3;
@@ -96,6 +96,12 @@ export interface vtkRegularPolygonSource extends vtkRegularPolygonSourceBase {
   setCenter(center: Vector3): boolean;
 
   /**
+   * Set the center of the regular polygon.
+   * @param {Vector3} center
+   */
+  setCenterFrom(center: Vector3): void;
+
+  /**
    * Set whether to generate polygon points.
    * @param generatePolygon
    * @returns {Boolean} true if the value was changed, false otherwise
@@ -115,6 +121,12 @@ export interface vtkRegularPolygonSource extends vtkRegularPolygonSourceBase {
    * @returns {Boolean} true if the value was changed, false otherwise
    */
   setNormal(normal: Vector3): boolean;
+
+  /**
+   * Set the normal of the regular polygon.
+   * @param {Vector3} normal
+   */
+  setNormalFrom(normal: Vector3): void;
 
   /**
    * Set the number of sides for the regular polygon.
@@ -145,20 +157,20 @@ export interface vtkRegularPolygonSource extends vtkRegularPolygonSourceBase {
  *
  * @param publicAPI object on which methods will be bounds (public)
  * @param model object on which data structure will be bounds (protected)
- * @param {IPlaneSourceInitialValues} [initialValues] (default: {})
+ * @param {IRegularPolygonSourceInitialValues} [initialValues] (default: {})
  */
 export function extend(
   publicAPI: object,
   model: object,
-  initialValues?: IPlaneSourceInitialValues
+  initialValues?: IRegularPolygonSourceInitialValues
 ): void;
 
 /**
  * Method used to create a new instance of vtkRegularPolygonSource.
- * @param {IPlaneSourceInitialValues} [initialValues] for pre-setting some of its content
+ * @param {IRegularPolygonSourceInitialValues} [initialValues] for pre-setting some of its content
  */
 export function newInstance(
-  initialValues?: IPlaneSourceInitialValues
+  initialValues?: IRegularPolygonSourceInitialValues
 ): vtkRegularPolygonSource;
 
 /**

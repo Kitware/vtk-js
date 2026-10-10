@@ -1,4 +1,5 @@
 import { vtkObject } from '../../../interfaces';
+import { vtkViewNode } from '../ViewNode';
 
 /**
  *
@@ -10,7 +11,7 @@ export interface vtkViewNodeFactory extends vtkObject {
    * Creates and returns a vtkViewNode for the provided renderable.
    * @param dataObject
    */
-  createNode(dataObject: any): void;
+  createNode(dataObject: any): vtkViewNode | null;
 }
 
 /**

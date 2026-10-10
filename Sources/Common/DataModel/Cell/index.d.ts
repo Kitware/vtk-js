@@ -73,9 +73,14 @@ export interface vtkCell extends vtkObject {
    */
   getNumberOfPoints(): number;
 
-  // getCellDimension(): void;
-  // intersectWithLine(p1: any, p2: any, tol: any, t: any, x: any, pcoords: any, subId: any): void;
-  // evaluatePosition(x: Vector3, closestPoint: Vector3, subId: number, pcoords: Vector3, dist2: number, weights: any): void;
+  /** Get the topological dimension of the cell. Virtual in vtkCell itself. */
+  getCellDimension(): number | undefined;
+
+  /** Virtual line-intersection hook implemented by concrete cell types. */
+  intersectWithLine(...args: any[]): any;
+
+  /** Virtual point-evaluation hook implemented by concrete cell types. */
+  evaluatePosition(...args: any[]): any;
 }
 
 /**

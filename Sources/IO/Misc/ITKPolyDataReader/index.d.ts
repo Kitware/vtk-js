@@ -1,4 +1,5 @@
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 
 /**
  *
@@ -23,7 +24,7 @@ export interface vtkITKPolyDataReader extends vtkITKPolyDataReaderBase {
   /**
    * Get the array name.
    */
-  getArrayName(): string;
+  getArrayName(): Nullable<string>;
 
   /**
    * Get the filename.
@@ -34,7 +35,7 @@ export interface vtkITKPolyDataReader extends vtkITKPolyDataReaderBase {
    * Parse data as array buffer.
    * @param {ArrayBuffer} arrayBuffer The array buffer to parse.
    */
-  parseAsArrayBuffer(arrayBuffer: ArrayBuffer): void;
+  parseAsArrayBuffer(arrayBuffer: ArrayBuffer): Promise<void>;
 
   /**
    *
@@ -81,7 +82,7 @@ export function newInstance(
  *
  * @param {*} fn
  */
-export function setReadPolyDataArrayBufferFromITK(fn: any): Promise<any>;
+declare function setReadPolyDataArrayBufferFromITK(fn: any): void;
 
 /**
  * The vtkITKPolyDataReader aims to read a ITK file format.

@@ -1,6 +1,7 @@
 import { vtkObject } from '../../../interfaces';
 import { Size } from '../../../types';
 import vtkViewStream from './ViewStream';
+import createDefaultProtocol from './DefaultProtocol';
 
 /**
  *
@@ -17,7 +18,10 @@ export interface vtkImageStream extends vtkObject {
   /**
    *
    */
-  connect(session: WebsocketSession): void;
+  connect(
+    session: WebsocketSession,
+    protocol?: typeof createDefaultProtocol
+  ): void;
 
   /**
    *
@@ -39,7 +43,7 @@ export interface vtkImageStream extends vtkObject {
   /**
    *
    */
-  getProtocol(): any;
+  getProtocol(): ReturnType<typeof createDefaultProtocol>;
 
   /**
    *
@@ -49,7 +53,7 @@ export interface vtkImageStream extends vtkObject {
   /**
    *
    */
-  registerViewStream(): void;
+  registerViewStream(view: vtkViewStream): void;
 
   /**
    *
@@ -60,7 +64,7 @@ export interface vtkImageStream extends vtkObject {
   /**
    *
    */
-  unregisterViewStream(): void;
+  unregisterViewStream(view: vtkViewStream): void;
 }
 
 /**

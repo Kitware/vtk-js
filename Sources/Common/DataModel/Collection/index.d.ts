@@ -1,5 +1,4 @@
 import { vtkObject } from '../../../interfaces';
-import { Nullable } from '../../../types';
 
 /**
  *
@@ -58,9 +57,9 @@ export interface vtkCollection extends vtkObject {
   empty(): boolean;
 
   /**
-   * get the current item and provided index, returns null if index is out of bounds
+   * get the current item and provided index, returns undefined if index is out of bounds
    */
-  getItem(idx: number): Nullable<vtkObject>;
+  getItem(idx: number): vtkObject | undefined;
 
   /**
    * Execute a passed function on every item in the collection
@@ -89,9 +88,9 @@ export interface vtkCollection extends vtkObject {
    * Similar to forEach, but returns an array of resulting values.
    * @param callbackfn callback function to execute on each item in the collection, that returns a value.
    */
-  map<T>(
-    callbackfn: (value: T, index: number, array: readonly T[]) => void
-  ): void;
+  map<T, U>(
+    callbackfn: (value: T, index: number, array: readonly T[]) => U
+  ): U[];
 
   /**
    * Check each element for modified time and update the collection's

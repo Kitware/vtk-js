@@ -41,8 +41,8 @@ export interface PixelInformation {
   prop: vtkProp;
   propID: number;
   compositeID: number;
-  zValue: number;
-  displayPosition: Vector2;
+  zValue?: number;
+  displayPosition?: Vector2;
   attributeID?: number;
 }
 
@@ -102,7 +102,7 @@ export interface vtkOpenGLHardwareSelector extends vtkHardwareSelector {
     fy1: number,
     fx2: number,
     fy2: number
-  ): Promise<SourceData>;
+  ): Promise<SourceData | false>;
 
   /**
    * Captures the scene for picking.
@@ -228,7 +228,7 @@ export interface vtkOpenGLHardwareSelector extends vtkHardwareSelector {
   /**
    * Gets the current renderer.
    */
-  getRenderer(): vtkRenderer;
+  getRenderer(): vtkRenderer | undefined;
 
   /**
    * Sets the current pass type.
@@ -247,7 +247,7 @@ export interface vtkOpenGLHardwareSelector extends vtkHardwareSelector {
    */
   setOpenGLRenderWindow(oglrw: vtkOpenGLRenderWindow): boolean;
 
-  getOpenGLRenderWindow(): vtkOpenGLRenderWindow;
+  getOpenGLRenderWindow(): vtkOpenGLRenderWindow | undefined;
 
   /**
    * Sets the maximum point ID.
@@ -286,9 +286,20 @@ export interface vtkOpenGLHardwareSelector extends vtkHardwareSelector {
   setPropColorValue(r: number, g: number, b: number): boolean;
 
   /**
+   * Sets the prop's color value from an array.
+   * @param color An array of the prop's color value.
+   */
+  setPropColorValueFrom(color: Vector3): void;
+
+  /**
    * Gets the prop color value.
    */
   getPropColorValue(): Vector3;
+
+  /**
+   * Gets the prop color value by reference.
+   */
+  getPropColorValueByReference(): Vector3;
 
   /**
    * Sets the selection area.
@@ -307,9 +318,20 @@ export interface vtkOpenGLHardwareSelector extends vtkHardwareSelector {
   setArea(fx1: number, fy1: number, fx2: number, fy2: number): boolean;
 
   /**
+   * Sets the selection area from an array.
+   * @param area An area bounding box
+   */
+  setAreaFrom(area: Area): void;
+
+  /**
    * Gets the selection area.
    */
   getArea(): Area;
+
+  /**
+   * Gets the selection area by reference.
+   */
+  getAreaByReference(): Area;
 
   /**
    * Listen to the start/stop events.
@@ -317,9 +339,18 @@ export interface vtkOpenGLHardwareSelector extends vtkHardwareSelector {
    * @param priority
    */
   onEvent(cb: EventHandler, priority?: number): Readonly<vtkSubscription>;
+
+  /**
+   * Invoke the start/stop events.
+   * @param args
+   */
+  invokeEvent(...args: unknown[]): void;
 }
 
 export interface IOpenGLHardwareSelectorInitialValues extends IHardwareSelectorInitialValues {
+  area?: Area;
+  currentPass?: PassTypes;
+  propColorValue?: Vector3;
   maximumPointId?: number;
   maximumCellId?: number;
   idOffset?: number;
@@ -355,6 +386,7 @@ export function extend(
 export const vtkOpenGLHardwareSelector: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  PassTypes: typeof PassTypes;
 };
 
 export default vtkOpenGLHardwareSelector;

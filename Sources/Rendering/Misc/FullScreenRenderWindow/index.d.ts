@@ -3,9 +3,7 @@ import { RGBAColor, RGBColor } from '../../../types';
 import vtkRenderer from '../../Core/Renderer';
 import vtkRenderWindow, { DEFAULT_VIEW_API } from '../../Core/RenderWindow';
 import vtkRenderWindowInteractor from '../../Core/RenderWindowInteractor';
-
-// import vtkOpenGLRenderWindow from "../../../OpenGL/RenderWindow";
-// import vtkWebGPURenderWindow from "../../../WebGPU/RenderWindow";
+import vtkRenderWindowViewNode from '../../SceneGraph/RenderWindowViewNode';
 
 /**
  *
@@ -44,7 +42,7 @@ export interface vtkFullScreenRenderWindow extends vtkObject {
    * vtkFullScreenRenderWindow has been created with "defaultViewAPI: 'WebGPU'",
    * otherwise vtkOpenGLRenderWindow is returned.
    */
-  getApiSpecificRenderWindow(): any; // vtkOpenGLRenderWindow || vtkWebGPURenderWindow
+  getApiSpecificRenderWindow(): vtkRenderWindowViewNode;
 
   /**
    * Get container element
@@ -54,7 +52,7 @@ export interface vtkFullScreenRenderWindow extends vtkObject {
   /**
    * Get control container element
    */
-  getControlContainer(): HTMLElement;
+  getControlContainer(): HTMLElement | undefined;
 
   /**
    * Get interactor object

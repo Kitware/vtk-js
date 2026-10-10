@@ -31,7 +31,7 @@ export interface vtkJSONReader extends vtkJSONReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    *
@@ -42,7 +42,7 @@ export interface vtkJSONReader extends vtkJSONReaderBase {
   /**
    *
    */
-  isBusy(): number;
+  isBusy(): boolean;
 
   /**
    * Load the object data.
@@ -60,7 +60,7 @@ export interface vtkJSONReader extends vtkJSONReaderBase {
    * Parse data as text.
    * @param {String} content The content to parse.
    */
-  parseAsText(content: string): void;
+  parseAsText(content: string): boolean;
   /**
    *
    * @param inData
@@ -73,7 +73,7 @@ export interface vtkJSONReader extends vtkJSONReaderBase {
    * @param {String} url the url of the object to load.
    * @param {IJSONReaderOptions} [option] The JSON reader options.
    */
-  setUrl(url: string, option?: IJSONReaderOptions): Promise<string>;
+  setUrl(url: string, option?: IJSONReaderOptions): Promise<boolean>;
 }
 
 /**

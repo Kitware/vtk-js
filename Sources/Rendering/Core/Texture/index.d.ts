@@ -1,4 +1,4 @@
-import { vtkAlgorithm } from '../../../interfaces';
+import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Nullable } from '../../../types';
 
 /**
@@ -6,6 +6,10 @@ import { Nullable } from '../../../types';
  * @param {boolean} [resizable] Must be set to true if texture can be resized at run time (default: false)
  */
 export interface ITextureInitialValues {
+  canvas?: HTMLCanvasElement;
+  image?: HTMLImageElement;
+  imageBitmap?: ImageBitmap;
+  jsImageData?: ImageData;
   repeat?: boolean;
   interpolate?: boolean;
   edgeClamp?: boolean;
@@ -14,7 +18,13 @@ export interface ITextureInitialValues {
   resizable?: boolean;
 }
 
-export interface vtkTexture extends vtkAlgorithm {
+type vtkTextureBase = vtkObject &
+  Omit<vtkAlgorithm, 'getOutputData' | 'getOutputPort'>;
+
+export interface vtkTexture extends vtkTextureBase {
+  /** Return the number of non-singleton dimensions in the texture input. */
+  getDimensionality(): number;
+
   /**
    * Returns the canvas used by the texture.
    */
@@ -51,6 +61,11 @@ export interface vtkTexture extends vtkAlgorithm {
   getImageLoaded(): boolean;
 
   /**
+   * Returns the input image data as a JavaScript ImageData object.
+   */
+  getJsImageData(): Nullable<ImageData>;
+
+  /**
    * Returns the input image data object.
    */
   getInputAsJsImageData(): Nullable<
@@ -68,6 +83,12 @@ export interface vtkTexture extends vtkAlgorithm {
    * interaction or other factors.
    */
   getResizable(): boolean;
+
+  /**
+   * Marks the image as loaded and notifies listeners.
+   * Called automatically once the image set with setImage() has loaded.
+   */
+  imageLoaded(): void;
 
   /**
    * Returns the canvas used by the texture.
@@ -153,7 +174,7 @@ export function newInstance(initialValues?: ITextureInitialValues): vtkTexture;
  * @param {GPUTexture} texture - The GPU texture for which mipmaps will be generated.
  * @param {number} mipLevelCount - The total number of mip levels to generate (including the base level).
  */
-export function generateMipmaps(
+declare function generateMipmaps(
   device: any,
   texture: any,
   mipLevelCount: number
@@ -174,5 +195,9 @@ export function generateMipmaps(
 export declare const vtkTexture: {
   newInstance: typeof newInstance;
   extend: typeof extend;
+  generateMipmaps: typeof generateMipmaps;
 };
+export declare const STATIC: Readonly<{
+  generateMipmaps: typeof generateMipmaps;
+}>;
 export default vtkTexture;

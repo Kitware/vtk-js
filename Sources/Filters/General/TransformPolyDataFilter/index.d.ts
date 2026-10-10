@@ -1,6 +1,7 @@
-import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes';
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import vtkTransform from '../../../Common/Transform/Transform';
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 
 export interface ITransformPolyDataFilterInitialValues {
   transform?: vtkTransform;
@@ -13,7 +14,7 @@ export interface vtkTransformPolyDataFilter extends vtkTransformPolyDataFilterBa
   /**
    * Get the transform used by this filter.
    */
-  getTransform(): vtkTransform;
+  getTransform(): Nullable<vtkTransform>;
 
   /**
    * Get the output points precision.

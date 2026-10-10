@@ -1,4 +1,4 @@
-import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes';
+import { DesiredOutputPrecision } from '../../../Common/DataModel/DataSetAttributes/Constants';
 import { vtkAlgorithm, vtkObject } from '../../../interfaces';
 import { Vector3 } from '../../../types';
 
@@ -112,7 +112,7 @@ export interface vtkEllipseArcSource extends vtkEllipseArcSourceBase {
    * Set the center of the arc by reference.
    * @param {Vector3} center The center's coordinates.
    */
-  setCenterFrom(center: Vector3): boolean;
+  setCenterFrom(center: Vector3): void;
 
   /**
    * Set the major radius vector of the arc.
@@ -124,7 +124,7 @@ export interface vtkEllipseArcSource extends vtkEllipseArcSourceBase {
    * Set the major radius vector of the arc by reference.
    * @param {Vector3} majorRadiusVector The major radius vector's coordinates.
    */
-  setMajorRadiusVectorFrom(majorRadiusVector: Vector3): boolean;
+  setMajorRadiusVectorFrom(majorRadiusVector: Vector3): void;
 
   /**
    * Set the normal vector of the arc.
@@ -136,7 +136,7 @@ export interface vtkEllipseArcSource extends vtkEllipseArcSourceBase {
    * Set the normal vector of the arc by reference.
    * @param {Vector3} normal The normal vector's coordinates.
    */
-  setNormalFrom(normal: Vector3): boolean;
+  setNormalFrom(normal: Vector3): void;
 
   /**
    * Set the output points precision.
