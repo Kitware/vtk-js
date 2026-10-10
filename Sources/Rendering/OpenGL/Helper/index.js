@@ -26,6 +26,12 @@ function vtkOpenGLHelper(publicAPI, model) {
 
   publicAPI.setOpenGLRenderWindow = (win) => {
     model.context = win.getContext();
+    if (!model.program) {
+      // A mapper clears the program on shader compile/bind failure; restore an
+      // empty one (handle 0) so getNeedToRebuildShaders re-arms instead of
+      // dereferencing null on the next pass.
+      model.program = vtkShaderProgram.newInstance();
+    }
     model.program.setContext(model.context);
     model.VAO.setOpenGLRenderWindow(win);
     model.CABO.setOpenGLRenderWindow(win);
