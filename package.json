@@ -64,7 +64,7 @@
     "glob": "8.0.3",
     "husky": "8.0.1",
     "lil-gui": "0.21.0",
-    "oxfmt": "0.51.0",
+    "oxfmt": "0.72.0",
     "oxlint": "1.66.0",
     "patch-package": "8.0.1",
     "pixelmatch": "5.3.0",
