@@ -22,10 +22,11 @@ function vtkImageAppendComponents(publicAPI, model) {
       return;
     }
 
-    const output = outData[0]?.initialize() || vtkImageData.newInstance();
+    const output = outData[0] || vtkImageData.newInstance();
     output.setDimensions(inputs[0].getDimensions());
     output.setSpacing(inputs[0].getSpacing());
     output.setOrigin(inputs[0].getOrigin());
+    output.setDirection(inputs[0].getDirection());
 
     const numberOfVoxels =
       inputs[0].getDimensions()[0] *
@@ -37,17 +38,30 @@ function vtkImageAppendComponents(publicAPI, model) {
       0
     );
 
-    const ArrayType = inputs[0]
-      .getPointData()
-      .getScalars()
-      .getData().constructor;
-    const outValues = new ArrayType(numberOfVoxels * numberOfComponents);
-    const outArray = vtkDataArray.newInstance({
-      name: 'Scalars',
-      numberOfComponents,
-      values: outValues,
-    });
-    output.getPointData().setScalars(outArray);
+    const inputScalars = inputs[0].getPointData().getScalars();
+    let outArray = output.getPointData().getScalars();
+    let outValues = null;
+    if (outArray != null) {
+      if (outArray.getDataType() !== inputScalars.getDataType()) {
+        outArray = null;
+      } else {
+        outArray.setNumberOfComponents(numberOfComponents);
+        outArray.resize(numberOfVoxels);
+        outValues = outArray.getData();
+        outArray.modified();
+      }
+    }
+
+    if (outArray == null) {
+      const ArrayType = inputScalars.getData().constructor;
+      outValues = new ArrayType(numberOfVoxels * numberOfComponents);
+      outArray = vtkDataArray.newInstance({
+        name: 'Scalars',
+        numberOfComponents,
+        values: outValues,
+      });
+      output.getPointData().setScalars(outArray);
+    }
 
     let outComponent = 0;
     inputs
@@ -55,10 +69,16 @@ function vtkImageAppendComponents(publicAPI, model) {
       .forEach((inputScalars) => {
         const inputNumberOfComponents = inputScalars.getNumberOfComponents();
         const inputValues = inputScalars.getData();
-        for (let i = 0; i < numberOfVoxels; i++) {
-          for (let c = 0; c < inputNumberOfComponents; c++) {
-            outValues[i * numberOfComponents + outComponent + c] =
-              inputValues[i * inputNumberOfComponents + c];
+        if (inputNumberOfComponents === 1) {
+          for (let i = 0; i < numberOfVoxels; i++) {
+            outValues[i * numberOfComponents + outComponent] = inputValues[i];
+          }
+        } else {
+          for (let i = 0; i < numberOfVoxels; i++) {
+            for (let c = 0; c < inputNumberOfComponents; c++) {
+              outValues[i * numberOfComponents + outComponent + c] =
+                inputValues[i * inputNumberOfComponents + c];
+            }
           }
         }
         outComponent += inputNumberOfComponents;
