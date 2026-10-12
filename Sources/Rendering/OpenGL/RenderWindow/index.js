@@ -1072,9 +1072,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
       ['WebGL Version', 'WEBGL_VERSION', 2],
     ];
 
-    const result = buildGLInformations(params);
-    model._glInformation = result;
-    return result;
+    model._glInformation = buildGLInformations(params);
+    return model._glInformation;
   };
 
   publicAPI.traverseAllPasses = () => {
