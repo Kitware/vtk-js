@@ -124,6 +124,12 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
     [...graphicsResourceReferenceCount.keys()].forEach((coreObject) =>
       renderWindow.unregisterGraphicsResourceUser(coreObject, publicAPI)
     );
+    // The default lookup textures are not shared
+    [model._defaultColorTexture, model._defaultPwfTexture].forEach((entry) =>
+      entry?.oglObject.releaseGraphicsResources(renderWindow)
+    );
+    model._defaultColorTexture = null;
+    model._defaultPwfTexture = null;
   }
 
   publicAPI.buildPass = (prepass) => {
@@ -431,16 +437,20 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       numIComps
     );
     const firstColorTransferFunc = firstActorProperty.getRGBTransferFunction();
-    const cTex = model._openGLRenderWindow.getGraphicsResourceForObject(
-      firstColorTransferFunc
-    );
-    const reBuildC =
-      !cTex?.oglObject?.getHandle() || cTex?.hash !== colorFuncHash;
+    let cWidth = model.renderable.getColorTextureWidth();
+    if (cWidth <= 0) {
+      cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+    }
+    // Without a transfer function there is no core object to share the
+    // texture under, so the mapper keeps its own default grayscale ramp.
+    const cHash = firstColorTransferFunc ? colorFuncHash : `default-${cWidth}`;
+    const cTex = firstColorTransferFunc
+      ? model._openGLRenderWindow.getGraphicsResourceForObject(
+          firstColorTransferFunc
+        )
+      : model._defaultColorTexture;
+    const reBuildC = !cTex?.oglObject?.getHandle() || cTex?.hash !== cHash;
     if (reBuildC) {
-      let cWidth = model.renderable.getColorTextureWidth();
-      if (cWidth <= 0) {
-        cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
-      }
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
       const newColorTexture = vtkOpenGLTexture.newInstance();
@@ -500,6 +510,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           newColorTexture,
           colorFuncHash
         );
+      } else {
+        model._defaultColorTexture?.oglObject.releaseGraphicsResources(
+          model._openGLRenderWindow
+        );
+        model._defaultColorTexture = {
+          oglObject: newColorTexture,
+          hash: cHash,
+        };
       }
       model.colorTexture = newColorTexture;
     } else {
@@ -534,15 +552,21 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       numIComps
     );
     const firstPwFunc = firstActorProperty.getPiecewiseFunction();
-    const pwfTex =
-      model._openGLRenderWindow.getGraphicsResourceForObject(firstPwFunc);
+    let pwfWidth = model.renderable.getOpacityTextureWidth();
+    if (pwfWidth <= 0) {
+      pwfWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+    }
+    // Same as the color texture: without a piecewise function the mapper
+    // keeps its own fully opaque default.
+    const pwfHash = firstPwFunc
+      ? opacityFuncHash
+      : `default-${pwfWidth}-${textureHeight}`;
+    const pwfTex = firstPwFunc
+      ? model._openGLRenderWindow.getGraphicsResourceForObject(firstPwFunc)
+      : model._defaultPwfTexture;
     const reBuildPwf =
-      !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== opacityFuncHash;
+      !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== pwfHash;
     if (reBuildPwf) {
-      let pwfWidth = model.renderable.getOpacityTextureWidth();
-      if (pwfWidth <= 0) {
-        pwfWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
-      }
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
       const newOpacityTexture = vtkOpenGLTexture.newInstance();
@@ -599,6 +623,14 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
           newOpacityTexture,
           opacityFuncHash
         );
+      } else {
+        model._defaultPwfTexture?.oglObject.releaseGraphicsResources(
+          model._openGLRenderWindow
+        );
+        model._defaultPwfTexture = {
+          oglObject: newOpacityTexture,
+          hash: pwfHash,
+        };
       }
       model.pwfTexture = newOpacityTexture;
     } else {
@@ -2050,6 +2082,8 @@ const DEFAULT_VALUES = {
   _colorTextureCore: null,
   pwfTexture: null,
   _pwfTextureCore: null,
+  _defaultColorTexture: null,
+  _defaultPwfTexture: null,
   labelOutlineProperties: [],
   labelOutlineThicknessTexture: null,
   _labelOutlineThicknessHash: null,
