@@ -57,6 +57,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   function unregisterGraphicsResources(renderWindow) {
     // The openGLTexture is not shared
     model.openGLTexture.releaseGraphicsResources(renderWindow);
+    // Neither are the default lookup textures used without transfer functions
+    [model._defaultColorTexture, model._defaultPwfTexture].forEach((entry) =>
+      entry?.oglObject.releaseGraphicsResources(renderWindow)
+    );
+    model._defaultColorTexture = null;
+    model._defaultPwfTexture = null;
     // All these other resources are shared
     [
       model._colorTransferFunc,
@@ -977,21 +983,27 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       numIComps
     );
     const firstColorTransferFunc = actorProperty.getRGBTransferFunction();
-    const cTex = model._openGLRenderWindow.getGraphicsResourceForObject(
-      firstColorTransferFunc
-    );
+    let cWidth = model.renderable.getColorTextureWidth();
+    if (cWidth <= 0) {
+      cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+    }
+    // Without a transfer function there is no core object to share the
+    // texture under, so the mapper keeps its own default grayscale ramp.
+    const cHash = firstColorTransferFunc
+      ? cfunToString
+      : `default-${cWidth}-${iType}`;
+    const cTex = firstColorTransferFunc
+      ? model._openGLRenderWindow.getGraphicsResourceForObject(
+          firstColorTransferFunc
+        )
+      : model._defaultColorTexture;
 
-    const reBuildC =
-      !cTex?.oglObject?.getHandle() || cTex?.hash !== cfunToString;
+    const reBuildC = !cTex?.oglObject?.getHandle() || cTex?.hash !== cHash;
     if (reBuildC) {
       model.colorTexture = vtkOpenGLTexture.newInstance({
         resizable: true,
       });
       model.colorTexture.setOpenGLRenderWindow(model._openGLRenderWindow);
-      let cWidth = model.renderable.getColorTextureWidth();
-      if (cWidth <= 0) {
-        cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
-      }
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
       // set interpolation on the texture based on property setting
@@ -1061,6 +1073,14 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           );
         }
         model._colorTransferFunc = firstColorTransferFunc;
+      } else {
+        model._defaultColorTexture?.oglObject.releaseGraphicsResources(
+          model._openGLRenderWindow
+        );
+        model._defaultColorTexture = {
+          oglObject: model.colorTexture,
+          hash: cHash,
+        };
       }
     } else {
       model.colorTexture = cTex.oglObject;
@@ -1079,16 +1099,22 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       numIComps
     );
     const firstPwFunc = actorProperty.getPiecewiseFunction();
-    const pwfTex =
-      model._openGLRenderWindow.getGraphicsResourceForObject(firstPwFunc);
+    let pwfWidth = model.renderable.getOpacityTextureWidth();
+    if (pwfWidth <= 0) {
+      pwfWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+    }
+    // Same as the color texture: without a piecewise function the mapper
+    // keeps its own fully opaque default.
+    const pwfHash = firstPwFunc
+      ? pwfunToString
+      : `default-${pwfWidth}-${iType}`;
+    const pwfTex = firstPwFunc
+      ? model._openGLRenderWindow.getGraphicsResourceForObject(firstPwFunc)
+      : model._defaultPwfTexture;
     // rebuild opacity tfun?
     const reBuildPwf =
-      !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== pwfunToString;
+      !pwfTex?.oglObject?.getHandle() || pwfTex?.hash !== pwfHash;
     if (reBuildPwf) {
-      let pwfWidth = model.renderable.getOpacityTextureWidth();
-      if (pwfWidth <= 0) {
-        pwfWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
-      }
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
       model.pwfTexture = vtkOpenGLTexture.newInstance({
@@ -1166,6 +1192,14 @@ function vtkOpenGLImageMapper(publicAPI, model) {
           );
         }
         model._pwFunc = firstPwFunc;
+      } else {
+        model._defaultPwfTexture?.oglObject.releaseGraphicsResources(
+          model._openGLRenderWindow
+        );
+        model._defaultPwfTexture = {
+          oglObject: model.pwfTexture,
+          hash: pwfHash,
+        };
       }
     } else {
       model.pwfTexture = pwfTex.oglObject;
@@ -1414,9 +1448,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         // (non indexed) vertex layout where elementCount matches the vertices.
         forceFlatten: true,
       });
-      model.VBOBuildTime.modified();
       model.VBOBuildString = toString;
     }
+
+    // Also mark property or actor only rebuilds, which do not change the VBO
+    // string, so the next render does not rebuild again.
+    model.VBOBuildTime.modified();
   };
 
   publicAPI.updateLabelOutlineOpacityTexture = (image) => {
@@ -1622,6 +1659,8 @@ const DEFAULT_VALUES = {
   // _colorTransferFunc: null,
   // _pwFunc: null,
   // _labelOutlineThicknessArray: null,
+  // _defaultColorTexture: null,
+  // _defaultPwfTexture: null,
 };
 
 // ----------------------------------------------------------------------------
