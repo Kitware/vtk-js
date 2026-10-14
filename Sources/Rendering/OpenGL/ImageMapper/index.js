@@ -55,8 +55,9 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLImageMapper');
 
   function unregisterGraphicsResources(renderWindow) {
-    // The openGLTexture is not shared
+    // The openGLTexture and the tris helper are not shared
     model.openGLTexture.releaseGraphicsResources(renderWindow);
+    model.tris.releaseGraphicsResources(renderWindow);
     // All these other resources are shared
     [
       model._colorTransferFunc,
