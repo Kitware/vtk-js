@@ -35,6 +35,8 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLImageCPRMapper');
 
   function unregisterGraphicsResources(renderWindow) {
+    // The tris helper is not shared
+    model.tris.releaseGraphicsResources(renderWindow);
     [model._scalars, model._colorTransferFunc, model._pwFunc].forEach(
       (coreObject) =>
         renderWindow.unregisterGraphicsResourceUser(coreObject, publicAPI)

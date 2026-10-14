@@ -55,7 +55,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
   model.classHierarchy.push('vtkOpenGLImageMapper');
 
   function unregisterGraphicsResources(renderWindow) {
-    // The openGLTexture is not shared
+    // The openGLTexture and the tris helper are not shared
+    model.tris.releaseGraphicsResources(renderWindow);
     model.openGLTexture.releaseGraphicsResources(renderWindow);
     // Neither are the default lookup textures used without transfer functions
     [model._defaultColorTexture, model._defaultPwfTexture].forEach((entry) =>

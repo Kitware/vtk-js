@@ -120,6 +120,8 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
   }
 
   function unregisterGraphicsResources(renderWindow) {
+    // The tris helper is not shared
+    model.tris.releaseGraphicsResources(renderWindow);
     // Convert to an array using the spread operator as Firefox doesn't support Iterator.forEach()
     [...graphicsResourceReferenceCount.keys()].forEach((coreObject) =>
       renderWindow.unregisterGraphicsResourceUser(coreObject, publicAPI)
