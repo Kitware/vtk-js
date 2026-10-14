@@ -15,11 +15,23 @@ function vtkProp3D(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkProp3D');
 
+  // Track the modification time of the transform inputs (origin, position,
+  // scale, rotation, userMatrix) separately so computeMatrix() does not run
+  // on every modified() event, e.g. when only the visibility changes.
+  // The _onXXXChanged hooks run before the setter's own modified() call.
+  function transformsModified() {
+    model.transformsMTime.modified();
+    publicAPI.modified();
+  }
+  model._onOriginChanged = () => model.transformsMTime.modified();
+  model._onPositionChanged = () => model.transformsMTime.modified();
+  model._onScaleChanged = () => model.transformsMTime.modified();
+
   publicAPI.addPosition = (deltaXYZ) => {
     model.position = model.position.map(
       (value, index) => value + deltaXYZ[index]
     );
-    publicAPI.modified();
+    transformsModified();
   };
 
   publicAPI.getOrientationWXYZ = () => {
@@ -42,7 +54,7 @@ function vtkProp3D(publicAPI, model) {
       model.rotation,
       vtkMath.radiansFromDegrees(val)
     );
-    publicAPI.modified();
+    transformsModified();
   };
 
   publicAPI.rotateY = (val) => {
@@ -54,7 +66,7 @@ function vtkProp3D(publicAPI, model) {
       model.rotation,
       vtkMath.radiansFromDegrees(val)
     );
-    publicAPI.modified();
+    transformsModified();
   };
 
   publicAPI.rotateZ = (val) => {
@@ -66,7 +78,7 @@ function vtkProp3D(publicAPI, model) {
       model.rotation,
       vtkMath.radiansFromDegrees(val)
     );
-    publicAPI.modified();
+    transformsModified();
   };
 
   publicAPI.rotateWXYZ = (degrees, x, y, z) => {
@@ -83,7 +95,7 @@ function vtkProp3D(publicAPI, model) {
     const quatMat = new Float64Array(16);
     mat4.fromQuat(quatMat, q);
     mat4.multiply(model.rotation, model.rotation, quatMat);
-    publicAPI.modified();
+    transformsModified();
   };
 
   publicAPI.rotateQuaternion = (orientationQuaternion) => {
@@ -96,7 +108,7 @@ function vtkProp3D(publicAPI, model) {
       orientationQuaternion
     );
     mat4.multiply(model.rotation, model.rotation, oriQuatMat);
-    publicAPI.modified();
+    transformsModified();
   };
 
   publicAPI.setOrientation = (x, y, z) => {
@@ -112,7 +124,7 @@ function vtkProp3D(publicAPI, model) {
     publicAPI.rotateZ(z);
     publicAPI.rotateX(x);
     publicAPI.rotateY(y);
-    publicAPI.modified();
+    transformsModified();
     return true;
   };
 
@@ -121,7 +133,7 @@ function vtkProp3D(publicAPI, model) {
     mat4.fromQuat(rotation, q);
     if (!vtkMath.areMatricesEqual(rotation, model.rotation)) {
       model.rotation = rotation;
-      publicAPI.modified();
+      transformsModified();
       return true;
     }
     return false;
@@ -132,7 +144,7 @@ function vtkProp3D(publicAPI, model) {
       return false;
     }
     mat4.copy(model.userMatrix, matrix);
-    publicAPI.modified();
+    transformsModified();
     return true;
   };
 
@@ -143,7 +155,7 @@ function vtkProp3D(publicAPI, model) {
 
   publicAPI.computeMatrix = () => {
     // check whether or not need to rebuild the matrix
-    if (publicAPI.getMTime() > model.matrixMTime.getMTime()) {
+    if (model.transformsMTime.getMTime() > model.matrixMTime.getMTime()) {
       mat4.identity(model.matrix);
       if (model.userMatrix) {
         mat4.multiply(model.matrix, model.matrix, model.userMatrix);
@@ -303,6 +315,7 @@ const DEFAULT_VALUES = {
   cachedProp3D: null,
   isIdentity: true,
   matrixMTime: null,
+  transformsMTime: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -315,6 +328,8 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   model.matrixMTime = {};
   macro.obj(model.matrixMTime);
+  model.transformsMTime = {};
+  macro.obj(model.transformsMTime);
 
   // Build VTK API
   macro.get(publicAPI, model, ['isIdentity']);
