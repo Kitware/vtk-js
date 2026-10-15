@@ -46,7 +46,9 @@ export function getHashFromUsage(usage) {
 
 export function getTopologyFromUsage(usage) {
   switch (usage) {
+    // The index buffer gives strips as a list of triangles.
     case BufferUsage.Triangles:
+    case BufferUsage.Strips:
       return 'triangle-list';
     case BufferUsage.Verts:
       return 'point-list';

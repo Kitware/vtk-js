@@ -1,72 +1,66 @@
 import * as macro from 'vtk.js/Sources/macros';
-import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
-import vtkWebGPUCellArrayMapper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper';
-import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
+import vtkWebGPUPolyDataMapper from 'vtk.js/Sources/Rendering/WebGPU/PolyDataMapper';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 
-const { PrimitiveTypes } = vtkWebGPUBufferManager;
-
 // ----------------------------------------------------------------------------
-// vtkWebGPUPolyDataMapper methods
+// vtkWebGPUPolyDataMapper2D methods
 // ----------------------------------------------------------------------------
 
 function vtkWebGPUPolyDataMapper2D(publicAPI, model) {
   // Set our className
   model.classHierarchy.push('vtkWebGPUPolyDataMapper2D');
 
-  publicAPI.createCellArrayMapper = () =>
-    vtkWebGPUCellArrayMapper.newInstance();
+  // The scalar colors get the opacity of the property, as in the OpenGL
+  // backend.
+  publicAPI.getScalarOpacity = () =>
+    model.WebGPUActor.getRenderable().getProperty().getOpacity();
 
-  publicAPI.buildPass = (prepass) => {
-    if (prepass) {
-      model.WebGPUActor = publicAPI.getFirstAncestorOfType('vtkWebGPUActor2D');
-      if (!model.renderable.getStatic()) {
-        model.renderable.update();
-      }
-
-      const poly = model.renderable.getInputData();
-
-      model.renderable.mapScalars(poly, 1.0);
-
-      publicAPI.updateCellArrayMappers(poly);
-    }
+  publicAPI.setUpCellArrayMapper = (cellMapper) => {
+    cellMapper.setIs2D(true);
   };
 
-  publicAPI.updateCellArrayMappers = (poly) => {
-    const prims = [
-      poly.getVerts(),
-      poly.getLines(),
-      poly.getPolys(),
-      poly.getStrips(),
-    ];
-
-    // we instantiate a cell array mapper for each cellArray that has cells
-    // and they handle the rendering of that cell array
-    const cellMappers = [];
-    let cellOffset = 0;
-    for (let i = PrimitiveTypes.Points; i <= PrimitiveTypes.Triangles; i++) {
-      if (prims[i].getNumberOfValues() > 0) {
-        if (!model.primitives[i]) {
-          model.primitives[i] = publicAPI.createCellArrayMapper();
-        }
-        const cellMapper = model.primitives[i];
-        cellMapper.setCellArray(prims[i]);
-        cellMapper.setCurrentInput(poly);
-        cellMapper.setCellOffset(cellOffset);
-        cellMapper.setPrimitiveType(i);
-        cellMapper.setRenderable(model.renderable);
-        cellMapper.setIs2D(true);
-        cellOffset += prims[i].getNumberOfCells();
-        cellMappers.push(cellMapper);
-      } else {
-        model.primitives[i] = null;
-      }
+  // With a transform coordinate, each point goes through it to viewport
+  // pixels, as in the OpenGL backend. The result is kept until the input,
+  // the coordinate, the renderer or the viewport size changes.
+  publicAPI.getRenderInput = (poly) => {
+    const transformCoordinate = model.renderable.getTransformCoordinate();
+    if (!transformCoordinate) {
+      model.transformedInput = null;
+      return poly;
+    }
+    const wgpuRen = publicAPI.getFirstAncestorOfType('vtkWebGPURenderer');
+    const ren = wgpuRen.getRenderable();
+    const tsize = wgpuRen.getTiledSizeAndOrigin();
+    const key =
+      `${poly.getMTime()}_${transformCoordinate.getMTime()}_` +
+      `${ren.getMTime()}_${tsize.usize}_${tsize.vsize}`;
+    if (model.transformedInput && model.transformedInputKey === key) {
+      return model.transformedInput;
     }
 
-    publicAPI.prepareNodes();
-    publicAPI.addMissingChildren(cellMappers);
-    publicAPI.removeUnusedNodes();
+    const points = poly.getPoints();
+    const numPts = points.getNumberOfPoints();
+    const values = new Float32Array(numPts * 3);
+    const point = [];
+    for (let i = 0; i < numPts; ++i) {
+      points.getPoint(i, point);
+      transformCoordinate.setValue(point);
+      const v = transformCoordinate.getComputedDoubleViewportValue(ren);
+      values[i * 3] = v[0];
+      values[i * 3 + 1] = v[1];
+    }
+    const transformedPoints = vtkPoints.newInstance();
+    transformedPoints.setData(values, 3);
+
+    const transformed = vtkPolyData.newInstance();
+    transformed.shallowCopy(poly);
+    transformed.setPoints(transformedPoints);
+    model.transformedInput = transformed;
+    model.transformedInputKey = key;
+    return transformed;
   };
 }
 
@@ -75,17 +69,17 @@ function vtkWebGPUPolyDataMapper2D(publicAPI, model) {
 // ----------------------------------------------------------------------------
 
 function defaultValues(initialValues) {
-  return { primitives: [], ...initialValues };
+  return { actorClassName: 'vtkWebGPUActor2D', ...initialValues };
 }
 
 // ----------------------------------------------------------------------------
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, defaultValues(initialValues));
-
   // Inheritance
-  vtkViewNode.extend(publicAPI, model, initialValues);
-
-  model.primitives = [];
+  vtkWebGPUPolyDataMapper.extend(
+    publicAPI,
+    model,
+    defaultValues(initialValues)
+  );
 
   // Object methods
   vtkWebGPUPolyDataMapper2D(publicAPI, model);
