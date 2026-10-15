@@ -3,6 +3,8 @@
 
 import '@kitware/vtk.js/favicon';
 
+import GUI from 'lil-gui';
+
 // Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 import '@kitware/vtk.js/Rendering/Profiles/Glyph';
@@ -25,6 +27,24 @@ import { FieldAssociations } from '@kitware/vtk.js/Common/DataModel/DataSet/Cons
 import { Representation } from '@kitware/vtk.js/Rendering/Core/Property/Constants';
 
 // ----------------------------------------------------------------------------
+// Renderer selector
+// ----------------------------------------------------------------------------
+
+const rendererSelectorParams = {
+  viewAPI:
+    new URLSearchParams(window.location.search).get('viewAPI') || 'WebGL',
+};
+const rendererSelectorGui = new GUI();
+rendererSelectorGui
+  .add(rendererSelectorParams, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    const query = new URLSearchParams(window.location.search);
+    query.set('viewAPI', api);
+    window.location.search = query.toString();
+  });
+
+// ----------------------------------------------------------------------------
 // Constants
 // ----------------------------------------------------------------------------
 
@@ -32,28 +52,34 @@ const WHITE = [1, 1, 1];
 const GREEN = [0.1, 0.8, 0.1];
 
 // ----------------------------------------------------------------------------
-// Create DOM tooltip
+// Selection information in a read only text area of the GUI
 // ----------------------------------------------------------------------------
 
-const tooltipsElem = document.createElement('div');
-tooltipsElem.style.position = 'absolute';
-tooltipsElem.style.top = 0;
-tooltipsElem.style.left = 0;
-tooltipsElem.style.padding = '10px';
-tooltipsElem.style.zIndex = 1;
-tooltipsElem.style.background = 'white';
-tooltipsElem.style.textAlign = 'center';
+const pickInfo = { position: '', prop: '', field: '', composite: '' };
 
-const positionTooltipElem = document.createElement('div');
-const fieldIdTooltipElem = document.createElement('div');
-const compositeIdTooltipElem = document.createElement('div');
-const propIdTooltipElem = document.createElement('div');
-tooltipsElem.appendChild(positionTooltipElem);
-tooltipsElem.appendChild(propIdTooltipElem);
-tooltipsElem.appendChild(fieldIdTooltipElem);
-tooltipsElem.appendChild(compositeIdTooltipElem);
+const pickInfoElem = document.createElement('textarea');
+pickInfoElem.readOnly = true;
+pickInfoElem.rows = 4;
+pickInfoElem.style.width = '100%';
+pickInfoElem.style.boxSizing = 'border-box';
+pickInfoElem.style.resize = 'none';
+pickInfoElem.style.font = 'inherit';
+pickInfoElem.style.color = 'inherit';
+pickInfoElem.style.background = 'var(--widget-color)';
+pickInfoElem.style.border = 'none';
+pickInfoElem.style.padding = '4px';
+rendererSelectorGui.addFolder('Selection').$children.appendChild(pickInfoElem);
 
-document.querySelector('body').appendChild(tooltipsElem);
+const updatePickInfo = () => {
+  pickInfoElem.value = [
+    pickInfo.position,
+    pickInfo.prop,
+    pickInfo.field,
+    pickInfo.composite,
+  ]
+    .filter(Boolean)
+    .join('\n');
+};
 
 // ----------------------------------------------------------------------------
 // Create 4 objects
@@ -198,7 +224,9 @@ pointerMapper.setInputConnection(pointerSource.getOutputPort());
 // Create rendering infrastructure
 // ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
+const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
+  viewAPI: rendererSelectorParams.viewAPI,
+});
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = renderer.getRenderWindow();
 const interactor = renderWindow.getInteractor();
@@ -222,11 +250,17 @@ renderWindow.render();
 
 const hardwareSelector = apiSpecificRenderWindow.getSelector();
 hardwareSelector.setCaptureZValues(true);
-// TODO: bug in FIELD_ASSOCIATION_POINTS mode
-// hardwareSelector.setFieldAssociation(
-//   FieldAssociations.FIELD_ASSOCIATION_POINTS
-// );
 hardwareSelector.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_CELLS);
+
+rendererSelectorGui
+  .add({ field: FieldAssociations.FIELD_ASSOCIATION_CELLS }, 'field', {
+    Cells: FieldAssociations.FIELD_ASSOCIATION_CELLS,
+    Points: FieldAssociations.FIELD_ASSOCIATION_POINTS,
+  })
+  .name('Field')
+  .onChange((value) => {
+    hardwareSelector.setFieldAssociation(Number(value));
+  });
 
 // ----------------------------------------------------------------------------
 // Create Mouse listener for picking on mouse move
@@ -247,35 +281,38 @@ function eventToWindowXY(event) {
 let needGlyphCleanup = false;
 let lastProcessedActor = null;
 
-const updatePositionTooltip = (worldPosition) => {
+const updatePositionInfo = (worldPosition) => {
   if (lastProcessedActor) {
-    positionTooltipElem.innerHTML = `Position: ${worldPosition
+    pickInfo.position = `Position: ${worldPosition
       .map((v) => v.toFixed(3))
       .join(' , ')}`;
   } else {
-    positionTooltipElem.innerHTML = '';
+    pickInfo.position = '';
   }
+  updatePickInfo();
 };
 
-const updateAssociationTooltip = (type, id) => {
+const updateAssociationInfo = (type, id) => {
   if (type !== undefined && id !== undefined) {
-    fieldIdTooltipElem.innerHTML = `${type} ID: ${id}`;
+    pickInfo.field = `${type} ID: ${id}`;
   } else {
-    fieldIdTooltipElem.innerHTML = '';
+    pickInfo.field = '';
   }
+  updatePickInfo();
 };
 
-const updateCompositeAndPropIdTooltip = (compositeID, propID) => {
+const updateCompositeAndPropIdInfo = (compositeID, propID) => {
   if (compositeID !== undefined) {
-    compositeIdTooltipElem.innerHTML = `Composite ID: ${compositeID}`;
+    pickInfo.composite = `Composite ID: ${compositeID}`;
   } else {
-    compositeIdTooltipElem.innerHTML = '';
+    pickInfo.composite = '';
   }
   if (propID !== undefined) {
-    propIdTooltipElem.innerHTML = `Prop ID: ${propID}`;
+    pickInfo.prop = `Prop ID: ${propID}`;
   } else {
-    propIdTooltipElem.innerHTML = '';
+    pickInfo.prop = '';
   }
+  updatePickInfo();
 };
 
 const updateCursor = (worldPosition) => {
@@ -286,16 +323,16 @@ const updateCursor = (worldPosition) => {
     pointerActor.setVisibility(false);
   }
   renderWindow.render();
-  updatePositionTooltip(worldPosition);
+  updatePositionInfo(worldPosition);
 };
 
 function processSelections(selections) {
   renderer.getActors().forEach((a) => a.getProperty().setColor(...WHITE));
   if (!selections || selections.length === 0) {
     lastProcessedActor = null;
-    updateAssociationTooltip();
+    updateAssociationInfo();
     updateCursor();
-    updateCompositeAndPropIdTooltip();
+    updateCompositeAndPropIdInfo();
     return;
   }
 
@@ -307,7 +344,7 @@ function processSelections(selections) {
     attributeID,
   } = selections[0].getProperties();
 
-  updateCompositeAndPropIdTooltip(compositeID, propID);
+  updateCompositeAndPropIdInfo(compositeID, propID);
 
   let closestCellPointWorldPosition = [...rayHitWorldPosition];
   if (attributeID || attributeID === 0) {
@@ -335,11 +372,11 @@ function processSelections(selections) {
         ...input.getPoints().getTuple(attributeID),
       ];
       propToWorld.apply(closestCellPointWorldPosition);
-      updateAssociationTooltip('Point', attributeID);
+      updateAssociationInfo('Point', attributeID);
     } else {
       // Selecting cells
       const cellPoints = input.getCellPoints(attributeID);
-      updateAssociationTooltip('Cell', attributeID);
+      updateAssociationInfo('Cell', attributeID);
       if (cellPoints?.cellPointIds) {
         const pointIds = cellPoints.cellPointIds;
         // Find the closest cell point, and use that as cursor position

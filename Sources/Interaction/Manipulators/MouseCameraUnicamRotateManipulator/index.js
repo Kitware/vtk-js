@@ -268,11 +268,14 @@ function vtkMouseCameraUnicamRotateManipulator(publicAPI, model) {
     // to the distance from the camera's position to the focal point.
     // This seems like an arbitrary, but perhaps reasonable, default value.
     let selections = null;
-    if (model.useHardwareSelector) {
-      const selector = interactor.getView().getSelector();
+    // A selector without a synchronous select() (WebGPU) uses the point
+    // picker.
+    const view = interactor.getView();
+    if (model.useHardwareSelector && view.getSelector().select) {
+      const selector = view.getSelector();
       selector.setCaptureZValues(true);
       selector.setFieldAssociation(FieldAssociations.FIELD_ASSOCIATION_POINTS);
-      selector.attach(interactor.getView(), renderer);
+      selector.attach(view, renderer);
 
       selector.setArea(position.x, position.y, position.x, position.y);
       selections = selector.select();

@@ -1,20 +1,14 @@
 import macro from 'vtk.js/Sources/macros';
-import Constants from 'vtk.js/Sources/Rendering/OpenGL/HardwareSelector/Constants';
+import Constants from 'vtk.js/Sources/Rendering/Core/HardwareSelector/Constants';
 import vtkHardwareSelector from 'vtk.js/Sources/Rendering/Core/HardwareSelector';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
-import vtkSelectionNode from 'vtk.js/Sources/Common/DataModel/SelectionNode';
+import PixelSelectionHelper from 'vtk.js/Sources/Rendering/Core/HardwareSelector/PixelSelectionHelper';
 import vtkDataSet from 'vtk.js/Sources/Common/DataModel/DataSet';
 
 const { PassTypes } = Constants;
-const { SelectionContent, SelectionField } = vtkSelectionNode;
 const { FieldAssociations } = vtkDataSet;
-const { vtkErrorMacro, vtkDebugMacro } = macro;
 
 const idOffset = 1;
-
-function getInfoHash(info) {
-  return `${info.propID} ${info.compositeID}`;
-}
 
 function getAlpha(xx, yy, pb, area) {
   if (!pb) {
@@ -24,19 +18,16 @@ function getAlpha(xx, yy, pb, area) {
   return pb[offset + 3];
 }
 
-function convert(xx, yy, pb, area, caller = null) {
+function convert(xx, yy, pb, area) {
   if (!pb) {
     return 0;
   }
 
-  // console.log(caller);
-  // console.log('convert', xx, yy, pb, area);
   const offset = (yy * (area[2] - area[0] + 1) + xx) * 4;
 
   const r = pb[offset];
   const g = pb[offset + 1];
   const b = pb[offset + 2];
-  // console.log(b, g, r, (b * 256 + g) * 256 + r);
   return (b * 256 + g) * 256 + r;
 }
 
@@ -49,287 +40,115 @@ function getID(low24, high8) {
   /* eslint-enable no-bitwise */
 }
 
-function getPixelInformationWithData(
-  buffdata,
-  inDisplayPosition,
-  maxDistance,
-  outSelectedPosition
-) {
-  // Base case
-  const maxDist = maxDistance < 0 ? 0 : maxDistance;
-  if (maxDist === 0) {
-    outSelectedPosition[0] = inDisplayPosition[0];
-    outSelectedPosition[1] = inDisplayPosition[1];
+// Decode one pixel of the pass buffers. buffdata has area, pixBuffer, props,
+// captureZValues and zBuffer.
+function readPixel(buffdata, inDisplayPosition) {
+  if (
+    inDisplayPosition[0] < buffdata.area[0] ||
+    inDisplayPosition[0] > buffdata.area[2] ||
+    inDisplayPosition[1] < buffdata.area[1] ||
+    inDisplayPosition[1] > buffdata.area[3]
+  ) {
+    return null;
+  }
+
+  // offset inDisplayPosition based on the lower-left-corner of the Area.
+  const displayPosition = [
+    inDisplayPosition[0] - buffdata.area[0],
+    inDisplayPosition[1] - buffdata.area[1],
+  ];
+
+  const actorid = convert(
+    displayPosition[0],
+    displayPosition[1],
+    buffdata.pixBuffer[PassTypes.ACTOR_PASS],
+    buffdata.area
+  );
+  if (actorid <= 0 || actorid - idOffset >= buffdata.props.length) {
+    // the pixel did not hit any actor.
+    return null;
+  }
+
+  const info = {};
+  info.valid = true;
+
+  info.propID = actorid - idOffset;
+  info.prop = buffdata.props[info.propID];
+
+  let compositeID = convert(
+    displayPosition[0],
+    displayPosition[1],
+    buffdata.pixBuffer[PassTypes.COMPOSITE_INDEX_PASS],
+    buffdata.area
+  );
+  if (compositeID < 0 || compositeID > 0xffffff) {
+    compositeID = 0;
+  }
+  info.compositeID = compositeID - idOffset;
+  if (buffdata.captureZValues) {
+    const offset =
+      (displayPosition[1] * (buffdata.area[2] - buffdata.area[0] + 1) +
+        displayPosition[0]) *
+      4;
+    info.zValue =
+      (256 * buffdata.zBuffer[offset] + buffdata.zBuffer[offset + 1]) / 65535.0;
+    info.displayPosition = [inDisplayPosition[0], inDisplayPosition[1]];
+  }
+
+  // Skip attribute ids if alpha is zero (missed)
+  if (buffdata.pixBuffer[PassTypes.ID_LOW24]) {
     if (
-      inDisplayPosition[0] < buffdata.area[0] ||
-      inDisplayPosition[0] > buffdata.area[2] ||
-      inDisplayPosition[1] < buffdata.area[1] ||
-      inDisplayPosition[1] > buffdata.area[3]
+      getAlpha(
+        displayPosition[0],
+        displayPosition[1],
+        buffdata.pixBuffer[PassTypes.ID_LOW24],
+        buffdata.area
+      ) === 0.0
     ) {
-      return null;
+      return info;
     }
-
-    // offset inDisplayPosition based on the lower-left-corner of the Area.
-    const displayPosition = [
-      inDisplayPosition[0] - buffdata.area[0],
-      inDisplayPosition[1] - buffdata.area[1],
-    ];
-
-    const actorid = convert(
-      displayPosition[0],
-      displayPosition[1],
-      buffdata.pixBuffer[PassTypes.ACTOR_PASS],
-      buffdata.area,
-      'getPixelInformationWithData1'
-    );
-    if (actorid <= 0 || actorid - idOffset >= buffdata.props.length) {
-      // the pixel did not hit any actor.
-      return null;
-    }
-
-    const info = {};
-    info.valid = true;
-
-    info.propID = actorid - idOffset;
-    info.prop = buffdata.props[info.propID];
-
-    let compositeID = convert(
-      displayPosition[0],
-      displayPosition[1],
-      buffdata.pixBuffer[PassTypes.COMPOSITE_INDEX_PASS],
-      buffdata.area,
-      'getPixelInformationWithData2'
-    );
-    if (compositeID < 0 || compositeID > 0xffffff) {
-      compositeID = 0;
-    }
-    info.compositeID = compositeID - idOffset;
-    if (buffdata.captureZValues) {
-      const offset =
-        (displayPosition[1] * (buffdata.area[2] - buffdata.area[0] + 1) +
-          displayPosition[0]) *
-        4;
-      info.zValue =
-        (256 * buffdata.zBuffer[offset] + buffdata.zBuffer[offset + 1]) /
-        65535.0;
-      info.displayPosition = inDisplayPosition;
-    }
-
-    if (buffdata.pixBuffer[PassTypes.ID_LOW24]) {
-      if (
-        getAlpha(
-          displayPosition[0],
-          displayPosition[1],
-          buffdata.pixBuffer[PassTypes.ID_LOW24],
-          buffdata.area
-        ) === 0.0
-      ) {
-        return info;
-      }
-    }
-
-    const low24 = convert(
-      displayPosition[0],
-      displayPosition[1],
-      buffdata.pixBuffer[PassTypes.ID_LOW24],
-      buffdata.area,
-      'getPixelInformationWithData3'
-    );
-    const high24 = convert(
-      displayPosition[0],
-      displayPosition[1],
-      buffdata.pixBuffer[PassTypes.ID_HIGH24],
-      buffdata.area,
-      'getPixelInformationWithData4'
-    );
-    info.attributeID = getID(low24, high24, 0);
-
-    return info;
   }
 
-  // Iterate over successively growing boxes.
-  // They recursively call the base case to handle single pixels.
-  const dispPos = [inDisplayPosition[0], inDisplayPosition[1]];
-  const curPos = [0, 0];
-  let info = getPixelInformationWithData(
-    buffdata,
+  const low24 = convert(
+    displayPosition[0],
+    displayPosition[1],
+    buffdata.pixBuffer[PassTypes.ID_LOW24],
+    buffdata.area
+  );
+  const high24 = convert(
+    displayPosition[0],
+    displayPosition[1],
+    buffdata.pixBuffer[PassTypes.ID_HIGH24],
+    buffdata.area
+  );
+  info.attributeID = getID(low24, high24);
+
+  return info;
+}
+
+// Give buffdata the functions that build selections from its pixels.
+// buffdata also has fieldAssociation, renderer and openGLRenderWindow.
+function addSelectionFunctions(buffdata) {
+  const read = (position) => readPixel(buffdata, position);
+  buffdata.getPixelInformation = (
     inDisplayPosition,
-    0,
+    maxDistance,
     outSelectedPosition
-  );
-  if (info && info.valid) {
-    return info;
-  }
-  for (let dist = 1; dist < maxDist; ++dist) {
-    // Vertical sides of box.
-    for (
-      let y = dispPos[1] > dist ? dispPos[1] - dist : 0;
-      y <= dispPos[1] + dist;
-      ++y
-    ) {
-      curPos[1] = y;
-      if (dispPos[0] >= dist) {
-        curPos[0] = dispPos[0] - dist;
-        info = getPixelInformationWithData(
-          buffdata,
-          curPos,
-          0,
-          outSelectedPosition
-        );
-        if (info && info.valid) {
-          return info;
-        }
-      }
-      curPos[0] = dispPos[0] + dist;
-      info = getPixelInformationWithData(
-        buffdata,
-        curPos,
-        0,
-        outSelectedPosition
-      );
-      if (info && info.valid) {
-        return info;
-      }
-    }
-    // Horizontal sides of box.
-    for (
-      let x = dispPos[0] >= dist ? dispPos[0] - (dist - 1) : 0;
-      x <= dispPos[0] + (dist - 1);
-      ++x
-    ) {
-      curPos[0] = x;
-      if (dispPos[1] >= dist) {
-        curPos[1] = dispPos[1] - dist;
-        info = getPixelInformationWithData(
-          buffdata,
-          curPos,
-          0,
-          outSelectedPosition
-        );
-        if (info && info.valid) {
-          return info;
-        }
-      }
-      curPos[1] = dispPos[1] + dist;
-      info = getPixelInformationWithData(
-        buffdata,
-        curPos,
-        0,
-        outSelectedPosition
-      );
-      if (info && info.valid) {
-        return info;
-      }
-    }
-  }
-
-  // nothing hit.
-  outSelectedPosition[0] = inDisplayPosition[0];
-  outSelectedPosition[1] = inDisplayPosition[1];
-  return null;
-}
-
-//-----------------------------------------------------------------------------
-function convertSelection(
-  fieldassociation,
-  dataMap,
-  captureZValues,
-  renderer,
-  openGLRenderWindow
-) {
-  const sel = [];
-
-  let count = 0;
-  dataMap.forEach((value, key) => {
-    const child = vtkSelectionNode.newInstance();
-    child.setContentType(SelectionContent.INDICES);
-    switch (fieldassociation) {
-      case FieldAssociations.FIELD_ASSOCIATION_CELLS:
-        child.setFieldType(SelectionField.CELL);
-        break;
-      case FieldAssociations.FIELD_ASSOCIATION_POINTS:
-        child.setFieldType(SelectionField.POINT);
-        break;
-      default:
-        vtkErrorMacro('Unknown field association');
-    }
-    child.getProperties().propID = value.info.propID;
-    child.getProperties().prop = value.info.prop;
-    child.getProperties().compositeID = value.info.compositeID;
-    child.getProperties().attributeID = value.info.attributeID;
-    child.getProperties().pixelCount = value.pixelCount;
-    if (captureZValues) {
-      child.getProperties().displayPosition = [
-        value.info.displayPosition[0],
-        value.info.displayPosition[1],
-        value.info.zValue,
-      ];
-      child.getProperties().worldPosition = openGLRenderWindow.displayToWorld(
-        value.info.displayPosition[0],
-        value.info.displayPosition[1],
-        value.info.zValue,
-        renderer
-      );
-    }
-
-    child.setSelectionList(value.attributeIDs);
-    sel[count] = child;
-    count++;
-  });
-
-  return sel;
-}
-
-//----------------------------------------------------------------------------
-function generateSelectionWithData(buffdata, fx1, fy1, fx2, fy2) {
-  const x1 = Math.floor(fx1);
-  const y1 = Math.floor(fy1);
-  const x2 = Math.floor(fx2);
-  const y2 = Math.floor(fy2);
-
-  const dataMap = new Map();
-
-  const outSelectedPosition = [0, 0];
-
-  for (let yy = y1; yy <= y2; yy++) {
-    for (let xx = x1; xx <= x2; xx++) {
-      const pos = [xx, yy];
-      const info = getPixelInformationWithData(
-        buffdata,
-        pos,
-        0,
-        outSelectedPosition
-      );
-      if (info && info.valid) {
-        const hash = getInfoHash(info);
-        if (!dataMap.has(hash)) {
-          dataMap.set(hash, {
-            info,
-            pixelCount: 1,
-            attributeIDs: [info.attributeID],
-          });
-        } else {
-          const dmv = dataMap.get(hash);
-          dmv.pixelCount++;
-          if (buffdata.captureZValues) {
-            if (info.zValue < dmv.info.zValue) {
-              dmv.info = info;
-            }
-          }
-          if (dmv.attributeIDs.indexOf(info.attributeID) === -1) {
-            dmv.attributeIDs.push(info.attributeID);
-          }
-        }
-      }
-    }
-  }
-  return convertSelection(
-    buffdata.fieldAssociation,
-    dataMap,
-    buffdata.captureZValues,
-    buffdata.renderer,
-    buffdata.openGLRenderWindow
-  );
+  ) =>
+    PixelSelectionHelper.getPixelInformation(
+      read,
+      inDisplayPosition,
+      maxDistance,
+      outSelectedPosition
+    );
+  buffdata.generateSelection = (fx1, fy1, fx2, fy2) =>
+    PixelSelectionHelper.generateSelection(read, fx1, fy1, fx2, fy2, {
+      fieldAssociation: buffdata.fieldAssociation,
+      captureZValues: buffdata.captureZValues,
+      displayToWorld: (x, y, z) =>
+        buffdata.openGLRenderWindow.displayToWorld(x, y, z, buffdata.renderer),
+    });
+  return buffdata;
 }
 
 // ----------------------------------------------------------------------------
@@ -462,15 +281,12 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       renderer,
       openGLRenderWindow: model._openGLRenderWindow,
     };
-    result.generateSelection = (...args) =>
-      generateSelectionWithData(result, ...args);
-    return result;
+    return addSelectionFunctions(result);
   };
 
   //----------------------------------------------------------------------------
   publicAPI.captureBuffers = () => {
-    if (!model._renderer || !model._openGLRenderWindow) {
-      vtkErrorMacro('Renderer and view must be set before calling Select.');
+    if (!publicAPI.prepareCapture(model._openGLRenderWindow, model._renderer)) {
       return false;
     }
 
@@ -478,10 +294,6 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
       model._renderer,
       model._openGLRenderer
     );
-
-    // todo revisit making selection part of core
-    // then we can do this in core
-    model._openGLRenderWindow.getRenderable().preRender();
 
     // int rgba[4];
     // rwin.getColorBufferSizes(rgba);
@@ -645,20 +457,12 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
   };
 
   //----------------------------------------------------------------------------
-  // TODO: make inline
+  // Keeps the largest attribute id given. A negative id is valid and is
+  // ignored: higher order cells add points to draw smooth surfaces.
   publicAPI.renderAttributeId = (attribid) => {
-    if (attribid < 0) {
-      // negative attribid is valid. It happens when rendering higher order
-      // elements where new points are added for rendering smooth surfaces.
-      return;
+    if (attribid >= 0) {
+      model.maxAttributeId = Math.max(model.maxAttributeId, attribid);
     }
-
-    model.maxAttributeId =
-      attribid > model.maxAttributeId ? attribid : model.maxAttributeId;
-
-    // if (model.currentPass < PassTypes.ID_LOW24) {
-    //   return; // useless...
-    // }
   };
 
   //----------------------------------------------------------------------------
@@ -678,224 +482,35 @@ function vtkOpenGLHardwareSelector(publicAPI, model) {
     publicAPI.delete
   );
 
-  // info has
-  //   valid
-  //   propId
-  //   prop
-  //   compositeID
-  //   attributeID
-
   //----------------------------------------------------------------------------
+  // The selection functions read the pass buffers of the last
+  // captureBuffers() call. info has valid, propID, prop, compositeID and
+  // attributeID.
+  const getCapturedData = () =>
+    addSelectionFunctions({
+      area: model.area,
+      pixBuffer: model.pixBuffer,
+      captureZValues: model.captureZValues,
+      zBuffer: model.zBuffer,
+      props: model.props,
+      fieldAssociation: model.fieldAssociation,
+      renderer: model._renderer,
+      openGLRenderWindow: model._openGLRenderWindow,
+    });
+
   publicAPI.getPixelInformation = (
     inDisplayPosition,
     maxDistance,
     outSelectedPosition
-  ) => {
-    // Base case
-    const maxDist = maxDistance < 0 ? 0 : maxDistance;
-    vtkDebugMacro('getPixelInformation called', maxDist);
-    if (maxDist === 0) {
-      outSelectedPosition[0] = inDisplayPosition[0];
-      outSelectedPosition[1] = inDisplayPosition[1];
-      if (
-        inDisplayPosition[0] < model.area[0] ||
-        inDisplayPosition[0] > model.area[2] ||
-        inDisplayPosition[1] < model.area[1] ||
-        inDisplayPosition[1] > model.area[3]
-      ) {
-        return null;
-      }
-
-      vtkDebugMacro(inDisplayPosition);
-      vtkDebugMacro(model.area);
-      // offset inDisplayPosition based on the lower-left-corner of the Area.
-      const displayPosition = [
-        inDisplayPosition[0] - model.area[0],
-        inDisplayPosition[1] - model.area[1],
-      ];
-
-      vtkDebugMacro('adjusted displayPosition', displayPosition);
-
-      const actorid = convert(
-        displayPosition[0],
-        displayPosition[1],
-        model.pixBuffer[PassTypes.ACTOR_PASS],
-        model.area,
-        'getPixelInformation'
-      );
-
-      vtkDebugMacro('actorid', actorid);
-      if (actorid <= 0 || actorid - idOffset >= model.props.length) {
-        // the pixel did not hit any actor.
-        return null;
-      }
-
-      const info = {};
-      info.valid = true;
-
-      info.propID = actorid - idOffset;
-      info.prop = model.props[info.propID];
-      let compositeID = convert(
-        displayPosition[0],
-        displayPosition[1],
-        model.pixBuffer[PassTypes.COMPOSITE_INDEX_PASS],
-        model.area,
-        'getPixelInformation2'
-      );
-      if (compositeID < 0 || compositeID > 0xffffff) {
-        compositeID = 0;
-      }
-      info.compositeID = compositeID - idOffset;
-      if (model.captureZValues) {
-        const offset =
-          (displayPosition[1] * (model.area[2] - model.area[0] + 1) +
-            displayPosition[0]) *
-          4;
-        info.zValue =
-          (256 * model.zBuffer[offset] + model.zBuffer[offset + 1]) / 65535.0;
-        info.displayPosition = inDisplayPosition;
-      }
-
-      // Skip attribute ids if alpha is zero (missed)
-      if (model.pixBuffer[PassTypes.ID_LOW24]) {
-        if (
-          getAlpha(
-            displayPosition[0],
-            displayPosition[1],
-            model.pixBuffer[PassTypes.ID_LOW24],
-            model.area
-          ) === 0.0
-        ) {
-          return info;
-        }
-      }
-
-      const low24 = convert(
-        displayPosition[0],
-        displayPosition[1],
-        model.pixBuffer[PassTypes.ID_LOW24],
-        model.area,
-        'getPixelInformation3'
-      );
-      const high24 = convert(
-        displayPosition[0],
-        displayPosition[1],
-        model.pixBuffer[PassTypes.ID_HIGH24],
-        model.area,
-        'getPixelInformation4'
-      );
-      info.attributeID = getID(low24, high24);
-
-      return info;
-    }
-
-    // Iterate over successively growing boxes.
-    // They recursively call the base case to handle single pixels.
-    const dispPos = [inDisplayPosition[0], inDisplayPosition[1]];
-    const curPos = [0, 0];
-    let info = publicAPI.getPixelInformation(
+  ) =>
+    getCapturedData().getPixelInformation(
       inDisplayPosition,
-      0,
+      maxDistance,
       outSelectedPosition
     );
-    if (info && info.valid) {
-      return info;
-    }
-    for (let dist = 1; dist < maxDist; ++dist) {
-      // Vertical sides of box.
-      for (
-        let y = dispPos[1] > dist ? dispPos[1] - dist : 0;
-        y <= dispPos[1] + dist;
-        ++y
-      ) {
-        curPos[1] = y;
-        if (dispPos[0] >= dist) {
-          curPos[0] = dispPos[0] - dist;
-          info = publicAPI.getPixelInformation(curPos, 0, outSelectedPosition);
-          if (info && info.valid) {
-            return info;
-          }
-        }
-        curPos[0] = dispPos[0] + dist;
-        info = publicAPI.getPixelInformation(curPos, 0, outSelectedPosition);
-        if (info && info.valid) {
-          return info;
-        }
-      }
-      // Horizontal sides of box.
-      for (
-        let x = dispPos[0] >= dist ? dispPos[0] - (dist - 1) : 0;
-        x <= dispPos[0] + (dist - 1);
-        ++x
-      ) {
-        curPos[0] = x;
-        if (dispPos[1] >= dist) {
-          curPos[1] = dispPos[1] - dist;
-          info = publicAPI.getPixelInformation(curPos, 0, outSelectedPosition);
-          if (info && info.valid) {
-            return info;
-          }
-        }
-        curPos[1] = dispPos[1] + dist;
-        info = publicAPI.getPixelInformation(curPos, 0, outSelectedPosition);
-        if (info && info.valid) {
-          return info;
-        }
-      }
-    }
 
-    // nothing hit.
-    outSelectedPosition[0] = inDisplayPosition[0];
-    outSelectedPosition[1] = inDisplayPosition[1];
-    return null;
-  };
-
-  //----------------------------------------------------------------------------
-  publicAPI.generateSelection = (fx1, fy1, fx2, fy2) => {
-    const x1 = Math.floor(fx1);
-    const y1 = Math.floor(fy1);
-    const x2 = Math.floor(fx2);
-    const y2 = Math.floor(fy2);
-
-    const dataMap = new Map();
-
-    const outSelectedPosition = [0, 0];
-
-    for (let yy = y1; yy <= y2; yy++) {
-      for (let xx = x1; xx <= x2; xx++) {
-        const pos = [xx, yy];
-        const info = publicAPI.getPixelInformation(pos, 0, outSelectedPosition);
-        if (info && info.valid) {
-          const hash = getInfoHash(info);
-          if (!dataMap.has(hash)) {
-            dataMap.set(hash, {
-              info,
-              pixelCount: 1,
-              attributeIDs: [info.attributeID],
-            });
-          } else {
-            const dmv = dataMap.get(hash);
-            dmv.pixelCount++;
-            if (model.captureZValues) {
-              if (info.zValue < dmv.info.zValue) {
-                dmv.info = info;
-              }
-            }
-            if (dmv.attributeIDs.indexOf(info.attributeID) === -1) {
-              dmv.attributeIDs.push(info.attributeID);
-            }
-          }
-        }
-      }
-    }
-    return convertSelection(
-      model.fieldAssociation,
-      dataMap,
-      model.captureZValues,
-      model._renderer,
-      model._openGLRenderWindow
-    );
-  };
+  publicAPI.generateSelection = (fx1, fy1, fx2, fy2) =>
+    getCapturedData().generateSelection(fx1, fy1, fx2, fy2);
 
   publicAPI.getRawPixelBuffer = (passNo) => model.rawPixBuffer[passNo];
   publicAPI.getPixelBuffer = (passNo) => model.pixBuffer[passNo];
