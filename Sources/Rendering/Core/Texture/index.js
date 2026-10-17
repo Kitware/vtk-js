@@ -1,6 +1,8 @@
 /* eslint-disable no-bitwise */
 import macro from 'vtk.js/Sources/macros';
 
+const { vtkErrorMacro, vtkWarningMacro } = macro;
+
 // ----------------------------------------------------------------------------
 // vtkTexture methods
 // ----------------------------------------------------------------------------
@@ -180,137 +182,213 @@ function vtkTexture(publicAPI, model) {
  * @param {GPUTexture} texture - The GPU texture for which mipmaps will be generated. Must be created with mip levels.
  * @param {number} mipLevelCount - The total number of mip levels to generate (including the base level).
  */
-const generateMipmaps = (device, texture, mipLevelCount) => {
-  const computeShaderCode = `
-    @group(0) @binding(0) var inputTexture: texture_2d<f32>;
-    @group(0) @binding(1) var outputTexture: texture_storage_2d<rgba8unorm, write>;
+// Each texture logs a cube map message one time only, because the render
+// backends call useCubeMap for each build of the texture.
+const cubeMapMessageTextures = new WeakSet();
 
-    @compute @workgroup_size(8, 8)
-    fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
-      let texelCoord = vec2<i32>(global_id.xy);
-      let outputSize = textureDimensions(outputTexture);
+function logCubeMapMessageOnce(texture, log, message) {
+  if (!cubeMapMessageTextures.has(texture)) {
+    cubeMapMessageTextures.add(texture);
+    log(message);
+  }
+}
 
-      if (texelCoord.x >= i32(outputSize.x) || texelCoord.y >= i32(outputSize.y)) {
-        return;
-      }
-
-      let inputSize = textureDimensions(inputTexture);
-      let scale = vec2<f32>(inputSize) / vec2<f32>(outputSize);
-
-      // Compute the floating-point source coordinate
-      let srcCoord = (vec2<f32>(texelCoord) + 0.5) * scale - 0.5;
-
-      // Get integer coordinates for the four surrounding texels
-      let x0 = i32(floor(srcCoord.x));
-      let x1 = min(x0 + 1, i32(inputSize.x) - 1);
-      let y0 = i32(floor(srcCoord.y));
-      let y1 = min(y0 + 1, i32(inputSize.y) - 1);
-
-      // Compute the weights
-      let wx = srcCoord.x - f32(x0);
-      let wy = srcCoord.y - f32(y0);
-
-      // Fetch the four texels
-      let c00 = textureLoad(inputTexture, vec2<i32>(x0, y0), 0);
-      let c10 = textureLoad(inputTexture, vec2<i32>(x1, y0), 0);
-      let c01 = textureLoad(inputTexture, vec2<i32>(x0, y1), 0);
-      let c11 = textureLoad(inputTexture, vec2<i32>(x1, y1), 0);
-
-      // Bilinear interpolation
-      let color = mix(
-        mix(c00, c10, wx),
-        mix(c01, c11, wx),
-        wy
-      );
-
-      textureStore(outputTexture, texelCoord, color);
+/**
+ * Return true when a render backend must upload the texture as a cube map.
+ * This is true when the cubeMap flag is set and the six input ports have
+ * image data with scalars. Six faces without the cubeMap flag also give a
+ * cube map, with a warning, so that code which did not set the flag works.
+ */
+const useCubeMap = (texture) => {
+  let numberOfFaces = 0;
+  for (let i = 0; i < 6; i++) {
+    if (texture.getInputData(i)?.getPointData().getScalars()) {
+      numberOfFaces++;
     }
-  `;
+  }
+  if (texture.getCubeMap()) {
+    if (numberOfFaces < 6) {
+      logCubeMapMessageOnce(
+        texture,
+        vtkErrorMacro,
+        `The texture is a cube map but only ${numberOfFaces} of the 6 faces have image data. The texture is used as a 2D texture.`
+      );
+      return false;
+    }
+    return true;
+  }
+  if (numberOfFaces === 6) {
+    logCubeMapMessageOnce(
+      texture,
+      vtkWarningMacro,
+      'The texture has 6 inputs and is used as a cube map. Call setCubeMap(true) on the texture to remove this warning.'
+    );
+    return true;
+  }
+  return false;
+};
 
-  const computeShader = device.createShaderModule({
-    code: computeShaderCode,
-  });
+// Color formats that a render pass can write and that sample as float.
+// generateMipmaps makes the mip chain of these formats only.
+const MIPMAP_FORMATS = new Set([
+  'r8unorm',
+  'rg8unorm',
+  'rgba8unorm',
+  'rgba8unorm-srgb',
+  'bgra8unorm',
+  'bgra8unorm-srgb',
+  'rgb10a2unorm',
+  'r16float',
+  'rg16float',
+  'rgba16float',
+  'r32float',
+  'rg32float',
+  'rgba32float',
+]);
 
-  const bindGroupLayout = device.createBindGroupLayout({
-    entries: [
-      {
-        binding: 0,
-        // eslint-disable-next-line no-undef
-        visibility: GPUShaderStage.COMPUTE,
-        texture: { sampleType: 'float' },
-      },
-      {
-        binding: 1,
-        // eslint-disable-next-line no-undef
-        visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { format: 'rgba8unorm', access: 'write-only' },
-      },
-      {
-        binding: 2,
-        // eslint-disable-next-line no-undef
-        visibility: GPUShaderStage.COMPUTE,
-        sampler: { type: 'filtering' },
-      },
-    ],
-  });
+const canGenerateMipmaps = (format) => MIPMAP_FORMATS.has(format);
 
-  const pipelineLayout = device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayout],
-  });
+// Each output texel is the bilinear mix of the four nearest texels of the
+// level above. textureLoad does not need a filtering sampler, so the
+// unfilterable float formats work also.
+const mipmapShaderCode = `
+  struct VertexOutput {
+    @builtin(position) position: vec4<f32>,
+  };
 
-  const pipeline = device.createComputePipeline({
-    label: 'ComputeMipmapPipeline',
-    layout: pipelineLayout,
-    compute: {
-      module: computeShader,
-      entryPoint: 'main',
-    },
-  });
+  @group(0) @binding(0) var inputTexture: texture_2d<f32>;
 
-  const sampler = device.createSampler({
-    magFilter: 'linear',
-    minFilter: 'linear',
-  });
+  @vertex
+  fn vertexMain(@builtin(vertex_index) index: u32) -> VertexOutput {
+    var positions = array<vec2<f32>, 3>(
+      vec2<f32>(-1.0, -1.0),
+      vec2<f32>(3.0, -1.0),
+      vec2<f32>(-1.0, 3.0)
+    );
+    var output: VertexOutput;
+    output.position = vec4<f32>(positions[index], 0.0, 1.0);
+    return output;
+  }
 
-  // Generate each mip level
-  for (let mipLevel = 1; mipLevel < mipLevelCount; mipLevel++) {
-    const srcView = texture.createView({
-      baseMipLevel: mipLevel - 1,
-      mipLevelCount: 1,
+  @fragment
+  fn fragmentMain(input: VertexOutput) -> @location(0) vec4<f32> {
+    let inputSize = vec2<i32>(textureDimensions(inputTexture));
+    let outputSize = vec2<i32>(max(inputSize / 2, vec2<i32>(1, 1)));
+    let scale = vec2<f32>(inputSize) / vec2<f32>(outputSize);
+    let srcCoord = input.position.xy * scale - 0.5;
+
+    let x0 = clamp(i32(floor(srcCoord.x)), 0, inputSize.x - 1);
+    let x1 = min(x0 + 1, inputSize.x - 1);
+    let y0 = clamp(i32(floor(srcCoord.y)), 0, inputSize.y - 1);
+    let y1 = min(y0 + 1, inputSize.y - 1);
+    let wx = clamp(srcCoord.x - f32(x0), 0.0, 1.0);
+    let wy = clamp(srcCoord.y - f32(y0), 0.0, 1.0);
+
+    let c00 = textureLoad(inputTexture, vec2<i32>(x0, y0), 0);
+    let c10 = textureLoad(inputTexture, vec2<i32>(x1, y0), 0);
+    let c01 = textureLoad(inputTexture, vec2<i32>(x0, y1), 0);
+    let c11 = textureLoad(inputTexture, vec2<i32>(x1, y1), 0);
+    return mix(mix(c00, c10, wx), mix(c01, c11, wx), wy);
+  }
+`;
+
+// The pipelines of each GPUDevice, keyed by the texture format
+const mipmapPipelines = new WeakMap();
+
+function getMipmapPipeline(device, format) {
+  let pipelines = mipmapPipelines.get(device);
+  if (!pipelines) {
+    const module = device.createShaderModule({
+      label: 'MipmapShaderModule',
+      code: mipmapShaderCode,
     });
-
-    const dstView = texture.createView({
-      baseMipLevel: mipLevel,
-      mipLevelCount: 1,
-    });
-
-    const bindGroup = device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
+    const bindGroupLayout = device.createBindGroupLayout({
+      label: 'MipmapBindGroupLayout',
       entries: [
-        { binding: 0, resource: srcView },
-        { binding: 1, resource: dstView },
-        { binding: 2, resource: sampler },
+        {
+          binding: 0,
+          // eslint-disable-next-line no-undef
+          visibility: GPUShaderStage.FRAGMENT,
+          texture: { sampleType: 'unfilterable-float' },
+        },
       ],
     });
-
-    const commandEncoder = device.createCommandEncoder({
-      label: `MipmapGenerateCommandEncoder`,
-    });
-    const computePass = commandEncoder.beginComputePass();
-
-    computePass.setPipeline(pipeline);
-    computePass.setBindGroup(0, bindGroup);
-
-    const mipWidth = Math.max(1, texture.width >> mipLevel);
-    const mipHeight = Math.max(1, texture.height >> mipLevel);
-    const workgroupsX = Math.ceil(mipWidth / 8);
-    const workgroupsY = Math.ceil(mipHeight / 8);
-
-    computePass.dispatchWorkgroups(workgroupsX, workgroupsY);
-    computePass.end();
-
-    device.queue.submit([commandEncoder.finish()]);
+    pipelines = { module, bindGroupLayout, byFormat: new Map() };
+    mipmapPipelines.set(device, pipelines);
   }
+  let pipeline = pipelines.byFormat.get(format);
+  if (!pipeline) {
+    pipeline = device.createRenderPipeline({
+      label: `MipmapPipeline-${format}`,
+      layout: device.createPipelineLayout({
+        bindGroupLayouts: [pipelines.bindGroupLayout],
+      }),
+      vertex: { module: pipelines.module, entryPoint: 'vertexMain' },
+      fragment: {
+        module: pipelines.module,
+        entryPoint: 'fragmentMain',
+        targets: [{ format }],
+      },
+      primitive: { topology: 'triangle-list' },
+    });
+    pipelines.byFormat.set(format, pipeline);
+  }
+  return pipeline;
+}
+
+/**
+ * Make the mip levels 1 to mipLevelCount - 1 of a 2D GPUTexture from its
+ * level 0. Each array layer (for example each face of a cube map) gets its
+ * own mip chain. The texture must have the RENDER_ATTACHMENT and
+ * TEXTURE_BINDING usages and a format that canGenerateMipmaps accepts.
+ */
+const generateMipmaps = (device, texture, mipLevelCount) => {
+  if (texture.dimension !== '2d' || !canGenerateMipmaps(texture.format)) {
+    vtkErrorMacro(
+      `Cannot generate mipmaps of a ${texture.dimension} ${texture.format} texture.`
+    );
+    return;
+  }
+  const levelCount = Math.min(mipLevelCount, texture.mipLevelCount);
+  if (levelCount < 2) {
+    return;
+  }
+  const pipeline = getMipmapPipeline(device, texture.format);
+  const commandEncoder = device.createCommandEncoder({
+    label: 'MipmapGenerateCommandEncoder',
+  });
+  for (let layer = 0; layer < texture.depthOrArrayLayers; layer++) {
+    for (let mipLevel = 1; mipLevel < levelCount; mipLevel++) {
+      const srcView = texture.createView({
+        dimension: '2d',
+        baseMipLevel: mipLevel - 1,
+        mipLevelCount: 1,
+        baseArrayLayer: layer,
+        arrayLayerCount: 1,
+      });
+      const dstView = texture.createView({
+        dimension: '2d',
+        baseMipLevel: mipLevel,
+        mipLevelCount: 1,
+        baseArrayLayer: layer,
+        arrayLayerCount: 1,
+      });
+      const bindGroup = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [{ binding: 0, resource: srcView }],
+      });
+      const renderPass = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          { view: dstView, loadOp: 'clear', storeOp: 'store' },
+        ],
+      });
+      renderPass.setPipeline(pipeline);
+      renderPass.setBindGroup(0, bindGroup);
+      renderPass.draw(3);
+      renderPass.end();
+    }
+  }
+  device.queue.submit([commandEncoder.finish()]);
 };
 
 // ----------------------------------------------------------------------------
@@ -329,7 +407,16 @@ const DEFAULT_VALUES = {
   mipLevel: 0,
   wrapS: null, // per-axis wrap: 'repeat', 'clamp-to-edge', or 'mirror-repeat'
   wrapT: null,
+  wrapR: null,
+  // Sampler overrides. null uses the value from interpolate and mipLevel.
+  minFilter: null, // 'nearest' or 'linear'
+  magFilter: null, // 'nearest' or 'linear'
+  mipmapFilter: null, // 'nearest' or 'linear'
+  minLOD: null, // lowest mip level to sample, null for 0
+  maxLOD: null, // highest mip level to sample, null for the last level
+  maxAnisotropy: 1,
   resizable: false, // must be set at construction time if the texture can be resizable
+  cubeMap: false, // true: the six input ports are the faces +X, -X, +Y, -Y, +Z, -Z
 };
 
 // ----------------------------------------------------------------------------
@@ -357,6 +444,14 @@ export function extend(publicAPI, model, initialValues = {}) {
     'mipLevel',
     'wrapS',
     'wrapT',
+    'wrapR',
+    'minFilter',
+    'magFilter',
+    'mipmapFilter',
+    'minLOD',
+    'maxLOD',
+    'maxAnisotropy',
+    'cubeMap',
   ]);
 
   vtkTexture(publicAPI, model);
@@ -365,7 +460,7 @@ export function extend(publicAPI, model, initialValues = {}) {
 // ----------------------------------------------------------------------------
 
 export const newInstance = macro.newInstance(extend, 'vtkTexture');
-export const STATIC = { generateMipmaps };
+export const STATIC = { generateMipmaps, canGenerateMipmaps, useCubeMap };
 
 // ----------------------------------------------------------------------------
 
