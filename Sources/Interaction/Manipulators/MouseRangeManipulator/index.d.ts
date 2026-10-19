@@ -19,7 +19,7 @@ export interface vtkMouseRangeManipulator
     setValue: (v: number) => void,
     scale?: number,
     exponentialScroll?: boolean
-  );
+  ): void;
   setVerticalListener(
     min: number,
     max: number,
@@ -28,7 +28,7 @@ export interface vtkMouseRangeManipulator
     setValue: (v: number) => void,
     scale?: number,
     exponentialScroll?: boolean
-  );
+  ): void;
   setScrollListener(
     min: number,
     max: number,
@@ -37,11 +37,11 @@ export interface vtkMouseRangeManipulator
     setValue: (v: number) => void,
     scale?: number,
     exponentialScroll?: boolean
-  );
-  removeHorizontalListener();
-  removeVerticalListener();
-  removeScrollListener();
-  removeAllListeners();
+  ): void;
+  removeHorizontalListener(): void;
+  removeVerticalListener(): void;
+  removeScrollListener(): void;
+  removeAllListeners(): void;
 
   /**
    * Starts listening to mouse move events while the pointer is locked.
