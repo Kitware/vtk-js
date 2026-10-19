@@ -465,7 +465,7 @@ declare function createRangeHelper(): vtkRangeHelper;
  *
  * ```js
  * const isFloat32 = ('Float32Array' === getDataType(array));
- * const clone = new macro.TYPED_ARRAYS[getDataType(array)](array.length);
+ * const clone = macro.newTypedArray(getDataType(array), array.length);
  * ```
  *
  * @param typedArray to extract its type from

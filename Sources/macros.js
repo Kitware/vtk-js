@@ -94,7 +94,7 @@ export function vtkOnceErrorMacro(str) {
 // TypedArray
 // ----------------------------------------------------------------------------
 
-export const TYPED_ARRAYS = Object.create(null);
+const TYPED_ARRAYS = Object.create(null);
 TYPED_ARRAYS.Float32Array = Float32Array;
 TYPED_ARRAYS.Float64Array = Float64Array;
 TYPED_ARRAYS.Uint8Array = Uint8Array;
@@ -1818,7 +1818,6 @@ export default {
   setLoggerFunction,
   throttle,
   traverseInstanceTree,
-  TYPED_ARRAYS, // deprecated todo remove on breaking API revision
   uncapitalize,
   VOID,
   vtkDebugMacro,

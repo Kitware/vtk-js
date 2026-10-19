@@ -64,7 +64,7 @@ export function vtkOnceErrorMacro(str: string): void;
 /**
  * A way to create typed array based on its name without using the window namespace
  */
-export const TYPED_ARRAYS: {
+type TypedArrayConstructors = {
   Float32Array: typeof Float32Array;
   Float64Array: typeof Float64Array;
   Uint8Array: typeof Uint8Array;
@@ -79,10 +79,10 @@ export const TYPED_ARRAYS: {
 };
 
 // Unavailable optional constructors use the Float64Array fallback.
-type TypedArrayForName<T extends keyof typeof TYPED_ARRAYS> = {
+type TypedArrayForName<T extends keyof TypedArrayConstructors> = {
   [K in T]:
-    | InstanceType<NonNullable<(typeof TYPED_ARRAYS)[K]>>
-    | ({} extends Pick<typeof TYPED_ARRAYS, K> ? Float64Array : never);
+    | InstanceType<NonNullable<TypedArrayConstructors[K]>>
+    | ({} extends Pick<TypedArrayConstructors, K> ? Float64Array : never);
 }[T];
 
 /**
@@ -90,7 +90,7 @@ type TypedArrayForName<T extends keyof typeof TYPED_ARRAYS> = {
  * @param type name of the typed array constructor (e.g. 'Float32Array')
  * @param args arguments forwarded to the typed array constructor
  */
-export function newTypedArray<K extends keyof typeof TYPED_ARRAYS>(
+export function newTypedArray<K extends keyof TypedArrayConstructors>(
   type: K,
   ...args: any[]
 ): TypedArrayForName<K>;
@@ -104,7 +104,7 @@ export function newTypedArray(
  * @param type name of the typed array constructor (e.g. 'Float32Array')
  * @param args arguments forwarded to the typed array's `from()` method
  */
-export function newTypedArrayFrom<K extends keyof typeof TYPED_ARRAYS>(
+export function newTypedArrayFrom<K extends keyof TypedArrayConstructors>(
   type: K,
   ...args: any[]
 ): TypedArrayForName<K>;
@@ -802,7 +802,6 @@ declare const Macro: {
   setLoggerFunction: typeof setLoggerFunction;
   throttle: typeof throttle;
   traverseInstanceTree: typeof traverseInstanceTree;
-  TYPED_ARRAYS: typeof TYPED_ARRAYS;
   uncapitalize: typeof uncapitalize;
   VOID: typeof VOID;
   vtkDebugMacro: typeof vtkDebugMacro;

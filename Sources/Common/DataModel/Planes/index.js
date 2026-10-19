@@ -1,4 +1,4 @@
-import macro, { TYPED_ARRAYS } from 'vtk.js/Sources/macros';
+import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkImplicitFunction from 'vtk.js/Sources/Common/DataModel/ImplicitFunction';
 import vtkMath from 'vtk.js/Sources/Common/Core/Math';
@@ -17,10 +17,8 @@ function vtkPlanes(publicAPI, model) {
   model.classHierarchy.push('vtkPlanes');
 
   // Initialize internal variables
-  model.planes =
-    model.planes || macro.newTypedArray(TYPED_ARRAYS.Float64Array, 24);
-  model.bounds =
-    model.bounds || macro.newTypedArray(TYPED_ARRAYS.Float64Array, 6);
+  model.planes = model.planes || new Float64Array(24);
+  model.bounds = model.bounds || new Float64Array(6);
 
   model.plane = vtkPlane.newInstance();
 

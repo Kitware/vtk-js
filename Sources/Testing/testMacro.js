@@ -1,5 +1,25 @@
 import { it, expect } from 'vitest';
 import macro from 'vtk.js/Sources/macros';
+import * as macros from 'vtk.js/Sources/macros';
+
+it('Typed-array factories work without a public constructor registry', () => {
+  expect(macros).not.toHaveProperty('TYPED_ARRAYS');
+  expect(macro).not.toHaveProperty('TYPED_ARRAYS');
+
+  const values = macro.newTypedArray('Float64Array', 3);
+  expect(values).toBeInstanceOf(Float64Array);
+  expect(Array.from(values)).toEqual([0, 0, 0]);
+
+  const copy = macros.newTypedArrayFrom('Uint16Array', [1, 2, 3]);
+  expect(copy).toBeInstanceOf(Uint16Array);
+  expect(Array.from(copy)).toEqual([1, 2, 3]);
+
+  expect(macro.newTypedArray('UnknownArray', 2)).toBeInstanceOf(Float64Array);
+  const object = {};
+  macro.obj(object, { values: copy });
+  expect(object.getState().values).toEqual([1, 2, 3]);
+  object.delete();
+});
 
 const MY_ENUM = {
   ZERO: 0,

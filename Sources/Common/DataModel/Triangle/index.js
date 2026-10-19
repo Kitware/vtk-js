@@ -1,4 +1,4 @@
-import macro, { TYPED_ARRAYS } from 'vtk.js/Sources/macros';
+import macro from 'vtk.js/Sources/macros';
 import vtkCell from 'vtk.js/Sources/Common/DataModel/Cell';
 import * as vtkMath from 'vtk.js/Sources/Common/Core/Math';
 import vtkLine from 'vtk.js/Sources/Common/DataModel/Line';
@@ -670,7 +670,7 @@ function vtkTriangle(publicAPI, model) {
     const J = [v1[0] - v0[0], v1[1] - v0[1], v2[0] - v0[0], v2[1] - v0[1]];
 
     // Compute inverse Jacobian (expects flat array)
-    const JI = macro.newTypedArray(TYPED_ARRAYS.Float64Array, 4);
+    const JI = new Float64Array(4);
     vtkMath.invertMatrix(J, JI, 2); // returns flat array [JI00, JI01, JI10, JI11]
 
     // Compute derivatives
