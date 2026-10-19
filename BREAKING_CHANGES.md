@@ -1,8 +1,8 @@
 ## From 37.x to 38
 
-- **TypeScript declaration coverage and accuracy have been improved.** Runtime behavior is unchanged, but builds that compiled against the old declarations may fail. Modules that shipped no types resolved to `any`, and local `declare module '@kitware/vtk.js/...'` shims now collide with the real ones: delete the shims and fix what the types reject.
-- **TypeScript library definitions**: the typed-array factories now declare their BigInt array support. If your project uses a TypeScript `lib` list older than `ES2020`, add `ES2020.BigInt` to that list. Your `target` can stay unchanged.
-- **Accessors**: `setXFrom` and hand-written setters that only `return;` are `void`, not `boolean`. Accessors that can read back `null` or `undefined` now say so, and fields absent from `DEFAULT_VALUES` are `T | undefined` rather than `Nullable<T>`.
+- **TypeScript declarations**: expanded coverage and corrected types may expose build errors. Remove conflicting local declaration shims and fix code rejected by the new types.
+- **TypeScript libraries**: typed-array factories now declare BigInt support. Add `ES2020.BigInt` if your `lib` list does not include `ES2020` or later. Your `target` can stay unchanged.
+- **Accessor types**: `setXFrom` methods and setters that return no value now declare `void`. Getter types include `null` or `undefined` where applicable.
 
 ## From 36.x to 37
 
