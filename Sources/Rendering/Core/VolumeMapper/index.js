@@ -47,7 +47,6 @@ const methodNamesMovedToVolumeProperties = [
   'getPreferSizeOverAccuracy',
   'getVolumetricScatteringBlending',
   'setAnisotropy',
-  'setAverageIPScalarRange',
   'setComputeNormalFromOpacity',
   'setFilterMode',
   'setFilterModeToNormalized',
