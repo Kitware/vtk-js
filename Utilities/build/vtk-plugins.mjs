@@ -226,12 +226,6 @@ export function copyUmdAssetsPlugin({ umdOutputDir, projectRoot }) {
         delete pkg.type;
         delete pkg.types;
       });
-
-      // vtk-lite.js is a deprecated alias of vtk.js; see BREAKING_CHANGES.md.
-      const vtkBundle = path.join(umdOutputDir, 'vtk.js');
-      if (fs.existsSync(vtkBundle)) {
-        fs.copyFileSync(vtkBundle, path.join(umdOutputDir, 'vtk-lite.js'));
-      }
     },
   };
 }
