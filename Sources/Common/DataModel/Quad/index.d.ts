@@ -56,7 +56,7 @@ export interface vtkQuad extends vtkCell {
    * @param {Vector3} pcoords The parametric coordinates.
    * @param {Vector4} sf out weights.
    */
-  interpolationFunctions(pcoords: Vector3, sf: Vector4);
+  interpolationFunctions(pcoords: Vector3, sf: Vector4): void;
 }
 
 /**

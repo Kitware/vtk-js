@@ -39,7 +39,7 @@ export interface vtkViewProxy extends VtkProxy {
   setBackground(color: Vector3 | Vector4): boolean;
   getBackground(): Vector3 | Vector4;
 
-  setAnimation(enable: boolean, requester?: vtkObject);
+  setAnimation(enable: boolean, requester?: vtkObject): void;
 
   updateOrientation(
     axisIndex: 0 | 1 | 2,
@@ -55,7 +55,7 @@ export interface vtkViewProxy extends VtkProxy {
   ): Promise<void>;
 
   resetOrientation(animateSteps?: number): void;
-  rotate(angle): void;
+  rotate(angle: number): void;
 
   focusTo(focalPoint: Vector3): void;
 

@@ -62,7 +62,7 @@ export interface vtkWebXRRenderWindowHelper extends vtkObject {
   /**
    * Set the underlying render window to drive XR rendering.
    */
-  setRenderWindow(renderWindow: Nullable<vtkOpenGLRenderWindow>);
+  setRenderWindow(renderWindow: Nullable<vtkOpenGLRenderWindow>): boolean;
 
   /**
    * Get the active WebXR session.
