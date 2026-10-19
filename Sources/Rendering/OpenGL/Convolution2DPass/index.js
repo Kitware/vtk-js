@@ -165,7 +165,7 @@ function vtkConvolution2DPass(publicAPI, model) {
     gl.scissor(0, 0, size[0], size[1]);
 
     // activate texture
-    const tex = model.framebuffer.getColorBuffers()[0];
+    const tex = model.framebuffer.getColorBuffersByReference()[0];
     tex.activate();
     model.convolutionShader.setUniformi('u_image', tex.getTextureUnit());
     model.convolutionShader.setUniform2f(
