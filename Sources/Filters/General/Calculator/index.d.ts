@@ -164,9 +164,8 @@ export function newInstance(
  *
  * vtkCalculator evaluates a formula over the arrays of its input dataset and
  * stores the result in a new array of the shallow-copied output. The formula is
- * an object providing a `getArrays()` method — which declares the input arrays
- * it consumes and the output arrays it produces — and an `evaluate()` method
- * that fills the output arrays.
+ * an object whose `getArrays()` method declares the input and output arrays.
+ * Its `evaluate()` method fills the output arrays.
  */
 export declare const vtkCalculator: {
   newInstance: typeof newInstance;
