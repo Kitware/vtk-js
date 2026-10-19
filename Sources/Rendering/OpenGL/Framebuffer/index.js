@@ -310,9 +310,6 @@ function vtkFramebuffer(publicAPI, model) {
     publicAPI.releaseGraphicsResources,
     publicAPI.delete
   );
-
-  // For backwards compatibility. Use getColorBuffers()[0] going forward.
-  publicAPI.getColorTexture = () => model.colorBuffers[0];
 }
 
 // ----------------------------------------------------------------------------
