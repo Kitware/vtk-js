@@ -88,7 +88,11 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
 
     // Removing one attachment must not shift the others off their slots.
     framebuffer.removeColorBuffer(0);
-    expect(framebuffer.getColorBuffers()[2]).toBe(texture2);
+    const colorBuffers = framebuffer.getColorBuffers();
+    expect(colorBuffers[0]).toBeNull();
+    expect(colorBuffers[1]).toBeUndefined();
+    expect(colorBuffers[2]).toBe(texture2);
+    expect(framebuffer.getColorBuffersByReference()).toEqual(colorBuffers);
     expect(() => framebuffer.bind()).not.toThrow();
 
     // recreating while bound must keep the caller on the new framebuffer
