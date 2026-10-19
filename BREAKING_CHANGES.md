@@ -3,6 +3,7 @@
 - **TypeScript declarations**: expanded coverage and corrected types may expose build errors. Remove conflicting local declaration shims and fix code rejected by the new types.
 - **TypeScript libraries**: typed-array factories now declare BigInt support. Add `ES2020.BigInt` if your `lib` list does not include `ES2020` or later. Your `target` can stay unchanged.
 - **Accessor types**: `setXFrom` methods and setters that return no value now declare `void`. Getter types include `null` or `undefined` where applicable.
+- **`Point` type removed.** Import `Vector3` from `@kitware/vtk.js/types` instead.
 - **vtkOpenGLFramebuffer**: replace `getColorTexture()` with `getColorBuffers()[0]`.
 
 ## From 36.x to 37
