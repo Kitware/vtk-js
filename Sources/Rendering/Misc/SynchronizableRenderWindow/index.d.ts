@@ -150,13 +150,13 @@ declare function getSynchronizerContext(name?: string): ISynchronizerContext;
 declare function setSynchronizerContext(
   name: string,
   ctx: Nullable<ISynchronizerContext>
-);
+): void;
 
 /**
  *
  * @param name of the context to remove and if nothing provided clear them all.
  */
-declare function clearSynchronizerContext(name: Nullable<string>);
+declare function clearSynchronizerContext(name: Nullable<string>): void;
 
 /**
  *

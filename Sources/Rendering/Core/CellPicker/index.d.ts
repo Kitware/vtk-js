@@ -53,7 +53,7 @@ export interface vtkCellPicker extends vtkPicker {
   /**
    * Get the opacity threshold for volume picking
    */
-  setOpacityThreshold(value: number);
+  setOpacityThreshold(value: number): boolean;
 
   /**
    * Get the normal of the surface at the PickPosition, in world coordinates.

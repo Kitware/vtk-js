@@ -3,12 +3,6 @@ import { TypedArray, Vector3 } from '../../../types';
 
 declare interface Transform {
   /**
-   *
-   * @param {Boolean} [useDegree]
-   */
-  new (useDegree?: boolean);
-
-  /**
    * Multiplies the current matrix with a transformation matrix created by
    * normalizing both direction vectors and rotating around the axis of the
    * crossProduct by the angle from the dotProduct of the two directions.
