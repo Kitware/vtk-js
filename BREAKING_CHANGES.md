@@ -1,3 +1,7 @@
+## From 36.x to 37
+
+- **vtkCamera**: `setModelTransformMatrix` now expects matrices in gl-matrix column-major order, consistent with `vtkTransform`, `vtkMatrixBuilder`, and `userMatrix` on `vtkProp3D`. Remove any transpose previously applied to column-major rotation or translation matrices to compensate for the old behavior. Transpose row-major matrices before passing them. ([#3586](https://github.com/Kitware/vtk-js/pull/3586))
+
 ## From 35.x to 36
 
 - **`vtk-lite.js` deprecated.** The UMD build previously produced a slimmed-down companion bundle `dist/umd/vtk-lite.js` (curated ColorMaps subset; `PDBReader`, `MoleculeToRepresentation`, `MobileVR`, and `webvr-polyfill` stubbed out). The Vite build pipeline no longer produces a distinct lite bundle; `vtk-lite.js` now ships as a byte-identical alias of `vtk.js` so existing `<script src=…/vtk-lite.js>` and CDN consumers continue to load. Consumers should migrate to `vtk.js` directly — the alias will be removed in a future major. Note that anything that indexed into the `ColorMaps` array by position will now see the full preset set, not the lite subset.
