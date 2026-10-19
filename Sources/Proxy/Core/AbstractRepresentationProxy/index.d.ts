@@ -41,7 +41,7 @@ export interface vtkAbstractRepresentationProxy
     arrayName: string | null,
     arrayLocation: string,
     componentIndex?: number
-  );
+  ): void;
   /**
    * Get the array name, array location and component index currently driving
    * the coloring. Trailing entries are omitted when the matching state is not
