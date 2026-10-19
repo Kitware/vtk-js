@@ -63,13 +63,6 @@ export interface vtkFramebuffer extends vtkObject {
   getColorBuffersByReference(): (vtkOpenGLTexture | null | undefined)[];
 
   /**
-   * Get the texture attached as the first color buffer, if one is attached.
-   *
-   * @deprecated Use `getColorBuffers()[0]` instead.
-   */
-  getColorTexture(): vtkOpenGLTexture | null | undefined;
-
-  /**
    * Get the underlying WebGL framebuffer, or `null` before `create()`.
    */
   getGLFramebuffer(): Nullable<SizedWebGLFramebuffer>;
