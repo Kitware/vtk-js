@@ -96,7 +96,7 @@ function vtkKeyboardCameraManipulator(publicAPI, model) {
       internal.animationSub = null;
     }
 
-    model._interactor.cancelAnimation(ANIMATION_REQUESTER);
+    model.interactor.cancelAnimation(ANIMATION_REQUESTER);
 
     if (internal.cameraModifiedSub) {
       internal.cameraModifiedSub.unsubscribe();
