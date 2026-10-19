@@ -248,11 +248,6 @@ function vtkVolumeProperty(publicAPI, model) {
     publicAPI[`get${cap}`] = (index) => model.componentData[index][`${val}`];
   });
 
-  publicAPI.setAverageIPScalarRange = (min, max) => {
-    console.warn('setAverageIPScalarRange is deprecated use setIpScalarRange');
-    publicAPI.setIpScalarRange(min, max);
-  };
-
   publicAPI.getFilterModeAsString = () =>
     macro.enumToString(FilterMode, model.filterMode);
 
