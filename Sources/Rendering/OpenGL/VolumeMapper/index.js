@@ -1449,7 +1449,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       model.context.viewport(0, 0, size[0], size[1]);
 
       // activate texture
-      const tex = model.framebuffer.getColorBuffers()[0];
+      const tex = model.framebuffer.getColorBuffersByReference()[0];
       tex.activate();
       model.copyShader.setUniformi('texture', tex.getTextureUnit());
       model.copyShader.setUniform2f('tfactor', model.fvp[0], model.fvp[1]);
