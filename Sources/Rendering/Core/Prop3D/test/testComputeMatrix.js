@@ -57,4 +57,9 @@ it('Test computeMatrix only runs on transform change', () => {
   actor.setOrientation(0, 0, 0);
   expect(getMatrixMTime()).toBeGreaterThan(mtime);
   expect(actor.getIsIdentity()).toBe(true);
+
+  // In-place edits of the user matrix need an explicit transformsModified()
+  actor.getUserMatrix()[12] = 5;
+  actor.transformsModified();
+  expect(actor.getMatrix()[3]).toBe(5);
 });

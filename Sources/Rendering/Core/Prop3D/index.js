@@ -23,6 +23,7 @@ function vtkProp3D(publicAPI, model) {
     model.transformsMTime.modified();
     publicAPI.modified();
   }
+  publicAPI.transformsModified = transformsModified;
   model._onOriginChanged = () => model.transformsMTime.modified();
   model._onPositionChanged = () => model.transformsMTime.modified();
   model._onScaleChanged = () => model.transformsMTime.modified();
@@ -310,7 +311,6 @@ const DEFAULT_VALUES = {
   properties: [],
 
   userMatrix: null,
-  userMatrixMTime: null,
 
   cachedProp3D: null,
   isIdentity: true,

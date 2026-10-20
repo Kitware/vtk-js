@@ -135,6 +135,8 @@ export interface vtkProp3D extends vtkProp {
 
   /**
    * Get the transformation matrix set for your own use.
+   * The matrix is returned by reference: if you modify it in place, call
+   * transformsModified() so the actor matrix gets recomputed.
    */
   getUserMatrix(): mat4;
 
@@ -278,6 +280,14 @@ export interface vtkProp3D extends vtkProp {
    * Generate the matrix based on internal model.
    */
   computeMatrix(): void;
+
+  /**
+   * Mark the transform (origin, position, scale, rotation, userMatrix) as
+   * modified. Call it after changing one of these in place, e.g. through
+   * getUserMatrix() or getReferenceByName(), so computeMatrix() rebuilds the
+   * matrix.
+   */
+  transformsModified(): void;
 
   /**
    * Set the actor property for the specified mapper input port, which defaults to 0
