@@ -125,7 +125,7 @@ function createGarbageCollector() {
     // vtkObject handling
     resources.sort((a, b) => b.priority - a.priority);
     resources.forEach(({ vtkObj }) => {
-      if (vtkObj) {
+      if (vtkObj && !vtkObj.isDeleted?.()) {
         vtkObj.delete();
       }
     });

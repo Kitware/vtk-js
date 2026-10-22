@@ -77,9 +77,11 @@ export interface vtkOpenGLTexture extends vtkViewNode {
 
   /**
    * Releases the graphics resources used by the texture within the given render window.
-   * @param renWin The render window whose resources should be released.
+   * Deleting the texture releases them too.
+   * @param [renWin] The render window whose resources should be released.
+   * Defaults to the render window the texture was last used with.
    */
-  releaseGraphicsResources(renWin: vtkOpenGLRenderWindow): void;
+  releaseGraphicsResources(renWin?: vtkOpenGLRenderWindow): void;
 
   /**
    * Binds the texture to the current OpenGL context.
@@ -406,6 +408,7 @@ export interface vtkOpenGLTexture extends vtkViewNode {
 
   /**
    * Sets the OpenGL render window in which the texture will be used.
+   * Changing it releases the texture allocated in the previous one.
    * @param renWin The render window to set.
    */
   setOpenGLRenderWindow(renWin: any): void;
