@@ -123,8 +123,9 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     const objectsWithActorInA = windowA.tracker.count();
 
     // A second render window, sharing nothing with the first. Moving the
-    // renderer (not just the actor) into it is what makes the mapper's own
-    // buildPass see a different vtkOpenGLRenderWindow ancestor.
+    // renderer into it gives window B a fresh mapper view node and deletes the
+    // old one from window A's view tree. It does not reach the surviving
+    // mapper's render-window-switch branch, which no vtk.js API can reach.
     const windowB = createTrackedRenderView(gc);
     windowB.renderer.setBackground(0, 0, 1);
 
