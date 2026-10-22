@@ -13,7 +13,8 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 
 const sliceCount = 16;
 
-// An image mapper whose OpenGL view node counts its buffer object builds
+// An image mapper whose OpenGL view node counts its buffer object builds and
+// shows the handles of its default lookup textures
 let bufferObjectBuilds = 0;
 const newCountingImageMapper = macro.newInstance(
   (publicAPI, model, initialValues) => {
@@ -30,6 +31,10 @@ registerOverride(
       bufferObjectBuilds += 1;
       buildBufferObjects(ren, actor);
     };
+    publicAPI.getDefaultTextureHandles = () => ({
+      color: model._defaultColorTexture?.oglObject.getHandle(),
+      opacity: model._defaultPwfTexture?.oglObject.getHandle(),
+    });
   })
 );
 
@@ -86,12 +91,17 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'reuses its default lookup textures across slice and interpolation changes',
   () => {
     const gc = testUtils.createGarbageCollector();
-    const { tracker, renderWindow, actor, mapper } = renderImageSlice(gc);
+    const { tracker, renderWindow, view, actor, mapper } = renderImageSlice(gc);
     const objectsAfterFirstRender = tracker.count();
+    const node = view.getViewNodeFor(mapper);
+    const handles = node.getDefaultTextureHandles();
+    expect(handles.color).toBeTruthy();
+    expect(handles.opacity).toBeTruthy();
 
     for (let slice = 1; slice < sliceCount; ++slice) {
       mapper.setSlice(slice);
       renderWindow.render();
+      expect(node.getDefaultTextureHandles()).toEqual(handles);
     }
     expect(tracker.count()).toBe(objectsAfterFirstRender);
 
@@ -100,6 +110,35 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     renderWindow.render();
     actor.getProperty().setInterpolationTypeToLinear();
     renderWindow.render();
+    expect(tracker.count()).toBe(objectsAfterFirstRender);
+
+    gc.releaseResources();
+  }
+);
+
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'replaces a default lookup texture when its width changes, freeing the old one',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    const { tracker, renderWindow, view, mapper } = renderImageSlice(gc);
+    const objectsAfterFirstRender = tracker.count();
+    const node = view.getViewNodeFor(mapper);
+    const first = node.getDefaultTextureHandles();
+
+    mapper.setColorTextureWidth(512);
+    renderWindow.render();
+    const afterColor = node.getDefaultTextureHandles();
+    expect(afterColor.color).toBeTruthy();
+    expect(afterColor.color).not.toBe(first.color);
+    expect(afterColor.opacity).toBe(first.opacity);
+    expect(tracker.count()).toBe(objectsAfterFirstRender);
+
+    mapper.setOpacityTextureWidth(512);
+    renderWindow.render();
+    const afterOpacity = node.getDefaultTextureHandles();
+    expect(afterOpacity.opacity).toBeTruthy();
+    expect(afterOpacity.opacity).not.toBe(first.opacity);
+    expect(afterOpacity.color).toBe(afterColor.color);
     expect(tracker.count()).toBe(objectsAfterFirstRender);
 
     gc.releaseResources();
