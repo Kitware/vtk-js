@@ -480,13 +480,6 @@ export interface vtkVolumeProperty extends vtkObject {
   getLAOKernelRadius(): number;
 
   /**
-   * @deprecated use setIpScalarRange
-   * @param x
-   * @param y
-   */
-  setAverageIPScalarRange(x: number, y: number): void;
-
-  /**
    *
    * @param x
    * @param y
