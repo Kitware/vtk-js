@@ -14,7 +14,7 @@ function reverseCellArray(inputCells) {
   const inputData = inputCells.getData();
   const outputData = inputData.slice();
 
-  for (let offset = 0, len = inputData.length; offset < len; ) {
+  for (let offset = 0, len = inputData.length; offset < len;) {
     const cellSize = inputData[offset];
     let left = offset + 1;
     let right = offset + cellSize;

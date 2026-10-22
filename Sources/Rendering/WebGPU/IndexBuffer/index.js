@@ -304,7 +304,7 @@ function vtkWebGPUIndexBuffer(publicAPI, model) {
     processCell = countPrimitive;
     let oneToOne = true;
     let cellId = cellOffset;
-    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize; ) {
+    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize;) {
       const countBefore = state.primitiveCount;
       func(array[cellArrayIndex], array, cellArrayIndex + 1, cellId, state);
       if (state.primitiveCount - countBefore !== 1) {
@@ -329,7 +329,7 @@ function vtkWebGPUIndexBuffer(publicAPI, model) {
     processCell = fillPrimitive;
     state.primitiveCount = 0;
     cellId = cellOffset;
-    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize; ) {
+    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize;) {
       func(array[cellArrayIndex], array, cellArrayIndex + 1, cellId, state);
       cellArrayIndex += array[cellArrayIndex] + 1;
       cellId++;
@@ -371,7 +371,7 @@ function vtkWebGPUIndexBuffer(publicAPI, model) {
     // first we count how many extra provoking points we need
     processCell = countCell;
     let cellId = cellOffset || 0;
-    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize; ) {
+    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize;) {
       state.cellProvokedMap.clear();
       func(array[cellArrayIndex], array, cellArrayIndex + 1, cellId, state);
       cellArrayIndex += array[cellArrayIndex] + 1;
@@ -408,7 +408,7 @@ function vtkWebGPUIndexBuffer(publicAPI, model) {
     // and fill them in
     processCell = fillCell;
     cellId = cellOffset || 0;
-    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize; ) {
+    for (let cellArrayIndex = 0; cellArrayIndex < cellArraySize;) {
       state.cellProvokedMap.clear();
       func(array[cellArrayIndex], array, cellArrayIndex + 1, cellId, state);
       cellArrayIndex += array[cellArrayIndex] + 1;

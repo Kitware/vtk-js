@@ -65,7 +65,7 @@ function vtkXMLPolyDataWriter(publicAPI, model) {
       const cellsData = cells.getData();
       let npts = cellsData[0];
       let offset = 0;
-      for (let i = 0; i < cellsData.length; ) {
+      for (let i = 0; i < cellsData.length;) {
         npts = cellsData[i++];
         for (let j = 0; j < npts; ++j) {
           connectivity.push(cellsData[i++]);
