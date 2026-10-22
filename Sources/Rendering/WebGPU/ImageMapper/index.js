@@ -2,6 +2,7 @@ import { mat4, vec4 } from 'gl-matrix';
 import Constants from 'vtk.js/Sources/Rendering/Core/ImageMapper/Constants';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import * as macro from 'vtk.js/Sources/macros';
+import vtkWebGPUReplacementShaderMapper from 'vtk.js/Sources/Rendering/WebGPU/ReplacementShaderMapper';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUFullScreenQuad from 'vtk.js/Sources/Rendering/WebGPU/FullScreenQuad';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
@@ -63,6 +64,8 @@ fn main(
   // var computedColor: vec4<f32> = vec4<f32>(1.0,0.7, 0.5, 1.0);
 
   //VTK::Position::Impl
+
+  //VTK::CoincidentOffset::Impl
 
 //VTK::RenderEncoder::Impl
 
@@ -223,6 +226,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
     }
     if (publicAPI.useImageMipmaps()) {
       model.pipelineHash += 'mip';
+    }
+    if (publicAPI.usesCoincidentFactor()) {
+      model.pipelineHash += 'cf';
     }
     model.pipelineHash += model.renderEncoder.getPipelineHash();
   };
@@ -1109,29 +1115,9 @@ function vtkWebGPUImageMapper(publicAPI, model) {
   };
   sr.set('replaceShaderClip', publicAPI.replaceShaderClip);
 
-  publicAPI.replaceShaderCoincidentOffset = (hash, pipeline, vertexInput) => {
-    const fDesc = pipeline.getShaderDescription('fragment');
-    if (!fDesc) {
-      return;
-    }
-
-    fDesc.addBuiltinInput('vec4<f32>', '@builtin(position) fragPos');
-    fDesc.addBuiltinOutput('f32', '@builtin(frag_depth) fragDepth');
-
-    let code = fDesc.getCode();
-    code = vtkWebGPUShaderCache.substitute(code, '//VTK::Position::Impl', [
-      '  var coincidentDepth: f32 = input.fragPos.z;',
-      '  if (mapperUBO.CoincidentFactor != 0.0) {',
-      '    let cscale = length(vec2<f32>(dpdx(input.fragPos.z), dpdy(input.fragPos.z)));',
-      '    coincidentDepth = coincidentDepth - mapperUBO.CoincidentFactor * cscale;',
-      '  }',
-      '  output.fragDepth = clamp(coincidentDepth, 0.0, 1.0);',
-    ]).result;
-    fDesc.setCode(code);
-  };
-  sr.set(
-    'replaceShaderCoincidentOffset',
-    publicAPI.replaceShaderCoincidentOffset
+  vtkWebGPUReplacementShaderMapper.implementReplaceShaderCoincidentOffset(
+    publicAPI,
+    model
   );
 
   publicAPI.replaceShaderSelect = (hash, pipeline, vertexInput) => {
