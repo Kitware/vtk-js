@@ -14,7 +14,8 @@ import { registerOverride } from 'vtk.js/Sources/Rendering/OpenGL/ViewNodeFactor
 const sideLen = 32;
 const width = 20;
 
-// A CPR mapper whose OpenGL view node counts its buffer object builds
+// A CPR mapper whose OpenGL view node counts its buffer object builds and
+// shows the handles of its default lookup textures
 let bufferObjectBuilds = 0;
 const newCountingImageCPRMapper = macro.newInstance(
   (publicAPI, model, initialValues) => {
@@ -31,6 +32,10 @@ registerOverride(
       bufferObjectBuilds += 1;
       buildBufferObjects(ren, actor);
     };
+    publicAPI.getDefaultTextureHandles = () => ({
+      color: model._defaultColorTexture?.oglObject.getHandle(),
+      opacity: model._defaultPwfTexture?.oglObject.getHandle(),
+    });
   })
 );
 
@@ -93,13 +98,47 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
   'reuses its default lookup textures when the mapper changes',
   () => {
     const gc = testUtils.createGarbageCollector();
-    const { tracker, renderWindow, mapper } = renderCPRSlice(gc);
+    const { tracker, renderWindow, view, mapper } = renderCPRSlice(gc);
     const objectsAfterFirstRender = tracker.count();
+    const node = view.getViewNodeFor(mapper);
+    const handles = node.getDefaultTextureHandles();
+    expect(handles.color).toBeTruthy();
+    expect(handles.opacity).toBeTruthy();
 
     for (let i = 1; i < 16; ++i) {
       mapper.setWidth(width + i);
       renderWindow.render();
+      expect(node.getDefaultTextureHandles()).toEqual(handles);
     }
+    expect(tracker.count()).toBe(objectsAfterFirstRender);
+
+    gc.releaseResources();
+  }
+);
+
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'replaces a default lookup texture when its width changes, freeing the old one',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    const { tracker, renderWindow, view, mapper } = renderCPRSlice(gc);
+    const objectsAfterFirstRender = tracker.count();
+    const node = view.getViewNodeFor(mapper);
+    const first = node.getDefaultTextureHandles();
+
+    mapper.setColorTextureWidth(512);
+    renderWindow.render();
+    const afterColor = node.getDefaultTextureHandles();
+    expect(afterColor.color).toBeTruthy();
+    expect(afterColor.color).not.toBe(first.color);
+    expect(afterColor.opacity).toBe(first.opacity);
+    expect(tracker.count()).toBe(objectsAfterFirstRender);
+
+    mapper.setOpacityTextureWidth(512);
+    renderWindow.render();
+    const afterOpacity = node.getDefaultTextureHandles();
+    expect(afterOpacity.opacity).toBeTruthy();
+    expect(afterOpacity.opacity).not.toBe(first.opacity);
+    expect(afterOpacity.color).toBe(afterColor.color);
     expect(tracker.count()).toBe(objectsAfterFirstRender);
 
     gc.releaseResources();
