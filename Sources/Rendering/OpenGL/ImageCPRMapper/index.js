@@ -39,6 +39,12 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       (coreObject) =>
         renderWindow.unregisterGraphicsResourceUser(coreObject, publicAPI)
     );
+    // The default lookup textures are not shared
+    [model._defaultColorTexture, model._defaultPwfTexture].forEach((entry) =>
+      entry?.oglObject.releaseGraphicsResources(renderWindow)
+    );
+    model._defaultColorTexture = null;
+    model._defaultPwfTexture = null;
   }
 
   publicAPI.buildPass = (prepass) => {
@@ -275,18 +281,24 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
     );
 
     const firstColorTransferFunc = ppty.getRGBTransferFunction();
-    const cachedColorEntry =
-      model._openGLRenderWindow.getGraphicsResourceForObject(
-        firstColorTransferFunc
-      );
+    let cWidth = model.renderable.getColorTextureWidth();
+    if (cWidth <= 0) {
+      cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+    }
+    // Without a transfer function there is no core object to share the
+    // texture under, so the mapper keeps its own default grayscale ramp.
+    const colorHash = firstColorTransferFunc
+      ? colorTextureHash
+      : `default-${cWidth}`;
+    const cachedColorEntry = firstColorTransferFunc
+      ? model._openGLRenderWindow.getGraphicsResourceForObject(
+          firstColorTransferFunc
+        )
+      : model._defaultColorTexture;
     const reBuildColorTexture =
       !cachedColorEntry?.oglObject?.getHandle() ||
-      cachedColorEntry?.hash !== colorTextureHash;
+      cachedColorEntry?.hash !== colorHash;
     if (reBuildColorTexture) {
-      let cWidth = model.renderable.getColorTextureWidth();
-      if (cWidth <= 0) {
-        cWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
-      }
       const cSize = cWidth * textureHeight * 3;
       const cTable = new Uint8ClampedArray(cSize);
       model.colorTexture = vtkOpenGLTexture.newInstance();
@@ -350,6 +362,14 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
           );
         }
         model._colorTransferFunc = firstColorTransferFunc;
+      } else {
+        model._defaultColorTexture?.oglObject.releaseGraphicsResources(
+          model._openGLRenderWindow
+        );
+        model._defaultColorTexture = {
+          oglObject: model.colorTexture,
+          hash: colorHash,
+        };
       }
     } else {
       model.colorTexture = cachedColorEntry.oglObject;
@@ -368,16 +388,20 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       numIComps
     );
     const firstPwFunc = ppty.getPiecewiseFunction();
-    const cachedPwfEntry =
-      model._openGLRenderWindow.getGraphicsResourceForObject(firstPwFunc);
+    let pwfWidth = model.renderable.getOpacityTextureWidth();
+    if (pwfWidth <= 0) {
+      pwfWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+    }
+    // Same as the color texture: without a piecewise function the mapper
+    // keeps its own fully opaque default.
+    const pwfHash = firstPwFunc ? pwfTextureHash : `default-${pwfWidth}`;
+    const cachedPwfEntry = firstPwFunc
+      ? model._openGLRenderWindow.getGraphicsResourceForObject(firstPwFunc)
+      : model._defaultPwfTexture;
     const reBuildPwf =
       !cachedPwfEntry?.oglObject?.getHandle() ||
-      cachedPwfEntry?.hash !== pwfTextureHash;
+      cachedPwfEntry?.hash !== pwfHash;
     if (reBuildPwf) {
-      let pwfWidth = model.renderable.getOpacityTextureWidth();
-      if (pwfWidth <= 0) {
-        pwfWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
-      }
       const pwfSize = pwfWidth * textureHeight;
       const pwfTable = new Uint8ClampedArray(pwfSize);
       model.pwfTexture = vtkOpenGLTexture.newInstance();
@@ -444,6 +468,14 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
           );
         }
         model._pwFunc = firstPwFunc;
+      } else {
+        model._defaultPwfTexture?.oglObject.releaseGraphicsResources(
+          model._openGLRenderWindow
+        );
+        model._defaultPwfTexture = {
+          oglObject: model.pwfTexture,
+          hash: pwfHash,
+        };
       }
     } else {
       model.pwfTexture = cachedPwfEntry.oglObject;
@@ -603,8 +635,11 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         // (non indexed) vertex layout where elementCount matches the vertices.
         forceFlatten: true,
       });
-      model.VBOBuildTime.modified();
     }
+
+    // Also mark property or actor only rebuilds, which do not rebuild the
+    // vertices, so the next render does not rebuild again.
+    model.VBOBuildTime.modified();
   };
 
   publicAPI.getNeedToRebuildShaders = (cellBO, ren, actor) => {
@@ -1436,6 +1471,8 @@ const DEFAULT_VALUES = {
   // _scalars: null,
   // _colorTransferFunc: null,
   // _pwFunc: null,
+  // _defaultColorTexture: null,
+  // _defaultPwfTexture: null,
 };
 
 // ----------------------------------------------------------------------------
