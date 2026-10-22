@@ -113,7 +113,7 @@ function vtkForwardPass(publicAPI, model) {
 
   publicAPI.getZBufferTexture = () => {
     if (model.framebuffer) {
-      return model.framebuffer.getColorTexture();
+      return model.framebuffer.getColorBuffersByReference()[0];
     }
     return null;
   };

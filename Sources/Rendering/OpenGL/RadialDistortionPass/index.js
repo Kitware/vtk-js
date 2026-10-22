@@ -133,7 +133,7 @@ function vtkRadialDistortionPass(publicAPI, model) {
     gl.scissor(0, 0, size[0], size[1]);
 
     // activate texture
-    const tex = model.framebuffer.getColorTexture();
+    const tex = model.framebuffer.getColorBuffersByReference()[0];
     tex.activate();
     model.copyShader.setUniformi('distTexture', tex.getTextureUnit());
 
