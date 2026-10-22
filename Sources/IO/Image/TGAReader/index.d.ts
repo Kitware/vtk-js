@@ -29,7 +29,7 @@ export interface vtkTGAReader extends vtkTGAReaderBase {
   /**
    * Get the base url.
    */
-  getBaseURL(): string;
+  getBaseURL(): string | undefined;
 
   /**
    * Get the dataAccess helper.
@@ -43,7 +43,7 @@ export interface vtkTGAReader extends vtkTGAReaderBase {
   /**
    * Get the url of the object to load.
    */
-  getUrl(): string;
+  getUrl(): string | undefined;
 
   /**
    * Load the object data.

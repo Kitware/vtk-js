@@ -7,9 +7,9 @@ export interface IBoxInitialValues {
 }
 
 export interface IBoxIntersections {
-  t1;
+  t1: number;
   t2: number;
-  x1;
+  x1: Vector3;
   x2: Vector3;
 }
 
@@ -86,9 +86,9 @@ export function newInstance(initialValues?: IBoxInitialValues): vtkBox;
 // bounding planes one at a time and compute the parametric coordinate
 // of each intersection and return the parametric values and the calculated points
 export function intersectWithLine(
-  bounds,
-  p1,
-  p2
+  bounds: Bounds,
+  p1: Vector3,
+  p2: Vector3
 ): IBoxIntersections | undefined;
 
 /**
@@ -101,4 +101,5 @@ export declare const vtkBox: {
   extend: typeof extend;
   intersectWithLine: typeof intersectWithLine;
 };
+export declare const STATIC: Readonly<Record<never, never>>;
 export default vtkBox;

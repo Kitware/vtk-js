@@ -1,7 +1,10 @@
-export declare enum CoordinateSystem {
-  WORLD = 0,
-  DISPLAY = 1,
-}
+export declare const CoordinateSystem: {
+  readonly WORLD: 1;
+  readonly DISPLAY: 0;
+};
+
+export type CoordinateSystem =
+  (typeof CoordinateSystem)[keyof typeof CoordinateSystem];
 
 declare const _default: {
   CoordinateSystem: typeof CoordinateSystem;

@@ -1,20 +1,23 @@
 import { vtkObject } from '../../../interfaces';
+import { Nullable } from '../../../types';
 import vtkViewNode from '../ViewNode';
 
 /**
  *
  */
 export interface IRenderPassInitialValues {
-  delegates: Array<any>;
-  preDelegateOperations: Array<any>;
-  postDelegateOperations: Array<any>;
+  currentOperation?: string;
+  currentParent?: any;
+  delegates?: Array<any>;
+  preDelegateOperations?: Array<any>;
+  postDelegateOperations?: Array<any>;
 }
 
 export interface vtkRenderPass extends vtkObject {
   /**
    *
    */
-  getCurrentOperation(): string;
+  getCurrentOperation(): Nullable<string>;
 
   /**
    * True when this pass captures the color texture of its delegates and
@@ -31,22 +34,22 @@ export interface vtkRenderPass extends vtkObject {
   /**
    *
    */
-  getDelegates(): any;
+  getDelegates(): vtkRenderPass[];
 
   /**
    *
    */
-  getOperation(): void;
+  getOperation(): Nullable<string>;
 
   /**
    *
    */
-  getPostDelegateOperations(): any;
+  getPostDelegateOperations(): string[];
 
   /**
    *
    */
-  getPreDelegateOperations(): any;
+  getPreDelegateOperations(): string[];
 
   /**
    *
@@ -77,19 +80,19 @@ export interface vtkRenderPass extends vtkObject {
    *
    * @param delegates
    */
-  setDelegates(delegates: any): boolean;
+  setDelegates(delegates: vtkRenderPass[]): boolean;
 
   /**
    *
    * @param postDelegateOperations
    */
-  setPostDelegateOperations(postDelegateOperations: any): boolean;
+  setPostDelegateOperations(postDelegateOperations: string[]): boolean;
 
   /**
    *
    * @param preDelegateOperations
    */
-  setPreDelegateOperations(preDelegateOperations: any): boolean;
+  setPreDelegateOperations(preDelegateOperations: string[]): boolean;
 
   /**
    * by default this class will traverse all of its
@@ -99,7 +102,7 @@ export interface vtkRenderPass extends vtkObject {
    * @param viewNode
    * @param parent
    */
-  traverse(viewNode: vtkViewNode, parent: any): void;
+  traverse(viewNode: vtkViewNode, parent?: any): void;
 }
 
 /**
