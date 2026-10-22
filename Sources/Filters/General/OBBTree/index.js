@@ -256,7 +256,7 @@ function vtkOBBTree(publicAPI, model) {
       let bestRatio = 1;
       let foundBestSplit = 0;
       let bestPlane = 0;
-      for (; !splitAcceptable && splitPlane < 3; ) {
+      for (; !splitAcceptable && splitPlane < 3;) {
         // compute split normal
         for (let i = 0; i < 3; i++) {
           n[i] = axes[splitPlane][i];

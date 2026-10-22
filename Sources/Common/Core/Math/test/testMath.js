@@ -164,14 +164,14 @@ it('Test Identity', () => {
     0, 4, 0, 0,
     2, 2, 1, 0,
     0, 0, 9, 0,
-    0, 3, 7, 0]
+    0, 3, 7, 0];
   // prettier-ignore
   const Id = [
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, 0, 1
-  ]
+  ];
   const returnedMatrix = vtkMath.identity(4, m);
   expect(vtkMath.areEquals(m, Id)).toBeTruthy();
   expect(vtkMath.areEquals(returnedMatrix, Id)).toBeTruthy();

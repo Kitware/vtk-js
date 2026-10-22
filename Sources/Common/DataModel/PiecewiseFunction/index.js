@@ -319,7 +319,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
   publicAPI.addSegment = (x1, y1, x2, y2) => {
     // First, find all points in this range and remove them
     publicAPI.sortAndUpdateRange();
-    for (let i = 0; i < model.nodes.length; ) {
+    for (let i = 0; i < model.nodes.length;) {
       if (model.nodes[i].x >= x1 && model.nodes[i].x <= x2) {
         model.nodes.splice(i, 1);
       } else {
@@ -447,7 +447,7 @@ function vtkPiecewiseFunction(publicAPI, model) {
 
     // Remove all points out-of-range
     publicAPI.sortAndUpdateRange();
-    for (let i = 0; i < model.nodes.length; ) {
+    for (let i = 0; i < model.nodes.length;) {
       if (model.nodes[i].x >= range[0] && model.nodes[i].x <= range[1]) {
         model.nodes.splice(i, 1);
       } else {

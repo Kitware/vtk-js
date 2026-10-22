@@ -187,7 +187,7 @@ function generateNormals(cellArray, pointArray) {
   const size = cellArrayData.length;
   let vboidx = 0;
 
-  for (let index = 0; index < size; ) {
+  for (let index = 0; index < size;) {
     const normal = getNormal(
       pointData,
       cellArrayData[index + 1],

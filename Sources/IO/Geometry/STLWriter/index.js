@@ -114,7 +114,7 @@ function writeSTL(polyData, format = FormatTypes.BINARY, transform = null) {
   }
 
   // Polys
-  for (let i = 0; i < polys.length; ) {
+  for (let i = 0; i < polys.length;) {
     const pointNumber = polys[i++];
 
     if (pointNumber) {

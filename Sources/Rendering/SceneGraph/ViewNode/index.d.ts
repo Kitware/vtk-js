@@ -2,8 +2,8 @@ import { vtkObject } from '../../../interfaces';
 import vtkRenderPass from '../RenderPass';
 
 export enum PASS_TYPES {
-  'Build',
-  'Render',
+  Build,
+  Render,
 }
 
 /**

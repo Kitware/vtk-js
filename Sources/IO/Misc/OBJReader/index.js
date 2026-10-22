@@ -107,7 +107,7 @@ function end(model) {
         const pointKeys = [];
         let duplicatesCount = 0;
 
-        for (let offset = 0; offset < nbElems; ) {
+        for (let offset = 0; offset < nbElems;) {
           const cellSize = polyIn[offset++];
           for (let pIdx = 0; pIdx < cellSize; pIdx++) {
             const [vIdx, tcIdx, nIdx] = polyIn[offset++];
