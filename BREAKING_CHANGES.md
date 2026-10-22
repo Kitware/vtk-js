@@ -1,5 +1,6 @@
 ## From 37.x to 38
 
+- **`vtk-lite.js` removed.** Use `vtk.js` for script/CDN URLs and copied assets. Replace `vtk.js/vtk-lite.js` imports or requires with `vtk.js/vtk.js` or the package entry. Both files have contained the full UMD bundle since 36.
 - **TypeScript declarations**: expanded coverage and corrected types may expose build errors. Remove conflicting local declaration shims and fix code rejected by the new types.
 - **TypeScript libraries**: typed-array factories now declare BigInt support. Add `ES2020.BigInt` if your `lib` list does not include `ES2020` or later. Your `target` can stay unchanged.
 - **Accessor types**: `setXFrom` methods and setters that return no value now declare `void`. Getter types include `null` or `undefined` where applicable.
