@@ -69,7 +69,7 @@ function vtkPolyDataNormals(publicAPI, model) {
     // A point normal is the sum of all the cell normals the point belongs to
     if (model.computePointNormals) {
       const pointNormal = [0, 0, 0];
-      for (let i = 0; i < pointsData.length; ) {
+      for (let i = 0; i < pointsData.length;) {
         pointNormal[0] = pointNormals[i];
         pointNormal[1] = pointNormals[i + 1];
         pointNormal[2] = pointNormals[i + 2];

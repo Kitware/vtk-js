@@ -17,7 +17,7 @@ function extractCellSizes(cellArray) {
 
 function getNumberOfCells(cellArray) {
   let cellId = 0;
-  for (let cellArrayIndex = 0; cellArrayIndex < cellArray.length; ) {
+  for (let cellArrayIndex = 0; cellArrayIndex < cellArray.length;) {
     cellArrayIndex += cellArray[cellArrayIndex] + 1;
     cellId++;
   }

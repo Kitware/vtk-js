@@ -3,9 +3,9 @@ import { vtkObject } from '../../../interfaces';
 import { RGBColor, Vector3 } from '../../../types';
 
 export enum LIGHT_TYPES {
-  'HeadLight',
-  'CameraLight',
-  'SceneLight',
+  HeadLight,
+  CameraLight,
+  SceneLight,
 }
 
 export interface ILightInitialValues {

@@ -80,7 +80,7 @@ it('Test normals with trackDuplicates', () => {
     .getData();
   const mergedPointsPolysData = new Uint16Array(polys.length);
   let cellSize = 0;
-  for (let offset = 0; offset < polys.length; ) {
+  for (let offset = 0; offset < polys.length;) {
     cellSize = polys[offset];
     mergedPointsPolysData[offset++] = cellSize;
     for (let pointInCell = 0; pointInCell < cellSize; ++pointInCell) {

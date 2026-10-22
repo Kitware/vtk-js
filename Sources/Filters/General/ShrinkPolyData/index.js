@@ -168,7 +168,7 @@ function vtkShrinkPolyData(publicAPI, model) {
       const newVertData = [];
       const cellPointIds = [];
 
-      for (let i = 0; i < vertData.length; ) {
+      for (let i = 0; i < vertData.length;) {
         cellPointIds.length = 0; // Clear previous point IDs
         const npts = vertData[i];
         for (let j = 1; j <= npts; j++) {
@@ -198,7 +198,7 @@ function vtkShrinkPolyData(publicAPI, model) {
       const lineData = inLines.getData();
       const newLineData = [];
 
-      for (let i = 0; i < lineData.length; ) {
+      for (let i = 0; i < lineData.length;) {
         const npts = lineData[i];
 
         // Process each line segment
@@ -229,7 +229,7 @@ function vtkShrinkPolyData(publicAPI, model) {
       const newPolyData = [];
       const cellPointIds = [];
 
-      for (let i = 0; i < polyData.length; ) {
+      for (let i = 0; i < polyData.length;) {
         cellPointIds.length = 0; // Clear previous point IDs
         const npts = polyData[i];
 
@@ -260,7 +260,7 @@ function vtkShrinkPolyData(publicAPI, model) {
       const stripData = inStrips.getData();
       const newPolyData = [];
 
-      for (let i = 0; i < stripData.length; ) {
+      for (let i = 0; i < stripData.length;) {
         const npts = stripData[i];
 
         for (let j = 0; j < npts - 2; j++) {
