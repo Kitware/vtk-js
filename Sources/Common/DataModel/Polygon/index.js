@@ -62,7 +62,7 @@ function pointInPolygon(point, vertices, bounds, normal) {
   const p0 = [];
   const p1 = [];
 
-  for (let i = 0; i < vertices.length; ) {
+  for (let i = 0; i < vertices.length;) {
     // Check coincidence to polygon vertices
     p0[0] = vertices[i++];
     p0[1] = vertices[i++];
@@ -105,7 +105,7 @@ function pointInPolygon(point, vertices, bounds, normal) {
   // polygon. Process all polygon edges determining if there are ascending or
   // descending crossings of the line axis1=constant.
   let wn = 0;
-  for (let i = 0; i < vertices.length; ) {
+  for (let i = 0; i < vertices.length;) {
     p0[0] = vertices[i++];
     p0[1] = vertices[i++];
     p0[2] = vertices[i++];

@@ -328,7 +328,7 @@ function vtkDataArray(publicAPI, model) {
     let i = idx * model.numberOfComponents;
     const last = Math.min(tuples.length, model.size - i);
     let changed = false;
-    for (let j = 0; j < last; ) {
+    for (let j = 0; j < last;) {
       const previousValue = model.values[i];
       model.values[i] = tuples[j];
       if (!Object.is(model.values[i], previousValue)) {

@@ -197,7 +197,7 @@ function vtkThresholdPoints(publicAPI, model) {
         }
         if (keepCell) {
           newCellData[newP++] = numberOfPoints;
-          for (let p = firstPointIndex; p <= numberOfPoints; ) {
+          for (let p = firstPointIndex; p <= numberOfPoints;) {
             newCellData[newP++] = newPointIds[p++];
           }
         }
