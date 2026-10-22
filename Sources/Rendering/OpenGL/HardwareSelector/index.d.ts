@@ -9,7 +9,7 @@ import vtkOpenGLRenderWindow from '../../../Rendering/OpenGL/RenderWindow';
 import { FieldAssociations } from '../../../Common/DataModel/DataSet/Constants';
 import { EventHandler, vtkSubscription } from '../../../interfaces';
 import { Nullable, Vector2, Vector3 } from '../../../types';
-import { PassTypes } from './Constants';
+import { PassTypes } from '../../Core/HardwareSelector/Constants';
 
 type Area = [number, number, number, number];
 
@@ -46,7 +46,6 @@ export interface PixelInformation {
   attributeID?: number;
 }
 
-// TODO extends vtkHardwareSelector
 export interface vtkOpenGLHardwareSelector extends vtkHardwareSelector {
   /**
    * Releases internal pixel buffer memory.
