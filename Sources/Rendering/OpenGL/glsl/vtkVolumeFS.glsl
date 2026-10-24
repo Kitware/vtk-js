@@ -581,9 +581,12 @@ vec2 rayIntersectVolumeDistances(vec3 rayOriginVC, vec3 rayDirVC) {
   // Compute origin and direction in IS
   vec3 rayOriginIS = posVCtoIS(rayOriginVC);
   vec3 rayDirIS = vecVCToIS(rayDirVC);
+  // Division by zero is unspecified in GLSL ES, so zero components of the
+  // direction get an infinite inverse instead.
   // Don't check for infinity as the min/max combination afterward will always
   // find an intersection before infinity
-  vec3 invDir = 1.0 / rayDirIS;
+  vec3 isParallel = vec3(equal(rayDirIS, vec3(0.0)));
+  vec3 invDir = mix(1.0 / (rayDirIS + isParallel), vec3(infinity), isParallel);
 
   // We have: bound = origin + t * dir
   // So: t = (1/dir) * (bound - origin)
