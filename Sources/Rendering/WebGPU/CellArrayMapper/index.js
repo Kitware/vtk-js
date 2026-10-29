@@ -34,7 +34,7 @@ import {
 } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/ClippingPlanes';
 import { newStorageArray } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/StorageArray';
 import replaceShaderPositionHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Position';
-import replaceShaderCoincidentOffsetHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/CoincidentOffset';
+import vtkWebGPUReplacementShaderMapper from 'vtk.js/Sources/Rendering/WebGPU/ReplacementShaderMapper';
 import replaceShaderNormalHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Normal';
 import replaceShaderLightHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Lighting';
 import replaceShaderColorHelper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper/Replacements/Color';
@@ -674,18 +674,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     fDesc.setCode(header.join('\n'));
   };
 
-  publicAPI.replaceShaderCoincidentOffset = (hash, pipeline, vertexInput) => {
-    replaceShaderCoincidentOffsetHelper(
-      publicAPI,
-      model,
-      hash,
-      pipeline,
-      vertexInput
-    );
-  };
-  model.shaderReplacements.set(
-    'replaceShaderCoincidentOffset',
-    publicAPI.replaceShaderCoincidentOffset
+  vtkWebGPUReplacementShaderMapper.implementReplaceShaderCoincidentOffset(
+    publicAPI,
+    model
   );
 
   // The WGSL expression of the matrix that transforms a cell normal from
@@ -917,6 +908,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const uhash = publicAPI.getHashFromUsage(model.usage);
     pipelineHash += uhash;
     pipelineHash += `cm${publicAPI.getCullMode()}`;
+    if (publicAPI.usesCoincidentFactor()) {
+      pipelineHash += 'cf';
+    }
     pipelineHash += model.renderEncoder.getPipelineHash();
 
     model.pipelineHash = pipelineHash;
