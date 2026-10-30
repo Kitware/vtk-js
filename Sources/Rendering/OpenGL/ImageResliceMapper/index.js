@@ -9,6 +9,7 @@ import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkImageDataOutlineFilter from 'vtk.js/Sources/Filters/General/ImageDataOutlineFilter';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import supportsNorm16Linear from 'vtk.js/Sources/Rendering/OpenGL/Texture/supportsNorm16Linear';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
@@ -367,8 +368,11 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         // Build the textures
         const dims = imageData.getDimensions();
         // Use norm16 for scalar texture if the extension is available
+        // and linear filtering works (filter is set at render time)
         newScalarTexture.setOglNorm16Ext(
-          model.context.getExtension('EXT_texture_norm16')
+          supportsNorm16Linear()
+            ? model.context.getExtension('EXT_texture_norm16')
+            : null
         );
         newScalarTexture.resetFormatAndType();
         newScalarTexture.create3DFilterableFromDataArray({
