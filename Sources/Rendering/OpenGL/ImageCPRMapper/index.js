@@ -9,6 +9,7 @@ import vtkCellArray from 'vtk.js/Sources/Common/Core/CellArray';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import supportsNorm16Linear from 'vtk.js/Sources/Rendering/OpenGL/Texture/supportsNorm16Linear';
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
@@ -219,8 +220,11 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
       // Build the textures
       const dims = image.getDimensions();
       // Use norm16 for scalar texture if the extension is available
+      // and linear filtering works (filter is set at render time)
       model.volumeTexture.setOglNorm16Ext(
-        model.context.getExtension('EXT_texture_norm16')
+        supportsNorm16Linear()
+          ? model.context.getExtension('EXT_texture_norm16')
+          : null
       );
       model.volumeTexture.resetFormatAndType();
       model.volumeTexture.create3DFilterableFromDataArray({
@@ -261,6 +265,7 @@ function vtkOpenGLImageCPRMapper(publicAPI, model) {
         height: dims[1],
         depth: dims[2],
         dataArray: scalars,
+        preferSizeOverAccuracy: model.renderable.getPreferSizeOverAccuracy(),
         updatedExtents,
       });
     }
