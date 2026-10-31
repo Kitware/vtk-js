@@ -43,7 +43,7 @@ function vtkMTLReader(publicAPI, model) {
         model.materials[model.currentMaterial] = {};
       }
       model.materials[model.currentMaterial][tokens[0]] = tokens.slice(1);
-      if (tokens[0] === 'map_Kd') {
+      if (model.autoLoadMaterials && tokens[0] === 'map_Kd') {
         const image = new Image();
         image.onload = () => setTimeout(imageReady, 0);
         image.src = [model.baseURL, tokens[1]].join('/');
@@ -165,6 +165,7 @@ const DEFAULT_VALUES = {
   requestCount: 0,
   materials: {},
   interpolateTextures: true,
+  autoLoadMaterials: true,
   // baseURL: null,
   // dataAccessHelper: null,
   // url: null,
@@ -182,6 +183,7 @@ export function extend(publicAPI, model, initialValues = {}) {
     'dataAccessHelper',
     'interpolateTextures',
     'splitGroup',
+    'autoLoadMaterials',
   ]);
   macro.event(publicAPI, model, 'busy');
 
