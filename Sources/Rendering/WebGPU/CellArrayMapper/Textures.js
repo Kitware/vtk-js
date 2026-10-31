@@ -79,9 +79,12 @@ export function updateTextures(publicAPI, model) {
 
   // Add textures to manager only if not present
   newTextures.forEach(([textureName, srcTexture]) => {
+    // Only the diffuse texture has a cube map sampling path in the shader
     const newTex = model.device
       .getTextureManager()
-      .getTextureForVTKTexture(srcTexture, textureName);
+      .getTextureForVTKTexture(srcTexture, textureName, {
+        allowCubeMap: textureName === 'DiffuseTexture',
+      });
 
     if (!newTex.getReady()) return;
     let found = false;
@@ -97,13 +100,28 @@ export function updateTextures(publicAPI, model) {
     }
     if (!found) {
       usedTextures[model.textures.length] = true;
-      const tview = newTex.createView(textureName);
+      // One component is luminance and two components are luminance and
+      // alpha. With texture-component-swizzle the view remaps the channels,
+      // else the TCoord shader code does it.
+      const viewOptions = {};
+      if (
+        textureName === 'DiffuseTexture' &&
+        model.device.hasFeature('texture-component-swizzle')
+      ) {
+        const numberOfComponents = newTex.getNumberOfComponents();
+        if (numberOfComponents === 1) {
+          viewOptions.swizzle = 'rrr1';
+        } else if (numberOfComponents === 2) {
+          viewOptions.swizzle = 'rrrg';
+        }
+      }
+      const tview = newTex.createView(textureName, viewOptions);
       model.textures.push(newTex);
       model.textureViews.push(tview);
 
       // Sampler setup
       const interpolate = srcTexture.getInterpolate() ? 'linear' : 'nearest';
-      const hasMipmaps = srcTexture.getMipLevel() > 0;
+      const hasMipmaps = newTex.getMipLevel() > 0;
 
       // Per-axis wrap modes (wrapS/wrapT) take priority over legacy flags
       const wrapS = srcTexture.getWrapS?.();
@@ -136,6 +154,41 @@ export function updateTextures(publicAPI, model) {
       // Enable mipmap filtering when mipmaps are available
       if (hasMipmaps) {
         options.mipmapFilter = 'linear';
+      }
+
+      // Explicit sampler values on the vtkTexture replace the defaults
+      const wrapR = srcTexture.getWrapR?.();
+      if (wrapR) {
+        options.addressModeW = wrapR;
+      }
+      const minFilter = srcTexture.getMinFilter?.();
+      if (minFilter) {
+        options.minFilter = minFilter;
+      }
+      const magFilter = srcTexture.getMagFilter?.();
+      if (magFilter) {
+        options.magFilter = magFilter;
+      }
+      const mipmapFilter = srcTexture.getMipmapFilter?.();
+      if (hasMipmaps && mipmapFilter) {
+        options.mipmapFilter = mipmapFilter;
+      }
+      const minLOD = srcTexture.getMinLOD?.();
+      if (minLOD !== null && minLOD !== undefined) {
+        options.lodMinClamp = minLOD;
+      }
+      const maxLOD = srcTexture.getMaxLOD?.();
+      if (maxLOD !== null && maxLOD !== undefined) {
+        options.lodMaxClamp = maxLOD;
+      }
+      options.maxAnisotropy = srcTexture.getMaxAnisotropy?.() ?? 1;
+
+      // Clamp at the face edges so that filtering does not mix in texels
+      // from the other side of the face
+      if (tview.getDimension() === 'cube') {
+        options.addressModeU = 'clamp-to-edge';
+        options.addressModeV = 'clamp-to-edge';
+        options.addressModeW = 'clamp-to-edge';
       }
 
       if (textureName === 'EnvironmentTexture') {
