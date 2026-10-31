@@ -66,16 +66,17 @@ function vtkForwardPass(publicAPI, model) {
       model.opaquePass = vtkWebGPUOpaquePass.newInstance();
     }
 
-    const numlayers = viewNode.getRenderable().getNumberOfLayers();
+    const renderWindow = viewNode.getRenderable();
+    const numlayers = renderWindow.getNumberOfLayers();
+    const renderables = renderWindow.getRenderersByReference();
 
     // iterate over renderers
     const renderers = viewNode.getChildren();
     for (let i = 0; i < numlayers; i++) {
       for (let index = 0; index < renderers.length; index++) {
-        const renNode = renderers[index];
-        const ren = viewNode.getRenderable().getRenderers()[index];
-
+        const ren = renderables[index];
         if (ren.getDraw() && ren.getLayer() === i) {
+          const renNode = renderers[index];
           // check for both opaque and volume actors
           model.opaqueActorCount = 0;
           model.translucentActorCount = 0;
