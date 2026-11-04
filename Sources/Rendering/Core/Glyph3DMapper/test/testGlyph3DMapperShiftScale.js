@@ -99,3 +99,87 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     gc.releaseResources();
   }
 );
+
+it.skipIf(__VTK_TEST_NO_WEBGL__).each([0, 1e6])(
+  'Test vtkGlyph3DMapper renders a small glyph source at its true size (centers offset %d)',
+  (offset) => {
+    const gc = testUtils.createGarbageCollector();
+
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
+
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(
+      vtkRenderer.newInstance({ background: [0, 0, 0] })
+    );
+    renderWindow.addRenderer(renderer);
+
+    // A 2 cm square is small enough that the source VBO gets its own shift/scale.
+    const h = 0.01;
+    const source = gc.registerResource(
+      makePolyDataFromPoints([-h, -h, 0, h, -h, 0, h, h, 0, -h, h, 0])
+    );
+    source.setPolys(
+      vtkCellArray.newInstance({ values: new Uint32Array([4, 0, 1, 2, 3]) })
+    );
+    const centers = gc.registerResource(vtkPolyData.newInstance());
+    centers
+      .getPoints()
+      .setData(
+        Float64Array.from([offset - 0.25, 0, 0, offset + 0.25, 0, 0]),
+        3
+      );
+    const mapper = gc.registerResource(vtkGlyph3DMapper.newInstance());
+    const actor = gc.registerResource(vtkActor.newInstance());
+
+    mapper.setInputData(centers, 0);
+    mapper.setInputData(source, 1);
+    mapper.setScaling(false);
+    mapper.setScalarVisibility(false);
+    actor.getProperty().setColor(1, 1, 1);
+    actor.getProperty().setLighting(false);
+
+    actor.setMapper(mapper);
+    renderer.addActor(actor);
+
+    const openGLRenderWindow = gc.registerResource(
+      renderWindow.newAPISpecificView()
+    );
+    openGLRenderWindow.setContainer(renderWindowContainer);
+    renderWindow.addView(openGLRenderWindow);
+    const size = 100;
+    openGLRenderWindow.setSize(size, size);
+
+    // Parallel projection with a 1 x 1 view: each glyph covers 2 x 2 pixels.
+    const camera = renderer.getActiveCamera();
+    camera.setParallelProjection(true);
+    camera.setParallelScale(0.5);
+    camera.setPosition(offset, 0, 1);
+    camera.setFocalPoint(offset, 0, 0);
+    renderer.resetCameraClippingRange();
+    renderWindow.render();
+
+    // Rebuild without new glyph matrices, then force a re-upload of them.
+    actor.getProperty().setColor(1, 1, 0.9);
+    renderWindow.render();
+    openGLRenderWindow
+      .getViewNodeFor(mapper)
+      .releaseGraphicsResources(openGLRenderWindow);
+    renderWindow.render();
+
+    const pixels = openGLRenderWindow.getPixelData(0, 0, size - 1, size - 1);
+    let covered = 0;
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i] > 127) {
+        covered++;
+      }
+    }
+    expect(covered, 'glyph pixels drawn').toBeGreaterThan(0);
+    expect(covered, 'glyph pixels drawn').toBeLessThanOrEqual(2 * 4 * 4);
+
+    gc.releaseResources();
+  }
+);
