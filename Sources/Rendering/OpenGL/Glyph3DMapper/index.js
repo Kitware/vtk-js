@@ -21,7 +21,6 @@ const { ObjectType } = vtkBufferObject;
 const StartEvent = { type: 'StartEvent' };
 const EndEvent = { type: 'EndEvent' };
 
-const MAT4_BYTE_SIZE = 64;
 const MAT4_ELEMENT_COUNT = 16;
 
 // ----------------------------------------------------------------------------
@@ -491,24 +490,32 @@ function vtkOpenGLGlyph3DMapper(publicAPI, model) {
       model.pickBuffer.setOpenGLRenderWindow(model._openGLRenderWindow);
     }
 
-    if (useShiftAndScale) {
-      const buf = garray.buffer;
-      const shiftScaleMat = computeInverseShiftAndScaleMatrix(
-        coordShift,
-        coordScale
-      );
-      mat4.invert(shiftScaleMat, shiftScaleMat);
-      for (let ptIdx = 0; ptIdx < garray.byteLength; ptIdx += MAT4_BYTE_SIZE) {
-        const mat = new Float32Array(buf, ptIdx, MAT4_ELEMENT_COUNT);
-        mat4.multiply(mat, shiftScaleMat, mat);
-      }
-    }
-
     if (
       model.renderable.getBuildTime().getMTime() >
       model.glyphBOBuildTime.getMTime()
     ) {
-      model.matrixBuffer.upload(garray, ObjectType.ARRAY_BUFFER);
+      // Same helper and points the source CABOs pack with, so gMatrix can undo it.
+      const source = computeCoordShiftAndScale(model.currentInput.getPoints());
+      let uploadArray = garray;
+      if (useShiftAndScale || source.useShiftAndScale) {
+        // Copy: the renderable's array is reused when buffers are re-uploaded.
+        uploadArray = new Float32Array(garray);
+        const shiftScaleMat = computeInverseShiftAndScaleMatrix(
+          coordShift,
+          coordScale
+        );
+        mat4.invert(shiftScaleMat, shiftScaleMat);
+        const sourceInverseShiftScaleMat = computeInverseShiftAndScaleMatrix(
+          source.coordShift,
+          source.coordScale
+        );
+        for (let i = 0; i < uploadArray.length; i += MAT4_ELEMENT_COUNT) {
+          const mat = uploadArray.subarray(i, i + MAT4_ELEMENT_COUNT);
+          mat4.multiply(mat, shiftScaleMat, mat);
+          mat4.multiply(mat, mat, sourceInverseShiftScaleMat);
+        }
+      }
+      model.matrixBuffer.upload(uploadArray, ObjectType.ARRAY_BUFFER);
       model.normalBuffer.upload(narray, ObjectType.ARRAY_BUFFER);
       if (carray) {
         model.colorBuffer.upload(carray.getData(), ObjectType.ARRAY_BUFFER);
