@@ -8,6 +8,7 @@ import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkProperty from 'vtk.js/Sources/Rendering/Core/Property';
 import vtkProperty2D from 'vtk.js/Sources/Rendering/Core/Property2D';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
+import { MAX_3D_DEPTH } from 'vtk.js/Sources/Rendering/WebGPU/Camera';
 import vtkWebGPUUniformBuffer from 'vtk.js/Sources/Rendering/WebGPU/UniformBuffer';
 import vtkWebGPUSimpleMapper from 'vtk.js/Sources/Rendering/WebGPU/SimpleMapper';
 import vtkWebGPUStorageBuffer from 'vtk.js/Sources/Rendering/WebGPU/StorageBuffer';
@@ -52,6 +53,23 @@ const { DisplayLocation } = vtkProperty2D;
 
 const tmp2Mat4 = new Float64Array(16);
 
+// Actor2D layers. Each layer number gets its own depth, and a higher layer
+// is nearer, so the depth test draws the layers in order also in the order
+// independent translucent pass. The layers use a band of depth values at the
+// near plane (FOREGROUND) or at the far plane (BACKGROUND). The camera
+// keeps 3D depth at or below MAX_3D_DEPTH, so all the FOREGROUND layers are
+// in front of 3D geometry.
+const MAX_2D_LAYER = 99;
+const LAYER_DEPTH_STEP = (1.0 - MAX_3D_DEPTH) / (MAX_2D_LAYER + 1);
+
+function getActor2DDepth(displayLocation, layerNumber) {
+  const layer = Math.min(Math.max(layerNumber, 0), MAX_2D_LAYER);
+  if (displayLocation === DisplayLocation.FOREGROUND) {
+    return 1.0 - (MAX_2D_LAYER - layer) * LAYER_DEPTH_STEP;
+  }
+  return layer * LAYER_DEPTH_STEP;
+}
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUCellArrayMapper methods
 // ----------------------------------------------------------------------------
@@ -68,8 +86,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         model.is2D ? 'vtkWebGPUActor2D' : 'vtkWebGPUActor'
       );
       model.WebGPUActor = parent;
-      model.coordinateSystem =
-        model.WebGPUActor.getRenderable().getCoordinateSystem();
+      // An Actor2D draws in display coordinates.
+      if (model.is2D) {
+        model.coordinateSystem = CoordinateSystem.DISPLAY;
+      } else {
+        model.coordinateSystem =
+          model.WebGPUActor.getRenderable().getCoordinateSystem();
+      }
       model.useRendererMatrix =
         model.coordinateSystem !== CoordinateSystem.DISPLAY;
       model.WebGPURenderer = renderer;
@@ -151,13 +174,13 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       bufferShift[2],
     ]);
 
-    // Detect negative-determinant model matrix (odd reflections / negative scale)
-    const mcwc = actor.getMatrix();
-    const upper3x3 = mat3.fromMat4(mat3.create(), mcwc);
-    model.UBO.setValue(
-      'FlipFrontFacing',
-      mat3.determinant(upper3x3) < 0 ? 1.0 : 0.0
-    );
+    // Detect negative-determinant model matrix (odd reflections / negative scale).
+    // An Actor2D has no model matrix.
+    let flipFrontFacing = 0.0;
+    if (actor.getMatrix && publicAPI.hasNegativeDeterminant(actor)) {
+      flipFrontFacing = 1.0;
+    }
+    model.UBO.setValue('FlipFrontFacing', flipFrontFacing);
 
     model.UBO.setValue(
       'DebugChannel',
@@ -170,7 +193,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         ppty.getDisplayLocation?.() ?? DisplayLocation.BACKGROUND;
       model.UBO.setValue(
         'ZValue',
-        displayLoc === DisplayLocation.FOREGROUND ? 1.0 : 0.0
+        getActor2DDepth(displayLoc, actor.getLayerNumber?.() ?? 0)
       );
       const aColor = ppty.getColorByReference();
       model.UBO.setValue('AmbientIntensity', 1.0);
@@ -272,6 +295,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       model.UBO.setValue('ThicknessFactor', ppty.getThicknessFactor?.() ?? 0);
       // glTF KHR_materials_volume thickness is affected by node transforms.
       // Approximate object-space scale in view/world by geometric mean of basis lengths.
+      const mcwc = actor.getMatrix();
       const sx = Math.hypot(mcwc[0], mcwc[1], mcwc[2]);
       const sy = Math.hypot(mcwc[4], mcwc[5], mcwc[6]);
       const sz = Math.hypot(mcwc[8], mcwc[9], mcwc[10]);
@@ -384,10 +408,14 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       model.primitiveType === PrimitiveTypes.TriangleEdges ||
       model.primitiveType === PrimitiveTypes.TriangleStripEdges ||
       ppty.getRepresentation() === Representation.WIREFRAME;
-    model.UBO.setValue(
-      'Opacity',
-      edgeLikeRepresentation ? ppty.getEdgeOpacity() : ppty.getOpacity()
-    );
+
+    // A Property2D has no edge opacity.
+    let opacity = ppty.getOpacity();
+    if (edgeLikeRepresentation) {
+      opacity = ppty.getEdgeOpacity?.() ?? opacity;
+    }
+    model.UBO.setValue('Opacity', opacity);
+
     // In a selection pass, the selector gives the prop its selection id.
     const runtimePropID = model.WebGPUActor.getPropID();
     let propID = runtimePropID;
@@ -395,6 +423,7 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       propID = selector.getPropIDForSelection(runtimePropID, actor) + 1;
     }
     model.UBO.setValue('PropID', propID);
+
     const cp = publicAPI.getCoincidentParameters();
     model.UBO.setValue('CoincidentFactor', cp.factor);
     model.UBO.setValue('CoincidentOffset', cp.offset);
@@ -441,20 +470,26 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     return true;
   };
 
+  // True when the upper 3x3 of the model matrix of the actor has a negative
+  // determinant, which flips the triangle winding.
+  publicAPI.hasNegativeDeterminant = (actor) => {
+    const upper3x3 = mat3.fromMat4(mat3.create(), actor.getMatrix());
+    return mat3.determinant(upper3x3) < 0;
+  };
+
   publicAPI.getCullMode = () => {
     const actor = model.WebGPUActor.getRenderable();
     const property = actor.getProperty();
 
-    let frontCull = property.getFrontfaceCulling();
-    let backCull = property.getBackfaceCulling();
+    // A Property2D has no face culling.
+    let frontCull = property.getFrontfaceCulling?.() ?? false;
+    let backCull = property.getBackfaceCulling?.() ?? false;
 
     // Detect negative determinant from the model matrix (negative scale).
     // When the determinant is negative, triangle winding is flipped,
     // so we must swap the cull mode per the glTF spec.
-    if (frontCull || backCull) {
-      const mcwc = actor.getMatrix();
-      const upper3x3 = mat3.fromMat4(mat3.create(), mcwc);
-      if (mat3.determinant(upper3x3) < 0) {
+    if ((frontCull || backCull) && actor.getMatrix) {
+      if (publicAPI.hasNegativeDeterminant(actor)) {
         const tmp = frontCull;
         frontCull = backCull;
         backCull = tmp;
@@ -491,9 +526,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     if (
       // backwards compat with code that (errorneously) set this to boolean
       // eslint-disable-next-line eqeqeq
-      model.renderable.getResolveCoincidentTopology() ==
+      model.renderable.getResolveCoincidentTopology?.() ==
         Resolve.PolygonOffset ||
-      (prop.getEdgeVisibility() &&
+      (prop.getEdgeVisibility?.() &&
         prop.getRepresentation() === Representation.SURFACE)
     ) {
       const primType = model.primitiveType;
@@ -501,24 +536,30 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
         primType === PrimitiveTypes.Verts ||
         prop.getRepresentation() === Representation.POINTS
       ) {
-        cp = model.renderable.getCoincidentTopologyPointOffsetParameter();
+        cp =
+          model.renderable.getCoincidentTopologyPointOffsetParameter?.() ?? cp;
       } else if (
         primType === PrimitiveTypes.Lines ||
         prop.getRepresentation() === Representation.WIREFRAME
       ) {
-        cp = model.renderable.getCoincidentTopologyLineOffsetParameters();
+        cp =
+          model.renderable.getCoincidentTopologyLineOffsetParameters?.() ?? cp;
       } else if (
         primType === PrimitiveTypes.Triangles ||
         primType === PrimitiveTypes.TriangleStrips
       ) {
-        cp = model.renderable.getCoincidentTopologyPolygonOffsetParameters();
+        cp =
+          model.renderable.getCoincidentTopologyPolygonOffsetParameters?.() ??
+          cp;
       }
 
       if (
         primType === PrimitiveTypes.TriangleEdges ||
         primType === PrimitiveTypes.TriangleStripEdges
       ) {
-        cp = model.renderable.getCoincidentTopologyPolygonOffsetParameters();
+        cp =
+          model.renderable.getCoincidentTopologyPolygonOffsetParameters?.() ??
+          cp;
         cp.factor /= 2.0;
         cp.offset /= 2.0;
       }

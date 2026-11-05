@@ -3,7 +3,14 @@ import vtkWebGPURenderEncoder from 'vtk.js/Sources/Rendering/WebGPU/RenderEncode
 import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 import vtkRenderPass from 'vtk.js/Sources/Rendering/SceneGraph/RenderPass';
 
-// ----------------------------------------------------------------------------
+/**
+ * Get the appropriate depth load operation for the given renderer.
+ * @param {vtkRenderer} renderer
+ * @returns {string} The depth load operation ('load' or 'clear').
+ */
+export function getDepthLoadOperation(renderer) {
+  return renderer.getPreserveDepthBuffer() ? 'load' : 'clear';
+}
 
 function vtkWebGPUOpaquePass(publicAPI, model) {
   // Set our className
@@ -94,9 +101,8 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
         sampleCount,
         usage:
           GPUTextureUsage.RENDER_ATTACHMENT |
-          (sampleCount === 1
-            ? GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_SRC
-            : 0),
+          GPUTextureUsage.TEXTURE_BINDING |
+          (sampleCount === 1 ? GPUTextureUsage.COPY_SRC : 0),
       });
       /* eslint-enable no-undef */
       /* eslint-enable no-bitwise */
@@ -113,6 +119,8 @@ function vtkWebGPUOpaquePass(publicAPI, model) {
     }
 
     model.renderEncoder.attachTextureViews();
+    model.renderEncoder.getDescription().depthStencilAttachment.depthLoadOp =
+      getDepthLoadOperation(renNode.getRenderable());
     publicAPI.setCurrentOperation('opaquePass');
     renNode.setRenderEncoder(model.renderEncoder);
     renNode.traverse(publicAPI);

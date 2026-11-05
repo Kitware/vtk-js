@@ -7,17 +7,19 @@ function replaceShaderAlpha(publicAPI, model, hash, pipeline, vertexInput) {
 
   const actor = model.WebGPUActor;
   const ppty = actor.getRenderable().getProperty();
-  const alphaMode = ppty.getAlphaMode?.() ?? 0;
 
-  let alphaCode;
-  if (alphaMode === 1) {
+  // A property with no alpha mode (Property2D) keeps its opacity.
+  let alphaCode = [];
+  if (!ppty.getAlphaMode) {
+    alphaCode = [];
+  } else if (ppty.getAlphaMode() === 1) {
     // MASK: apply texture alpha, discard below cutoff, output opaque
     alphaCode = [
       '  computedColor.a = computedColor.a * _diffuseMap.a;',
       '  if (computedColor.a < mapperUBO.AlphaCutoff) { discard; }',
       '  computedColor.a = 1.0;',
     ];
-  } else if (alphaMode === 2) {
+  } else if (ppty.getAlphaMode() === 2) {
     // BLEND: use texture alpha for transparency
     alphaCode = [
       '  computedColor.a = computedColor.a * _diffuseMap.a;',
