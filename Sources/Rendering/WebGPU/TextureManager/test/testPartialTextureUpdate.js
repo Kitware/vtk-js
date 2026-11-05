@@ -10,7 +10,7 @@ import vtkWebGPUTextureManager from 'vtk.js/Sources/Rendering/WebGPU/TextureMana
 const DEFAULT_TEXTURE_USAGE =
   GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
 const MIPMAP_TEXTURE_USAGE =
-  DEFAULT_TEXTURE_USAGE | GPUTextureUsage.STORAGE_BINDING;
+  DEFAULT_TEXTURE_USAGE | GPUTextureUsage.RENDER_ATTACHMENT;
 /* eslint-enable no-bitwise */
 /* eslint-enable no-undef */
 
