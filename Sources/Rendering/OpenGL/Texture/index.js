@@ -1377,8 +1377,15 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.openGLDataType === model.context.FLOAT &&
       model.context.getExtension('OES_texture_float_linear') === null &&
       isExactHalfFloat;
+    // SHORT and UNSIGNED_SHORT mean norm16
+    const overrideNorm16 =
+      preferSizeOverAccuracy &&
+      (model.openGLDataType === model.context.SHORT ||
+        model.openGLDataType === model.context.UNSIGNED_SHORT);
     const useHalfFloat =
-      forceHalfFloat || model.openGLDataType === model.context.HALF_FLOAT;
+      forceHalfFloat ||
+      overrideNorm16 ||
+      model.openGLDataType === model.context.HALF_FLOAT;
 
     model.canUseHalfFloat = useHalfFloat && isExactHalfFloat;
   }
@@ -1410,8 +1417,12 @@ function vtkOpenGLTexture(publicAPI, model) {
     );
 
     // since our default is to use half float, in case that we can't use it
-    // we need to use another type
-    if (!publicAPI.useHalfFloat()) {
+    // (or norm16 is overridden) we need to use another type
+    if (
+      !publicAPI.useHalfFloat() ||
+      model.openGLDataType === model.context.SHORT ||
+      model.openGLDataType === model.context.UNSIGNED_SHORT
+    ) {
       publicAPI.getOpenGLDataType(dataType, true);
     }
 
