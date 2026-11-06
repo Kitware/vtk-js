@@ -959,6 +959,38 @@ export function algo(publicAPI, model, numberOfInputs, numberOfOutputs) {
 }
 
 // ----------------------------------------------------------------------------
+// initializeOutputData(output, inputs)
+// ----------------------------------------------------------------------------
+
+const SHAREABLE_DATA_FIELDS = [
+  'points',
+  'verts',
+  'lines',
+  'polys',
+  'strips',
+  'pointData',
+  'cellData',
+  'fieldData',
+];
+
+export function initializeOutputData(output, inputs = []) {
+  if (!output) {
+    return output;
+  }
+  SHAREABLE_DATA_FIELDS.forEach((name) => {
+    const field = output.getReferenceByName(name);
+    if (
+      field &&
+      inputs.some((input) => input?.getReferenceByName?.(name) === field)
+    ) {
+      // Release rather than initialize() what the input holds too
+      output[`set${_capitalize(name)}`](null);
+    }
+  });
+  return output.initialize();
+}
+
+// ----------------------------------------------------------------------------
 // Event handling: onXXX(callback), invokeXXX(args...)
 // ----------------------------------------------------------------------------
 
@@ -1797,6 +1829,7 @@ export default {
   get,
   getArray,
   getCurrentGlobalMTime,
+  initializeOutputData,
   isVtkObject,
   keystore,
   measurePromiseExecution,

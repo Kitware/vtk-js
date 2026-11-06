@@ -99,3 +99,22 @@ it('vtkReverseSense leaves normals unchanged when disabled', () => {
     'cell normals are unchanged'
   ).toEqual(Array.from(input.getCellData().getNormals().getData()));
 });
+
+it('should keep its input when re-executed', () => {
+  const input = createPolyData();
+  const nPoints = input.getNumberOfPoints();
+  const nPolys = input.getNumberOfPolys();
+  const filter = vtkReverseSense.newInstance();
+  filter.setInputData(input);
+  filter.update();
+  const output = filter.getOutputData();
+
+  input.modified();
+  filter.update();
+
+  expect(filter.getOutputData()).toBe(output);
+  expect(input.getNumberOfPoints()).toBe(nPoints);
+  expect(input.getNumberOfPolys()).toBe(nPolys);
+  expect(output.getNumberOfPoints()).toBe(nPoints);
+  expect(output.getNumberOfPolys()).toBe(nPolys);
+});

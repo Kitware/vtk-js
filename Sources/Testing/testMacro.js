@@ -1,5 +1,6 @@
 import { it, expect } from 'vitest';
 import macro from 'vtk.js/Sources/macros';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 
 const MY_ENUM = {
   ZERO: 0,
@@ -727,4 +728,25 @@ it('Macro debounce can be cancelled', () => {
   debFunc.cancel();
 
   // end the test after the debounce phase
+});
+
+it('Macro initializeOutputData releases data shared with the inputs', () => {
+  const input = vtkPolyData.newInstance();
+  input.getPoints().setData(Float32Array.from([0, 0, 0, 1, 0, 0, 0, 1, 0]));
+  input.getPolys().setData(Uint32Array.from([3, 0, 1, 2]));
+  const output = vtkPolyData.newInstance();
+  output.setPoints(input.getPoints());
+  output.setPolys(input.getPolys());
+  const ownLines = output.getLines();
+  ownLines.setData(Uint32Array.from([2, 0, 1]));
+
+  expect(macro.initializeOutputData(output, [null, input])).toBe(output);
+  expect(input.getNumberOfPoints()).toBe(3);
+  expect(input.getNumberOfPolys()).toBe(1);
+  expect(output.getPoints()).toBe(null);
+  expect(output.getPolys()).toBe(null);
+  // not shared, so initialized in place for reuse
+  expect(output.getLines()).toBe(ownLines);
+  expect(ownLines.getNumberOfCells()).toBe(0);
+  expect(macro.initializeOutputData(undefined, [input])).toBe(undefined);
 });
