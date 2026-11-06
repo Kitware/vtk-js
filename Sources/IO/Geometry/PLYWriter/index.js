@@ -30,11 +30,12 @@ const writeHeader = (
     format = fileType ? 'binary_little_endian' : 'binary_big_endian';
   } else format = 'ascii';
 
-  headerComments.unshift('VTK.js generated PLY File');
+  // Make a new list for each write, so the headerComments option stays the same.
+  const comments = ['VTK.js generated PLY File', ...(headerComments || [])];
   if (textureFileName) {
-    headerComments.push(`TextureFile ${textureFileName}`);
+    comments.push(`TextureFile ${textureFileName}`);
   }
-  const commentElements = headerComments
+  const commentElements = comments
     .map((comment) => `comment ${comment}`)
     .join('\n');
 
