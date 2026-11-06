@@ -104,45 +104,35 @@ function writeSTL(polyData, format = FormatTypes.BINARY, transform = null) {
   const strips = polyData.getStrips() ? polyData.getStrips().getData() : null;
 
   const n = [];
-  let v1 = [];
-  let v2 = [];
-  let v3 = [];
 
   // Strips
   if (strips && strips.length > 0) {
     throw new Error('Unsupported strips');
   }
 
-  // Polys
-  for (let i = 0; i < polys.length;) {
-    const pointNumber = polys[i++];
-
-    if (pointNumber) {
-      v1 = [
-        points[polys[i] * 3],
-        points[polys[i] * 3 + 1],
-        points[polys[i++] * 3 + 2],
-      ];
-      v2 = [
-        points[polys[i] * 3],
-        points[polys[i] * 3 + 1],
-        points[polys[i++] * 3 + 2],
-      ];
-      v3 = [
-        points[polys[i] * 3],
-        points[polys[i] * 3 + 1],
-        points[polys[i++] * 3 + 2],
-      ];
-      if (transform) {
-        vec3.transformMat4(v1, v1, transform);
-        vec3.transformMat4(v2, v2, transform);
-        vec3.transformMat4(v3, v3, transform);
-      }
-
-      vtkTriangle.computeNormal(v1, v2, v3, n);
-
-      writer.writeTriangle(v1, v2, v3, n);
+  const getPoint = (id) => {
+    const p = [points[id * 3], points[id * 3 + 1], points[id * 3 + 2]];
+    if (transform) {
+      vec3.transformMat4(p, p, transform);
     }
+    return p;
+  };
+
+  // Polys
+  // Each cell in the cell array is the point count, then the point ids. The
+  // writer splits each polygon into a triangle fan from its first point.
+  for (let i = 0; i < polys.length; ) {
+    const pointNumber = polys[i];
+    if (pointNumber >= 3) {
+      const v1 = getPoint(polys[i + 1]);
+      for (let k = 2; k < pointNumber; k++) {
+        const v2 = getPoint(polys[i + k]);
+        const v3 = getPoint(polys[i + k + 1]);
+        vtkTriangle.computeNormal(v1, v2, v3, n);
+        writer.writeTriangle(v1, v2, v3, n);
+      }
+    }
+    i += pointNumber + 1;
   }
   writer.writeFooter(polyData);
   return writer.getOutputData();
