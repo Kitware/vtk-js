@@ -89,3 +89,27 @@ it('Test vtkPolyDataNormals normals', () => {
     ++polysId;
   }
 });
+
+it('Test vtkPolyDataNormals keeps its input when re-executed', () => {
+  const input = vtkCubeSource.newInstance().getOutputData();
+  const nPoints = input.getNumberOfPoints();
+  const nPolys = input.getNumberOfPolys();
+
+  const normals = vtkPolyDataNormals.newInstance();
+  normals.setInputData(input);
+  normals.update();
+  const output = normals.getOutputData();
+
+  // the reused output shares the input's points and cells, which must survive
+  const points = input.getPoints().getData();
+  input.getPoints().setData(points.map((x) => 2 * x));
+  input.modified();
+  normals.update();
+
+  expect(normals.getOutputData()).toBe(output);
+  expect(input.getNumberOfPoints()).toBe(nPoints);
+  expect(input.getNumberOfPolys()).toBe(nPolys);
+  expect(output.getNumberOfPoints()).toBe(nPoints);
+  expect(output.getNumberOfPolys()).toBe(nPolys);
+  expect(output.getPointData().getNormals().getNumberOfTuples()).toBe(nPoints);
+});

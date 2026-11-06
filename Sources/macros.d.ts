@@ -352,6 +352,18 @@ export function algo(
 ): void;
 
 /**
+ * Initialize a previous output so a requestData() can reuse it, first
+ * releasing (setting to null) any points, cells or attributes it shares with
+ * one of the inputs, so that initialize() leaves the inputs' data untouched.
+ * The filter must set any field it shares again.
+ *
+ * @param output the previous output (outData[i]), if any
+ * @param inputs the filter's inputs (inData)
+ * @returns the initialized output, or the falsy output when there is none
+ */
+export function initializeOutputData<T>(output: T, inputs?: Array<any>): T;
+
+/**
  * Symbols used as return value for callback
  */
 export const VOID: symbol;
@@ -779,6 +791,7 @@ declare const Macro: {
   get: typeof get;
   getArray: typeof getArray;
   getCurrentGlobalMTime(): number;
+  initializeOutputData: typeof initializeOutputData;
   isVtkObject: typeof isVtkObject;
   keystore: typeof keystore;
   measurePromiseExecution: typeof measurePromiseExecution;
