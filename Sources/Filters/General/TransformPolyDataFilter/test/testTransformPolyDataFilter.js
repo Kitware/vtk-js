@@ -485,3 +485,23 @@ it('Test vtkTransformPolyDataFilter with cell normals and vectors transformation
     'Cell normals should be transformed correctly'
   ).toBeTruthy();
 });
+
+it('Test vtkTransformPolyDataFilter keeps its input when re-executed', () => {
+  const input = createTestPolyData();
+  const nPolys = input.getNumberOfPolys();
+  const nLines = input.getNumberOfLines();
+  const filter = vtkTransformPolyDataFilter.newInstance();
+  filter.setTransform(vtkTransform.newInstance());
+  filter.setInputData(input);
+  filter.update();
+  const output = filter.getOutputData();
+
+  input.modified();
+  filter.update();
+
+  expect(filter.getOutputData()).toBe(output);
+  expect(input.getNumberOfPolys()).toBe(nPolys);
+  expect(input.getNumberOfLines()).toBe(nLines);
+  expect(output.getNumberOfPolys()).toBe(nPolys);
+  expect(output.getNumberOfLines()).toBe(nLines);
+});

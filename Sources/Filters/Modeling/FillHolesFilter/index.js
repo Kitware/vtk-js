@@ -41,7 +41,9 @@ function vtkFillHolesFilter(publicAPI, model) {
 
   publicAPI.requestData = (inData, outData) => {
     const input = inData[0];
-    const output = outData[0]?.initialize() || vtkPolyData.newInstance();
+    const output =
+      macro.initializeOutputData(outData[0], inData) ||
+      vtkPolyData.newInstance();
 
     if (!input) {
       outData[0] = output;
