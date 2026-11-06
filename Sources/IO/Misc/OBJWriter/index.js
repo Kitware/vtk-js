@@ -26,7 +26,7 @@ const writeFaces = (faces, withNormals, withTCoords) => {
       if (withTCoords) {
         outputData += `/${fd[offset + i] + 1}`;
         if (withNormals) {
-          outputData += `//${fd[offset + i] + 1}`;
+          outputData += `/${fd[offset + i] + 1}`;
         }
       } else if (withNormals) {
         outputData += `//${fd[offset + i] + 1}`;
