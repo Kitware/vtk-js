@@ -23,6 +23,20 @@ function writeVectorBinary(dataView, offset, vector) {
   return writeFloatBinary(dataView, off, vector[2]);
 }
 
+// Each polygon with n points gives n - 2 triangles. Cells with less than 3
+// points give no triangle.
+function getNumberOfTriangles(polys) {
+  let count = 0;
+  for (let i = 0; i < polys.length; ) {
+    const pointNumber = polys[i];
+    if (pointNumber >= 3) {
+      count += pointNumber - 2;
+    }
+    i += pointNumber + 1;
+  }
+  return count;
+}
+
 // ----------------------------------------------------------------------------
 // vtkSTLWriter methods
 // ----------------------------------------------------------------------------
@@ -33,7 +47,9 @@ const binaryWriter = () => {
   return {
     init: (polyData) => {
       const polys = polyData.getPolys().getData();
-      const buffer = new ArrayBuffer(80 + 4 + (50 * polys.length) / 4); // buffer for the full file; size = header (80) + num cells (4) +  50 bytes per poly
+      // The file has a header of 80 bytes, the triangle count in 4 bytes,
+      // and 50 bytes for each triangle.
+      const buffer = new ArrayBuffer(80 + 4 + 50 * getNumberOfTriangles(polys));
       dataView = new DataView(buffer);
     },
     writeHeader: (polyData) => {
