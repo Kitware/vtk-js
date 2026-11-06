@@ -11,6 +11,7 @@ import vtkPointPicker from 'vtk.js/Sources/Rendering/Core/PointPicker';
 import vtkActor from 'vtk.js/Sources/Rendering/Core/Actor';
 import vtkLineSource from 'vtk.js/Sources/Filters/Sources/LineSource';
 import vtkMapper from 'vtk.js/Sources/Rendering/Core/Mapper';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import { Representation } from 'vtk.js/Sources/Rendering/Core/Property/Constants';
 import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 
@@ -147,6 +148,62 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)('Test vtkPointPicker line source', () => {
 
   gc.releaseResources();
 });
+
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'Test vtkPointPicker useCells with mixed cell sizes',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    const container = document.querySelector('body');
+    const renderWindowContainer = gc.registerDOMElement(
+      document.createElement('div')
+    );
+    container.appendChild(renderWindowContainer);
+
+    const renderWindow = gc.registerResource(vtkRenderWindow.newInstance());
+    const renderer = gc.registerResource(vtkRenderer.newInstance());
+    renderWindow.addRenderer(renderer);
+
+    // A triangle (points 0, 1, 2) and a quad (points 1, 3, 4, 2).
+    const polyData = vtkPolyData.newInstance();
+    polyData
+      .getPoints()
+      .setData(
+        Float32Array.from([0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0, 0, 2, 1, 0]),
+        3
+      );
+    polyData.getPolys().setData(Uint32Array.from([3, 0, 1, 2, 4, 1, 3, 4, 2]));
+
+    const mapper = gc.registerResource(vtkMapper.newInstance());
+    mapper.setInputData(polyData);
+    const actor = gc.registerResource(vtkActor.newInstance());
+    actor.setMapper(mapper);
+    renderer.addActor(actor);
+
+    const glwindow = gc.registerResource(renderWindow.newAPISpecificView());
+    glwindow.setContainer(renderWindowContainer);
+    renderWindow.addView(glwindow);
+    glwindow.setSize(300, 300);
+
+    renderer.resetCamera();
+    renderWindow.render();
+
+    const picker = vtkPointPicker.newInstance();
+    picker.setUseCells(true);
+
+    // point 4 is only used by the second (quad) cell
+    const [dx, dy] = renderer.worldToNormalizedDisplay(2, 1, 0, 1);
+    picker.pick([dx * 300, dy * 300, 0], renderer);
+    expect(picker.getActors().length).toBe(1);
+    expect(picker.getPointId()).toBe(4);
+    expect(areEquals(picker.getPickPosition(), [2, 1, 0])).toBeTruthy();
+
+    const [ex, ey] = renderer.worldToNormalizedDisplay(1, 0, 0, 1);
+    picker.pick([ex * 300, ey * 300, 0], renderer);
+    expect(picker.getPointId()).toBe(1);
+
+    gc.releaseResources();
+  }
+);
 
 it('Test vtkPointPicker instance', () => {
   expect(vtkPointPicker).toBeTruthy();

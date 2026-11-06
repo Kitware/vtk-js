@@ -62,20 +62,22 @@ function vtkPointPicker(publicAPI, model) {
 
     if (model.useCells) {
       const cellData = input.getPolys().getData();
-      const nbPointsPerCell = cellData[0];
-      const nbCells = input.getPolys().getNumberOfCells();
 
-      for (let cellID = 0; cellID < nbCells; cellID++) {
-        const firstPointIndex = cellID * nbPointsPerCell + 1;
-        const lastPointIndex = firstPointIndex + nbPointsPerCell;
+      // Each cell is stored as [size, id0, id1, ...], so walk the array
+      // using the size of each cell instead of assuming a fixed stride.
+      let cellOffset = 0;
+      while (cellOffset < cellData.length) {
+        const firstPointIndex = cellOffset + 1;
+        const lastPointIndex = firstPointIndex + cellData[cellOffset];
+        cellOffset = lastPointIndex;
 
         for (
           let pointIndex = firstPointIndex;
           pointIndex < lastPointIndex;
           pointIndex++
         ) {
-          const pointDataIndex = cellData[pointIndex];
-          points.getPoint(pointDataIndex, x);
+          ptId = cellData[pointIndex];
+          points.getPoint(ptId, x);
 
           t =
             (ray[0] * (x[0] - p1[0]) +
@@ -107,7 +109,7 @@ function vtkPointPicker(publicAPI, model) {
             }
           }
         } // end for pointIndex
-      } // end for cellID
+      } // end while cellOffset
     } else {
       // end if model.useCells
       for (ptId = 0; ptId < numPts; ptId++) {
