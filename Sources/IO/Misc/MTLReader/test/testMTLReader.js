@@ -12,3 +12,33 @@ it('vtkMTLReader reads a material named __proto__', () => {
   expect({}.Kd).toBeUndefined();
   expect(Object.prototype).not.toHaveProperty('Kd');
 });
+
+it('vtkMTLReader sends busy true and busy false for image loads', async () => {
+  const reader = vtkMTLReader.newInstance();
+  const events = [];
+  const done = new Promise((resolve) => {
+    reader.onBusy((busy) => {
+      events.push(busy);
+      if (!busy) {
+        resolve();
+      }
+    });
+  });
+  // The map_Kd lines start the load of two texture images. The images do not
+  // exist, thus the loads fail.
+  reader.parseAsText(
+    [
+      'newmtl tex1',
+      'map_Kd missing1.png',
+      'newmtl tex2',
+      'map_Kd missing2.png',
+    ].join('\n')
+  );
+
+  expect(reader.isBusy()).toBe(true);
+  expect(events).toEqual([true]);
+
+  await done;
+  expect(reader.isBusy()).toBe(false);
+  expect(events).toEqual([true, false]);
+});

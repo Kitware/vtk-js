@@ -46,11 +46,24 @@ function vtkMTLReader(publicAPI, model) {
       }
       model.materials[model.currentMaterial][tokens[0]] = tokens.slice(1);
       if (tokens[0] === 'map_Kd') {
+        // The reader is busy from the start of the first image load to the
+        // end of the last image load. A failed load also ends the load.
+        model.requestCount++;
+        if (model.requestCount === 1) {
+          publicAPI.invokeBusy(true);
+        }
         const image = new Image();
-        image.onload = () => setTimeout(imageReady, 0);
+        // Each image ends its first load one time only. A later setImageSrc()
+        // does not change the request count.
+        const loadEnd = () => {
+          image.onload = null;
+          image.onerror = null;
+          setTimeout(imageReady, 0);
+        };
+        image.onload = loadEnd;
+        image.onerror = loadEnd;
         image.src = [model.baseURL, tokens[1]].join('/');
         model.materials[model.currentMaterial].image = image;
-        model.requestCount++;
       }
     }
   }
