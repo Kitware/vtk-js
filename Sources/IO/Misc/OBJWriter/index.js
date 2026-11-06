@@ -77,13 +77,12 @@ const writePoints = (pts, normals, tcoords) => {
   }
 
   // Textures
+  // The faces use the point index as the texture coordinate index. Thus the
+  // writer writes one texture coordinate for each point.
   if (tcoords) {
     for (let i = 0; i < nbPts; i++) {
       p = tcoords.getTuple(i);
-
-      if (p[0] !== -1.0) {
-        outputData.push(`vt ${p[0]} ${p[1]}`);
-      }
+      outputData.push(`vt ${p[0]} ${p[1]}`);
     }
   }
 

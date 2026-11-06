@@ -116,3 +116,22 @@ it('OBJWriter: Write v/vt/vn for faces with texture coordinates and normals', ()
   const face = text.split('\n').find((line) => line.startsWith('f '));
   expect(face).toBe('f 1/1/1 2/2/2 3/3/3');
 });
+
+it('OBJWriter: Write one texture coordinate for each point', () => {
+  const polyData = vtkPolyData.newInstance();
+  polyData
+    .getPoints()
+    .setData(new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), 3);
+  polyData.getPolys().setData(new Uint32Array([3, 0, 1, 2]));
+  // The first point has u = -1.
+  polyData.getPointData().setTCoords(
+    vtkDataArray.newInstance({
+      numberOfComponents: 2,
+      values: new Float32Array([-1, 0, 1, 0, 0, 1]),
+    })
+  );
+  const lines = vtkOBJWriter.writeOBJ(polyData).split('\n');
+  expect(
+    lines.filter((l) => l.startsWith('vt ') || l.startsWith('f '))
+  ).toEqual(['vt -1 0', 'vt 1 0', 'vt 0 1', 'f 1/1 2/2 3/3']);
+});
