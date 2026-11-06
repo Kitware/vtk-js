@@ -1,4 +1,5 @@
 import { it, expect } from 'vitest';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkPLYWriter from 'vtk.js/Sources/IO/Geometry/PLYWriter';
 
@@ -32,4 +33,34 @@ it('vtkPLYWriter does not change the header comments option', () => {
     'comment VTK.js generated PLY File',
     'comment my comment',
   ]);
+});
+
+it('vtkPLYWriter does not write UVs and colors when the options are false', () => {
+  const polyData = makeTriangle();
+  polyData.getPointData().setTCoords(
+    vtkDataArray.newInstance({
+      numberOfComponents: 2,
+      values: new Float32Array([0, 0, 1, 0, 0, 1]),
+    })
+  );
+  polyData.getPointData().setScalars(
+    vtkDataArray.newInstance({
+      numberOfComponents: 3,
+      values: new Uint8Array([255, 0, 0, 0, 255, 0, 0, 0, 255]),
+    })
+  );
+
+  const writer = vtkPLYWriter.newInstance({
+    withNormals: false,
+    withUVs: false,
+    withColors: false,
+  });
+  writer.setInputData(polyData);
+  const text = writer.getOutputData();
+  const header = getHeader(text);
+  ['u', 'v', 'red', 'green', 'blue'].forEach((name) => {
+    expect(header).not.toContain(`property float ${name}`);
+    expect(header).not.toContain(`property uchar ${name}`);
+  });
+  expect(getBody(text)[0]).toBe('0 0 0');
 });

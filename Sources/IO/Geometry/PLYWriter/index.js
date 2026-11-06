@@ -291,15 +291,19 @@ function writePLY(
   const numPts = inPts.getNumberOfPoints();
   const numPolys = polys.getNumberOfCells();
 
-  // textureCoords / uvs
-  const textureCoords = polyData.getPointData().getTCoords();
-  // eslint-disable-next-line no-param-reassign
-  withUVs = !(textureCoords === null);
+  // The writer writes an attribute only when the option is true and the data
+  // has the attribute.
+  let textureCoords = null;
+  if (withUVs) {
+    textureCoords = polyData.getPointData().getTCoords();
+  }
+  const writeUVs = !!textureCoords;
 
-  // scalars / colors
-  const scalars = polyData.getPointData().getScalars();
-  // eslint-disable-next-line no-param-reassign
-  withColors = !(scalars === null);
+  let scalars = null;
+  if (withColors) {
+    scalars = polyData.getPointData().getScalars();
+  }
+  const writeColors = !!scalars;
 
   const fileType = dataByteOrder ? 0 : 1;
 
@@ -313,8 +317,8 @@ function writePLY(
     numPts,
     numPolys,
     withNormals,
-    withUVs,
-    withColors,
+    writeUVs,
+    writeColors,
     withIndices
   );
 
