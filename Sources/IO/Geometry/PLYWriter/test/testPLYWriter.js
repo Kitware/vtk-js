@@ -138,3 +138,43 @@ it('vtkPLYWriter applies the transform to the points', () => {
     '3 0 1 2',
   ]);
 });
+
+function makeQuadAndTriangle() {
+  const polyData = vtkPolyData.newInstance();
+  polyData
+    .getPoints()
+    .setData(
+      new Float32Array([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 2, 0, 0]),
+      3
+    );
+  // One quad, then one triangle.
+  polyData.getPolys().setData(new Uint32Array([4, 0, 1, 2, 3, 3, 1, 4, 2]));
+  return polyData;
+}
+
+it('vtkPLYWriter writes each face with its own point count', () => {
+  const writer = vtkPLYWriter.newInstance();
+  writer.setInputData(makeQuadAndTriangle());
+  const body = getBody(writer.getOutputData());
+  expect(body.slice(5)).toEqual(['4 0 1 2 3', '3 1 4 2']);
+});
+
+it('vtkPLYWriter writes binary faces with their own point count', () => {
+  const writer = vtkPLYWriter.newInstance({ format: 'binary' });
+  writer.setInputData(makeQuadAndTriangle());
+  const view = writer.getOutputData();
+  // The faces are at the end of the file: 1 + 4 * 4 bytes, then 1 + 3 * 4 bytes.
+  const faceStart = view.byteLength - (1 + 4 * 4) - (1 + 3 * 4);
+  const littleEndian = true;
+  expect(view.getUint8(faceStart)).toBe(4);
+  const quad = [0, 1, 2, 3].map((j) =>
+    view.getUint32(faceStart + 1 + j * 4, littleEndian)
+  );
+  expect(quad).toEqual([0, 1, 2, 3]);
+  const triStart = faceStart + 1 + 4 * 4;
+  expect(view.getUint8(triStart)).toBe(3);
+  const tri = [0, 1, 2].map((j) =>
+    view.getUint32(triStart + 1 + j * 4, littleEndian)
+  );
+  expect(tri).toEqual([1, 4, 2]);
+});

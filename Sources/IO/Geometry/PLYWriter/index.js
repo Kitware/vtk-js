@@ -108,11 +108,15 @@ const binaryWriter = () => {
     ) => {
       const vertexCount = polyData.getPoints().getNumberOfPoints();
       ft = fileType;
-      // 1 byte shape descriptor
-      // 3 vertex indices at ${indexByteCount} bytes
-      const faceListLength = withIndices
-        ? numPolys * (indexByteCount * 3 + 1)
-        : 0;
+      // Each face has 1 byte for the point count and indexByteCount bytes
+      // for each point index. The cell array has the count and the indices
+      // of each face.
+      let faceListLength = 0;
+      if (withIndices) {
+        const cellArrayLength = polyData.getPolys().getData().length;
+        faceListLength =
+          numPolys + (cellArrayLength - numPolys) * indexByteCount;
+      }
 
       // 3 position values at 4 bytes
       // 3 normal values at 4 bytes
@@ -181,15 +185,13 @@ const binaryWriter = () => {
         vOffset += 1;
       }
     },
-    writeFace: (n, x, y, z) => {
+    writeFace: (cellArray, offset, n) => {
       output.setUint8(fOffset, n);
       fOffset += 1;
-      output.setUint32(fOffset, x, ft);
-      fOffset += indexByteCount;
-      output.setUint32(fOffset, y, ft);
-      fOffset += indexByteCount;
-      output.setUint32(fOffset, z, ft);
-      fOffset += indexByteCount;
+      for (let j = 1; j <= n; j++) {
+        output.setUint32(fOffset, cellArray[offset + j], ft);
+        fOffset += indexByteCount;
+      }
     },
     writeFooter: (polyData) => {},
     getOutputData: () => output,
@@ -242,8 +244,9 @@ const asciiWriter = () => {
       }
       fileContent += '\n';
     },
-    writeFace: (n, x, y, z) => {
-      fileContent += `${n} ${x} ${y} ${z}\n`;
+    writeFace: (cellArray, offset, n) => {
+      const ids = cellArray.subarray(offset + 1, offset + 1 + n);
+      fileContent += `${n} ${ids.join(' ')}\n`;
     },
     writeFooter: (polyData) => {},
     getOutputData: () => fileContent,
@@ -388,9 +391,13 @@ function writePLY(
   }
 
   // polys / indices
+  // Each cell in the cell array is the point count, then the point ids.
   const pd = polys.getData();
-  for (let i = 0, l = pd.length; i < l; i += 4) {
-    writer.writeFace(pd[i + 0], pd[i + 1], pd[i + 2], pd[i + 3]);
+  let offset = 0;
+  while (offset < pd.length) {
+    const n = pd[offset];
+    writer.writeFace(pd, offset, n);
+    offset += n + 1;
   }
 
   writer.writeFooter(polyData);
