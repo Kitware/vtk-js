@@ -299,9 +299,20 @@ function writePLY(
   }
   const writeUVs = !!textureCoords;
 
+  // PLY colors are 8 bit RGB values. Other scalars are not colors.
   let scalars = null;
+  let scalarsComps = 0;
   if (withColors) {
-    scalars = polyData.getPointData().getScalars();
+    const pointScalars = polyData.getPointData().getScalars();
+    if (pointScalars) {
+      const dataType = pointScalars.getDataType();
+      scalarsComps = pointScalars.getNumberOfComponents();
+      const is8Bit =
+        dataType === 'Uint8Array' || dataType === 'Uint8ClampedArray';
+      if (is8Bit && scalarsComps >= 3) {
+        scalars = pointScalars;
+      }
+    }
   }
   const writeColors = !!scalars;
 
@@ -364,9 +375,9 @@ function writePLY(
     }
 
     if (scalars) {
-      r = scalars.getData()[i * 3];
-      g = scalars.getData()[i * 3 + 1];
-      b = scalars.getData()[i * 3 + 2];
+      r = scalars.getData()[i * scalarsComps];
+      g = scalars.getData()[i * scalarsComps + 1];
+      b = scalars.getData()[i * scalarsComps + 2];
     }
 
     if (normals) {

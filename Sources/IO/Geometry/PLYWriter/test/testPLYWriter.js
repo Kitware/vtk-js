@@ -93,3 +93,35 @@ it('vtkPLYWriter declares normals only when the polydata has normals', () => {
   // 3 points with 3 floats, and 1 face with 1 count byte and 3 indices.
   expect(view.byteLength - headerLength).toBe(3 * 3 * 4 + 1 + 3 * 4);
 });
+
+it('vtkPLYWriter reads colors with the number of components of the scalars', () => {
+  const polyData = makeTriangle();
+  polyData.getPointData().setScalars(
+    vtkDataArray.newInstance({
+      numberOfComponents: 4,
+      values: new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255]),
+    })
+  );
+  const writer = vtkPLYWriter.newInstance({ withNormals: false });
+  writer.setInputData(polyData);
+  expect(getBody(writer.getOutputData()).slice(0, 3)).toEqual([
+    '0 0 0 255 0 0',
+    '1 0 0 0 255 0',
+    '0 1 0 0 0 255',
+  ]);
+});
+
+it('vtkPLYWriter does not write float scalars as colors', () => {
+  const polyData = makeTriangle();
+  polyData.getPointData().setScalars(
+    vtkDataArray.newInstance({
+      numberOfComponents: 3,
+      values: new Float32Array([0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5]),
+    })
+  );
+  const writer = vtkPLYWriter.newInstance({ withNormals: false });
+  writer.setInputData(polyData);
+  const text = writer.getOutputData();
+  expect(getHeader(text)).not.toContain('property uchar red');
+  expect(getBody(text)[0]).toBe('0 0 0');
+});
