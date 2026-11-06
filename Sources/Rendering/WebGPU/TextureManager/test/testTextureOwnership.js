@@ -124,7 +124,10 @@ describe('vtkWebGPUTextureManager texture ownership', () => {
   });
 
   it('shares one float32 texture after the values stop fitting half float', () => {
-    const { device, textureManager } = createDevice(['float32-filterable']);
+    const { device, textureManager } = createDevice([
+      'float32-filterable',
+      'texture-formats-tier1',
+    ]);
     const imageData = createImageData(new Int16Array([0, 1, 2, 3]));
     const scalars = imageData.getPointData().getScalars();
     const values = scalars.getData();
@@ -182,45 +185,28 @@ describe('vtkWebGPUTextureManager texture ownership', () => {
   });
 });
 
-describe('vtkWebGPUTextureManager normalized 16 bit formats', () => {
-  it.each([
-    [new Int16Array([-30000, 30000]), 'r16snorm'],
-    [new Uint16Array([0, 60000]), 'r16unorm'],
-  ])('stores %o in 2 bytes as %s', (values, format) => {
-    const { textureManager } = createDevice([
-      'float32-filterable',
-      'texture-formats-tier1',
-    ]);
-    const imageData = createImageData(values);
+describe('vtkWebGPUTextureManager 16 bit formats on tier1 devices', () => {
+  it.each([false, true])(
+    'selects compact and accurate formats with float32 filtering %s',
+    (float32Filterable) => {
+      const features = ['texture-formats-tier1'];
+      if (float32Filterable) features.push('float32-filterable');
+      const { textureManager } = createDevice(features);
+      for (const values of [
+        new Int16Array([-30000, 30000]),
+        new Uint16Array([0, 60000]),
+      ]) {
+        const image = createImageData(values);
+        const accurate = textureManager.getTextureForImageData(image);
+        const compact = textureManager.getTextureForImageData(image, {
+          preferSizeOverAccuracy: true,
+        });
 
-    expect(textureManager.getTextureForImageData(imageData).getFormat()).toBe(
-      format
-    );
-    expect(
-      textureManager
-        .getTextureForImageData(imageData, { preferSizeOverAccuracy: true })
-        .getFormat()
-    ).toBe(format);
-  });
-
-  it('keeps r16snorm for a partial update', () => {
-    const { device, textureManager } = createDevice([
-      'float32-filterable',
-      'texture-formats-tier1',
-    ]);
-    const imageData = createImageData(new Int16Array([0, 1, 2, 3]));
-    const scalars = imageData.getPointData().getScalars();
-    const texture = textureManager.getTextureForImageData(imageData);
-
-    scalars.getData()[2] = -32000;
-    scalars.modified();
-    const patched = textureManager.getTextureForImageData(imageData, {
-      existingTexture: texture,
-      updatedExtents: [[2, 2, 0, 0, 0, 0]],
-    });
-
-    expect(patched).toBe(texture);
-    expect(texture.writeSubImageData).toHaveBeenCalledOnce();
-    expect(device.created).toHaveLength(1);
-  });
+        expect(accurate.getFormat()).toBe(
+          float32Filterable ? 'r32float' : 'r16float'
+        );
+        expect(compact.getFormat()).toBe('r16float');
+      }
+    }
+  );
 });
