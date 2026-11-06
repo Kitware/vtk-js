@@ -130,8 +130,18 @@ const writeOBJ = (polyData, materialFilename, materialName) => {
 
   // Decompose any triangle strips into triangles
   const polyStrips = vtkCellArray.newInstance();
+  // Each cell in the strip array is the point count, then the point ids.
+  // decomposeStrip keeps the orientation of the strip.
   if (strips && strips.length > 0) {
-    vtkTriangleStrip.decomposeStrip(pts, polyStrips);
+    let offset = 0;
+    while (offset < strips.length) {
+      const stripSize = strips[offset];
+      const stripIds = Array.from(
+        strips.subarray(offset + 1, offset + 1 + stripSize)
+      );
+      vtkTriangleStrip.decomposeStrip(stripIds, polyStrips);
+      offset += stripSize + 1;
+    }
   }
 
   // Write triangle strips

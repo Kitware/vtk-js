@@ -135,3 +135,18 @@ it('OBJWriter: Write one texture coordinate for each point', () => {
     lines.filter((l) => l.startsWith('vt ') || l.startsWith('f '))
   ).toEqual(['vt -1 0', 'vt 1 0', 'vt 0 1', 'f 1/1 2/2 3/3']);
 });
+
+it('OBJWriter: Write triangle strips as triangles', () => {
+  const polyData = vtkPolyData.newInstance();
+  polyData
+    .getPoints()
+    .setData(new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0]), 3);
+  // One triangle strip with two triangles, then one strip with one triangle.
+  polyData.getStrips().setData(new Uint32Array([4, 0, 1, 2, 3, 3, 1, 3, 2]));
+  const lines = vtkOBJWriter.writeOBJ(polyData).split('\n');
+  expect(lines.filter((l) => l.startsWith('f '))).toEqual([
+    'f 1 2 3',
+    'f 3 2 4',
+    'f 2 4 3',
+  ]);
+});
