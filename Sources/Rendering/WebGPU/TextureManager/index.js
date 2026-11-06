@@ -15,10 +15,6 @@ const { VtkDataTypes } = vtkDataArray;
 
 const HALF_FLOAT_EXACT_INTEGER_LIMIT = 2048;
 
-// This feature adds the r16unorm and r16snorm formats (and their rg and rgba
-// forms), which store 16 bit integers in 2 bytes.
-const NORMALIZED_16_BIT_FEATURE = 'texture-formats-tier1';
-
 // ----------------------------------------------------------------------------
 
 function vtkWebGPUTextureManager(publicAPI, model) {
@@ -34,22 +30,6 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       default:
         return 'rgba';
     }
-  }
-
-  // The normalized 16 bit format for this data type, or null.
-  // r16snorm samples max(v / 32767, -1). All values are exact, but -32768
-  // reads as -32767.
-  function _normalized16BitSuffix(dataType) {
-    if (!model.device.hasFeature(NORMALIZED_16_BIT_FEATURE)) {
-      return null;
-    }
-    if (dataType === VtkDataTypes.SHORT) {
-      return '16snorm';
-    }
-    if (dataType === VtkDataTypes.UNSIGNED_SHORT) {
-      return '16unorm';
-    }
-    return null;
   }
 
   // The state has two parts. The first part is valid for one scalar mtime.
@@ -150,10 +130,6 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     if (uses8BitNormalizedFormat) {
       return format.endsWith('8unorm');
     }
-    const normalized16BitSuffix = _normalized16BitSuffix(dataType);
-    if (normalized16BitSuffix) {
-      return format.endsWith(normalized16BitSuffix);
-    }
     return format.endsWith('16float') || format.endsWith('32float');
   }
 
@@ -207,11 +183,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       return '8unorm';
     }
 
-    const normalized16BitSuffix = _normalized16BitSuffix(dataType);
-    if (normalized16BitSuffix) {
-      return normalized16BitSuffix;
-    }
-
+    // Image mappers require filterable textures. texture-formats-tier1
+    // enables 16 bit normalized formats, but does not make them filterable.
     if (req.forceFloat32) {
       return '32float';
     }
