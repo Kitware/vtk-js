@@ -39,3 +39,14 @@ it('vtkSTLWriter splits polygons into a triangle fan', () => {
     v(1, 1),
   ]);
 });
+
+it('vtkSTLWriter makes the binary buffer from the triangle count', () => {
+  const polyData = vtkPolyData.newInstance();
+  polyData
+    .getPoints()
+    .setData(new Float32Array([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]), 3);
+  // One quad. A quad is two triangles in STL.
+  polyData.getPolys().setData(new Uint32Array([4, 1, 2, 3, 0]));
+  const view = vtkSTLWriter.writeSTL(polyData, FormatTypes.BINARY);
+  expect(view.byteLength).toBe(80 + 4 + 50 * 2);
+});
