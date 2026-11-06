@@ -50,3 +50,17 @@ it('vtkSTLWriter makes the binary buffer from the triangle count', () => {
   const view = vtkSTLWriter.writeSTL(polyData, FormatTypes.BINARY);
   expect(view.byteLength).toBe(80 + 4 + 50 * 2);
 });
+
+it('vtkSTLWriter writes the triangle count as the facet count', () => {
+  const polyData = vtkPolyData.newInstance();
+  polyData
+    .getPoints()
+    .setData(new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), 3);
+  polyData.getPolys().setData(new Uint32Array([3, 0, 1, 2]));
+  // One vertex cell and one line cell. STL does not write them.
+  polyData.getVerts().setData(new Uint32Array([1, 0]));
+  polyData.getLines().setData(new Uint32Array([2, 0, 1]));
+  const view = vtkSTLWriter.writeSTL(polyData, FormatTypes.BINARY);
+  expect(view.getUint32(80, true)).toBe(1);
+  expect((view.byteLength - 84) / 50).toBe(1);
+});
