@@ -40,7 +40,9 @@ function vtkMTLReader(publicAPI, model) {
         return;
       }
       if (!model.materials[model.currentMaterial]) {
-        model.materials[model.currentMaterial] = {};
+        // An object without a prototype accepts all the property names, also
+        // __proto__, as its own properties.
+        model.materials[model.currentMaterial] = Object.create(null);
       }
       model.materials[model.currentMaterial][tokens[0]] = tokens.slice(1);
       if (tokens[0] === 'map_Kd') {
@@ -52,6 +54,10 @@ function vtkMTLReader(publicAPI, model) {
       }
     }
   }
+
+  // The material names come from the file. Thus the materials object has no
+  // prototype.
+  model.materials = Object.assign(Object.create(null), model.materials);
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {
@@ -97,7 +103,7 @@ function vtkMTLReader(publicAPI, model) {
 
   publicAPI.parseAsText = (content) => {
     publicAPI.modified();
-    model.materials = {};
+    model.materials = Object.create(null);
     content.split('\n').forEach(parseLine);
   };
 
