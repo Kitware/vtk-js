@@ -64,3 +64,32 @@ it('vtkPLYWriter does not write UVs and colors when the options are false', () =
   });
   expect(getBody(text)[0]).toBe('0 0 0');
 });
+
+it('vtkPLYWriter declares normals only when the polydata has normals', () => {
+  const polyData = makeTriangle();
+  const writer = vtkPLYWriter.newInstance();
+  writer.setInputData(polyData);
+  let text = writer.getOutputData();
+  expect(getHeader(text)).not.toContain('property float nx');
+  expect(getBody(text)[0]).toBe('0 0 0');
+
+  polyData.getPointData().setNormals(
+    vtkDataArray.newInstance({
+      numberOfComponents: 3,
+      values: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+    })
+  );
+  const writerWithNormals = vtkPLYWriter.newInstance();
+  writerWithNormals.setInputData(polyData);
+  text = writerWithNormals.getOutputData();
+  expect(getHeader(text)).toContain('property float nx');
+  expect(getBody(text)[0]).toBe('0 0 0 0 0 1');
+
+  const binaryWriter = vtkPLYWriter.newInstance({ format: 'binary' });
+  binaryWriter.setInputData(makeTriangle());
+  const view = binaryWriter.getOutputData();
+  const header = new TextDecoder().decode(view.buffer).split('end_header\n')[0];
+  const headerLength = header.length + 'end_header\n'.length;
+  // 3 points with 3 floats, and 1 face with 1 count byte and 3 indices.
+  expect(view.byteLength - headerLength).toBe(3 * 3 * 4 + 1 + 3 * 4);
+});

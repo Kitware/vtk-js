@@ -305,6 +305,12 @@ function writePLY(
   }
   const writeColors = !!scalars;
 
+  let normals = null;
+  if (withNormals) {
+    normals = polyData.getPointData().getNormals();
+  }
+  const writeNormals = !!normals;
+
   const fileType = dataByteOrder ? 0 : 1;
 
   writer.writeHeader(
@@ -316,13 +322,11 @@ function writePLY(
     tCoordsName,
     numPts,
     numPolys,
-    withNormals,
+    writeNormals,
     writeUVs,
     writeColors,
     withIndices
   );
-
-  const normals = polyData.getPointData().getNormals();
 
   // points / vertices
   for (let i = 0; i < numPts; i++) {
