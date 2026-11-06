@@ -1,3 +1,4 @@
+import { vec3 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macros';
 
 import {
@@ -341,12 +342,9 @@ function writePLY(
 
   // points / vertices
   for (let i = 0; i < numPts; i++) {
-    // eslint-disable-next-line prefer-const
-    let p = inPts.getPoint(i);
-
-    // TODO: apply transform matrix
+    const p = inPts.getPoint(i);
     if (transform) {
-      // vec3.transformMat4(p, p, transform);
+      vec3.transformMat4(p, p, transform);
     }
 
     // coords

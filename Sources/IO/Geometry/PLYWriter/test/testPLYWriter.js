@@ -125,3 +125,16 @@ it('vtkPLYWriter does not write float scalars as colors', () => {
   expect(getHeader(text)).not.toContain('property uchar red');
   expect(getBody(text)[0]).toBe('0 0 0');
 });
+
+it('vtkPLYWriter applies the transform to the points', () => {
+  // Translation of 10 along x (column major matrix).
+  const transform = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 0, 0, 1];
+  const writer = vtkPLYWriter.newInstance({ transform });
+  writer.setInputData(makeTriangle());
+  expect(getBody(writer.getOutputData())).toEqual([
+    '10 0 0',
+    '11 0 0',
+    '10 1 0',
+    '3 0 1 2',
+  ]);
+});
