@@ -27,7 +27,7 @@ function writeVectorBinary(dataView, offset, vector) {
 // points give no triangle.
 function getNumberOfTriangles(polys) {
   let count = 0;
-  for (let i = 0; i < polys.length; ) {
+  for (let i = 0; i < polys.length;) {
     const pointNumber = polys[i];
     if (pointNumber >= 3) {
       count += pointNumber - 2;
@@ -55,8 +55,9 @@ const binaryWriter = () => {
     writeHeader: (polyData) => {
       offset += 80; // Header is empty // TODO: could add date, version, package
 
-      // First need to write the number of cells
-      dataView.setUint32(offset, polyData.getNumberOfCells(), true);
+      // The facet count is the number of triangles that the writer writes.
+      const polys = polyData.getPolys().getData();
+      dataView.setUint32(offset, getNumberOfTriangles(polys), true);
       offset += 4;
     },
     writeTriangle: (v1, v2, v3, dn) => {
@@ -137,7 +138,7 @@ function writeSTL(polyData, format = FormatTypes.BINARY, transform = null) {
   // Polys
   // Each cell in the cell array is the point count, then the point ids. The
   // writer splits each polygon into a triangle fan from its first point.
-  for (let i = 0; i < polys.length; ) {
+  for (let i = 0; i < polys.length;) {
     const pointNumber = polys[i];
     if (pointNumber >= 3) {
       const v1 = getPoint(polys[i + 1]);
