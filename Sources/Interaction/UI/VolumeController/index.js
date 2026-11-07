@@ -122,7 +122,7 @@ function vtkVolumeController(publicAPI, model) {
     const lookupTable = model.actor.getProperty().getRGBTransferFunction(0);
     const piecewiseFunction = model.actor.getProperty().getScalarOpacity(0);
 
-    const stylePostFix = isBackgroundDark ? 'DarkBG' : 'BrightBG';
+    const stylePostFix = isBackgroundDark ? 'DarkBg' : 'BrightBg';
     const localStyle = {};
     ['button', 'presets', 'shadow'].forEach((name) => {
       localStyle[name] = style[`${name}${stylePostFix}`];
