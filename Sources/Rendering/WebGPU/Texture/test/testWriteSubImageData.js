@@ -194,3 +194,34 @@ it.skipIf(!__VTK_TEST_WEBGPU__)(
     }
   }
 );
+
+it.skipIf(!__VTK_TEST_WEBGPU__)(
+  'keeps finite values in range on full and partial half-float uploads',
+  async () => {
+    const device = await testUtils.createWebGPUTestDevice();
+    const texture = vtkWebGPUTexture.newInstance();
+    texture.create(device, {
+      width: 2,
+      height: 1,
+      format: 'rg16float',
+      // eslint-disable-next-line no-undef, no-bitwise
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+    });
+
+    texture.writeImageData({
+      nativeArray: new Uint16Array([65519, 65535, 0, 0]),
+    });
+    texture.writeSubImageData({
+      x: 1,
+      width: 1,
+      nativeArray: new Float32Array([-70000, 70000]),
+    });
+
+    const bytes = await testUtils.readWebGPUTexture2D(device, texture, 2, 1);
+    const values = Array.from(
+      new Uint16Array(bytes.buffer),
+      HalfFloat.fromHalf
+    );
+    expect(values).toEqual([65504, 65504, -65504, 65504]);
+  }
+);

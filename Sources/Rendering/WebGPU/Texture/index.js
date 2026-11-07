@@ -5,10 +5,24 @@ import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
 const { vtkErrorMacro } = macro;
+const MAX_FINITE_HALF_FLOAT = 65504;
 
 // ----------------------------------------------------------------------------
 // Global methods
 // ----------------------------------------------------------------------------
+
+// Prevent finite inputs such as Uint16 65535 from becoming infinite texels,
+// which can contaminate interpolation with neighboring values.
+function toHalfForUpload(value) {
+  let uploadValue = value;
+  if (Number.isFinite(value)) {
+    uploadValue = Math.max(
+      -MAX_FINITE_HALF_FLOAT,
+      Math.min(value, MAX_FINITE_HALF_FLOAT)
+    );
+  }
+  return HalfFloat.toHalf(uploadValue);
+}
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUTexture methods
@@ -153,9 +167,7 @@ function vtkWebGPUTexture(publicAPI, model) {
             sourceX * tDetails.numComponents;
           const outOffset = row * alignedRowElements;
           for (let i = 0; i < expectedRowElements; i++) {
-            outArray[outOffset + i] = HalfFloat.toHalf(
-              inputArray[inOffset + i]
-            );
+            outArray[outOffset + i] = toHalfForUpload(inputArray[inOffset + i]);
           }
         }
       }
