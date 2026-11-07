@@ -30,13 +30,26 @@ const fpsMonitor = vtkFPSMonitor.newInstance();
 const progressContainer = document.createElement('div');
 myContainer.appendChild(progressContainer);
 
+const gui = new GUI();
+const rendererURL = new URL(window.location.href);
+const nextRenderer =
+  rendererURL.searchParams.get('viewAPI') === 'WebGPU' ? 'WebGL' : 'WebGPU';
+rendererURL.searchParams.set('viewAPI', nextRenderer);
+gui
+  .add(
+    { switchRenderer: () => window.location.assign(rendererURL.href) },
+    'switchRenderer'
+  )
+  .name(`Switch to ${nextRenderer}`);
+
 // ----------------------------------------------------------------------------
 // Main function to set up and render volume
 // ----------------------------------------------------------------------------
 function createVolumeShadowViewer(rootContainer, reader, imageData) {
   // Container content and style
   const background = [0, 0, 0];
-  const containerStyle = { height: '100%', width: '100%' };
+  // Stretch the canvas to the viewport independently of its rounded pixel buffer.
+  const containerStyle = { display: 'flex', height: '100%', width: '100%' };
   const controlPanelStyle = {
     position: 'absolute',
     left: '5px',
@@ -59,8 +72,6 @@ function createVolumeShadowViewer(rootContainer, reader, imageData) {
     controlPanelStyle,
   });
 
-  const gui = new GUI();
-
   const renderer = fullScreenRenderer.getRenderer();
   renderer.setTwoSidedLighting(false);
   const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -72,6 +83,7 @@ function createVolumeShadowViewer(rootContainer, reader, imageData) {
   fpsElm.style.bottom = '10px';
   fpsElm.style.background = 'rgba(255,255,255,0.5)';
   fpsElm.style.borderRadius = '5px';
+  fpsElm.style.font = getComputedStyle(gui.domElement).font;
   fpsMonitor.setContainer(rootContainer);
   fpsMonitor.setRenderWindow(renderWindow);
 
@@ -250,7 +262,12 @@ function createVolumeShadowViewer(rootContainer, reader, imageData) {
   renderer.addActor(actor);
 
   // Camera and first render
+  const camera = renderer.getActiveCamera();
+  camera.elevation(90);
+  camera.setViewUp(0, 0, -1);
   renderer.resetCamera();
+  camera.dolly(1.5);
+  renderer.resetCameraClippingRange();
   renderWindow.render();
 
   // Make some variables global so that you can inspect and

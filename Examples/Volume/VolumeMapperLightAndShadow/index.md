@@ -1,7 +1,7 @@
 
 ### Volume Mapper Light and Shadow
 
-This example demonstrates experimental light and shadow features for vtk.js. Secondary shadow rays is relatively expensive to render in terms of computation and memory. We recommend initializing this example with less processor demanding parameters. Please turn on WebGL2 on your target browser.
+This example demonstrates volume lighting and shadows on a CT scan of a head. It opens with WebGL. Use **Switch to WebGPU** in the Controls panel to reload the example with WebGPU.
 
 ## Widgets included in this example
 

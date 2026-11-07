@@ -78,46 +78,46 @@
   composes: select;
 }
 
-.buttonDarkBG {
+.buttonDarkBg {
   composes: button;
 }
 
-.presetsDarkBG {
+.presetsDarkBg {
   composes: presets;
   color: white;
 }
 
-.presetsDarkBG option {
+.presetsDarkBg option {
   color: black;
 }
 
-.shadowDarkBG {
+.shadowDarkBg {
   composes: shadow;
   color: white;
 }
 
-.shadowDarkBG option {
+.shadowDarkBg option {
   color: black;
 }
 
-.buttonBrightBG {
+.buttonBrightBg {
   composes: button;
 }
 
-.presetsBrightBG {
+.presetsBrightBg {
   composes: presets;
   color: black;
 }
 
-.presetsBrightBG option {
+.presetsBrightBg option {
   color: white;
 }
 
-.shadowBrightBG {
+.shadowBrightBg {
   composes: shadow;
   color: black;
 }
 
-.shadowBrightBG option {
+.shadowBrightBg option {
   color: white;
 }
