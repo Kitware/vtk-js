@@ -22,11 +22,30 @@ import vtkFPSMonitor from '@kitware/vtk.js/Interaction/UI/FPSMonitor';
 import GUI from 'lil-gui';
 
 // ----------------------------------------------------------------------------
+// Renderer selector
+// ----------------------------------------------------------------------------
+
+const gui = new GUI();
+const rendererSelectorParams = {
+  viewAPI:
+    new URLSearchParams(window.location.search).get('viewAPI') || 'WebGL',
+};
+gui
+  .add(rendererSelectorParams, 'viewAPI', ['WebGL', 'WebGPU'])
+  .name('Renderer')
+  .onChange((api) => {
+    const query = new URLSearchParams(window.location.search);
+    query.set('viewAPI', api);
+    window.location.search = query.toString();
+  });
+
+// ----------------------------------------------------------------------------
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
+  viewAPI: rendererSelectorParams.viewAPI,
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -124,27 +143,56 @@ fpsMonitor.update();
 // UI control handling
 // -----------------------------------------------------------
 
-const gui = new GUI();
 const params = {
   Representation: 2,
   Resolution: 10,
+  Opacity: actor2D.getProperty().getOpacity(),
+  LineWidth: actor2D.getProperty().getLineWidth(),
+  DisplayLocation: DisplayLocation.FOREGROUND,
 };
+
+const render = () => {
+  renderWindow.render();
+  fpsMonitor.update();
+};
+
 gui
   .add(params, 'Representation', { Points: 0, Wireframe: 1, Surface: 2 })
   .onChange((val) => {
     const rep = Number(val);
     actor2D.getProperty().setRepresentation(rep);
     actor.getProperty().setRepresentation(rep);
-    renderWindow.render();
-    fpsMonitor.update();
+    render();
   });
 gui.add(params, 'Resolution', 4, 80, 1).onChange((val) => {
   const res = Number(val);
   sphereSource.setThetaResolution(res);
   coneSource.setResolution(res);
-  renderWindow.render();
-  fpsMonitor.update();
+  render();
 });
+
+const actor2DFolder = gui.addFolder('Actor2D');
+actor2DFolder.add(params, 'Opacity', 0, 1, 0.05).onChange((val) => {
+  actor2D.getProperty().setOpacity(Number(val));
+  render();
+});
+actor2DFolder
+  .add(params, 'LineWidth', 1, 10, 1)
+  .name('Line width')
+  .onChange((val) => {
+    actor2D.getProperty().setLineWidth(Number(val));
+    render();
+  });
+actor2DFolder
+  .add(params, 'DisplayLocation', {
+    Background: DisplayLocation.BACKGROUND,
+    Foreground: DisplayLocation.FOREGROUND,
+  })
+  .name('Display location')
+  .onChange((val) => {
+    actor2D.getProperty().setDisplayLocation(Number(val));
+    render();
+  });
 
 // -----------------------------------------------------------
 // Make some variables global so that you can inspect and

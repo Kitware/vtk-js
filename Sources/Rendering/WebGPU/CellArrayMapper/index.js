@@ -70,8 +70,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       model.WebGPUActor = parent;
       model.coordinateSystem =
         model.WebGPUActor.getRenderable().getCoordinateSystem();
+      // 2D actors always use display pixels, as in the OpenGL backend.
       model.useRendererMatrix =
-        model.coordinateSystem !== CoordinateSystem.DISPLAY;
+        !model.is2D && model.coordinateSystem !== CoordinateSystem.DISPLAY;
       model.WebGPURenderer = renderer;
       model.WebGPURenderWindow = renderWindow;
       model.device = device;
@@ -127,8 +128,11 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     const backfaceProperty = actor.getBackfaceProperty?.() ?? ppty;
     const selector = model.WebGPURenderer?.getSelector?.();
     const utime = model.UBO.getSendTime();
+    // The position of a 2D actor can depend on the viewport size, so its
+    // values are sent at each render.
     if (
       !selector &&
+      !model.is2D &&
       publicAPI.getMTime() <= utime &&
       actor.getMTime() <= utime &&
       ppty.getMTime() <= utime &&
@@ -152,12 +156,16 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     ]);
 
     // Detect negative-determinant model matrix (odd reflections / negative scale)
-    const mcwc = actor.getMatrix();
-    const upper3x3 = mat3.fromMat4(mat3.create(), mcwc);
-    model.UBO.setValue(
-      'FlipFrontFacing',
-      mat3.determinant(upper3x3) < 0 ? 1.0 : 0.0
-    );
+    // A 2D actor has no model matrix, so it never flips.
+    let flipFrontFacing = 0.0;
+    const mcwc = actor.getMatrix?.();
+    if (mcwc) {
+      const upper3x3 = mat3.fromMat4(mat3.create(), mcwc);
+      if (mat3.determinant(upper3x3) < 0) {
+        flipFrontFacing = 1.0;
+      }
+    }
+    model.UBO.setValue('FlipFrontFacing', flipFrontFacing);
 
     model.UBO.setValue(
       'DebugChannel',
@@ -384,10 +392,12 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
       model.primitiveType === PrimitiveTypes.TriangleEdges ||
       model.primitiveType === PrimitiveTypes.TriangleStripEdges ||
       ppty.getRepresentation() === Representation.WIREFRAME;
-    model.UBO.setValue(
-      'Opacity',
-      edgeLikeRepresentation ? ppty.getEdgeOpacity() : ppty.getOpacity()
-    );
+    // vtkProperty2D has no edge opacity.
+    let opacity = ppty.getOpacity();
+    if (edgeLikeRepresentation && ppty.getEdgeOpacity) {
+      opacity = ppty.getEdgeOpacity();
+    }
+    model.UBO.setValue('Opacity', opacity);
     // In a selection pass, the selector gives the prop its selection id.
     const runtimePropID = model.WebGPUActor.getPropID();
     let propID = runtimePropID;
@@ -451,8 +461,9 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
     // Detect negative determinant from the model matrix (negative scale).
     // When the determinant is negative, triangle winding is flipped,
     // so we must swap the cull mode per the glTF spec.
-    if (frontCull || backCull) {
-      const mcwc = actor.getMatrix();
+    // A 2D actor has no model matrix.
+    const mcwc = actor.getMatrix?.();
+    if (mcwc && (frontCull || backCull)) {
       const upper3x3 = mat3.fromMat4(mat3.create(), mcwc);
       if (mat3.determinant(upper3x3) < 0) {
         const tmp = frontCull;
@@ -484,7 +495,8 @@ function vtkWebGPUCellArrayMapper(publicAPI, model) {
 
     const actor = model.WebGPUActor?.getRenderable();
     const prop = actor?.getProperty?.();
-    if (!prop) {
+    // vtkMapper2D has no coincident topology settings.
+    if (!prop || !model.renderable.getResolveCoincidentTopology) {
       return cp;
     }
 

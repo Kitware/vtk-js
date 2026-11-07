@@ -108,7 +108,9 @@ function vtkRenderWindow(publicAPI, model) {
           results.propCount += 1;
           const mpr = prop.getMapper && prop.getMapper();
           if (mpr && mpr.getPrimitiveCount) {
-            const gmpr = gren.getViewNodeFor(mpr);
+            // The view node of the renderer does not exist before the first
+            // frame of an asynchronous view (WebGPU).
+            const gmpr = gren?.getViewNodeFor(mpr);
             if (gmpr) {
               if (gmpr.getAllocatedGPUMemoryInBytes) {
                 results.gpuMemoryMB +=
