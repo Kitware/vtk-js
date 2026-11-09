@@ -127,24 +127,32 @@ function writeSTL(polyData, format = FormatTypes.BINARY, transform = null) {
     throw new Error('Unsupported strips');
   }
 
-  const getPoint = (id) => {
-    const p = [points[id * 3], points[id * 3 + 1], points[id * 3 + 2]];
+  const getPoint = (id, out) => {
+    out[0] = points[id * 3];
+    out[1] = points[id * 3 + 1];
+    out[2] = points[id * 3 + 2];
     if (transform) {
-      vec3.transformMat4(p, p, transform);
+      vec3.transformMat4(out, out, transform);
     }
-    return p;
+    return out;
   };
 
-  // Polys
-  // Each cell in the cell array is the point count, then the point ids. The
-  // writer splits each polygon into a triangle fan from its first point.
+  const v1 = [0, 0, 0];
+  let v2 = [0, 0, 0];
+  let v3 = [0, 0, 0];
+
+  // Polys: write each polygon as a triangle fan. The fan shares v3 with the
+  // next v2, thus each triangle reads one new point.
   for (let i = 0; i < polys.length;) {
     const pointNumber = polys[i];
     if (pointNumber >= 3) {
-      const v1 = getPoint(polys[i + 1]);
+      getPoint(polys[i + 1], v1);
+      getPoint(polys[i + 2], v3);
       for (let k = 2; k < pointNumber; k++) {
-        const v2 = getPoint(polys[i + k]);
-        const v3 = getPoint(polys[i + k + 1]);
+        const tmp = v2;
+        v2 = v3;
+        v3 = tmp;
+        getPoint(polys[i + k + 1], v3);
         vtkTriangle.computeNormal(v1, v2, v3, n);
         writer.writeTriangle(v1, v2, v3, n);
       }
