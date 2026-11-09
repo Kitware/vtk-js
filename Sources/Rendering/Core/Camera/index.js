@@ -671,7 +671,7 @@ function vtkCamera(publicAPI, model) {
       model.directionOfProjection[1] === y &&
       model.directionOfProjection[2] === z
     ) {
-      return;
+      return false;
     }
 
     model.directionOfProjection[0] = x;
@@ -685,6 +685,8 @@ function vtkCamera(publicAPI, model) {
     model.focalPoint[1] = model.position[1] + vec[1] * model.distance;
     model.focalPoint[2] = model.position[2] + vec[2] * model.distance;
     computeViewPlaneNormal();
+    publicAPI.modified();
+    return true;
   };
 
   // used to handle convert js device orientation angles
@@ -795,6 +797,15 @@ function vtkCamera(publicAPI, model) {
 
     return range;
   };
+
+  if (
+    model.distance === undefined &&
+    [model.position, model.focalPoint].every((p) => p && !p.some(vtkMath.isInf))
+  ) {
+    model.distance = Math.sqrt(
+      vtkMath.distance2BetweenPoints(model.position, model.focalPoint)
+    );
+  }
 }
 
 // ----------------------------------------------------------------------------
