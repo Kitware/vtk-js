@@ -1364,13 +1364,35 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   }
 
+  // Largest finite half float, values above overflow to infinity
+  // (e.g. Uint16 65535) and produce NaN when linearly filtered
+  const HALF_FLOAT_MAX = 65504;
+
+  function hasFiniteHalfFloat(offset, scale) {
+    for (let c = 0; c < offset.length; c++) {
+      const min = offset[c];
+      const max = scale[c] + min;
+      if (
+        min < -HALF_FLOAT_MAX ||
+        min > HALF_FLOAT_MAX ||
+        max < -HALF_FLOAT_MAX ||
+        max > HALF_FLOAT_MAX
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   function setCanUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
     publicAPI.getOpenGLDataType(dataType);
 
     // Don't consider halfFloat and convert back to Float when the range of data does not generate an accurate halfFloat
     // AND it is not preferable to have a smaller texture than an exact texture.
+    // Even when preferring size, never use halfFloat if values would overflow to infinity.
     const isExactHalfFloat =
-      hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy;
+      hasExactHalfFloat(offset, scale) ||
+      (preferSizeOverAccuracy && hasFiniteHalfFloat(offset, scale));
 
     // If OES_texture_float_linear is not available, and using a half float would still be exact, force half floats.
     const forceHalfFloat =

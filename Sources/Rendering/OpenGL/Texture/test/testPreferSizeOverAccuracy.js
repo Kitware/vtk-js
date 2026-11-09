@@ -50,3 +50,33 @@ it.skipIf(__VTK_TEST_NO_WEBGL__)(
     gc.releaseResources();
   }
 );
+
+it.skipIf(__VTK_TEST_NO_WEBGL__)(
+  'does not use half float when values overflow to infinity',
+  () => {
+    const gc = testUtils.createGarbageCollector();
+    const { view } = createTrackedRenderView(gc);
+    const gl = view.getContext();
+
+    const texture = gc.registerResource(vtkOpenGLTexture.newInstance());
+    texture.setOpenGLRenderWindow(view);
+    texture.setOglNorm16Ext(
+      gl.getExtension('EXT_texture_norm16') ?? fakeNorm16Ext
+    );
+    texture.resetFormatAndType();
+    // 65535 is above the largest finite half float (65504)
+    const sideLen = 4;
+    const values = new Uint16Array(sideLen ** 3);
+    values[values.length - 1] = 65535;
+    texture.create3DFilterableFromDataArray({
+      width: sideLen,
+      height: sideLen,
+      depth: sideLen,
+      dataArray: vtkDataArray.newInstance({ numberOfComponents: 1, values }),
+      preferSizeOverAccuracy: true,
+    });
+    expect(texture.getOpenGLDataType()).toBe(gl.UNSIGNED_SHORT);
+
+    gc.releaseResources();
+  }
+);
