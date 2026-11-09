@@ -448,8 +448,9 @@ export interface vtkCamera extends vtkObject {
    * @param {Number} x The x coordinate.
    * @param {Number} y The y coordinate.
    * @param {Number} z The z coordinate.
+   * @return {Boolean} true if the direction changed.
    */
-  setDirectionOfProjection(x: number, y: number, z: number): void;
+  setDirectionOfProjection(x: number, y: number, z: number): boolean;
 
   /**
    * Move the focal point so that it is the specified distance from the camera
