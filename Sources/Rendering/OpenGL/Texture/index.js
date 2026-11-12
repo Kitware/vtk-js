@@ -14,6 +14,20 @@ const { Wrap, Filter } = Constants;
 const { VtkDataTypes } = vtkDataArray;
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro, requiredParam } = macro;
 const { toHalf } = HalfFloat;
+const MAX_FINITE_HALF_FLOAT = 65504;
+
+// Prevent finite inputs such as Uint16 65535 from becoming infinite texels,
+// which turn linear interpolation with neighboring values into NaN.
+function toHalfForUpload(value) {
+  let uploadValue = value;
+  if (Number.isFinite(value)) {
+    uploadValue = Math.max(
+      -MAX_FINITE_HALF_FLOAT,
+      Math.min(value, MAX_FINITE_HALF_FLOAT)
+    );
+  }
+  return toHalf(uploadValue);
+}
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLTexture methods
@@ -778,7 +792,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           );
           const newArrayLen = newArray.length;
           for (let i = 0; i < newArrayLen; i++) {
-            newArray[i] = toHalf(src[i]);
+            newArray[i] = toHalfForUpload(src[i]);
           }
           pixData.push(newArray);
         } else {
@@ -1364,35 +1378,13 @@ function vtkOpenGLTexture(publicAPI, model) {
     return true;
   }
 
-  // Largest finite half float, values above overflow to infinity
-  // (e.g. Uint16 65535) and produce NaN when linearly filtered
-  const HALF_FLOAT_MAX = 65504;
-
-  function hasFiniteHalfFloat(offset, scale) {
-    for (let c = 0; c < offset.length; c++) {
-      const min = offset[c];
-      const max = scale[c] + min;
-      if (
-        min < -HALF_FLOAT_MAX ||
-        min > HALF_FLOAT_MAX ||
-        max < -HALF_FLOAT_MAX ||
-        max > HALF_FLOAT_MAX
-      ) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   function setCanUseHalfFloat(dataType, offset, scale, preferSizeOverAccuracy) {
     publicAPI.getOpenGLDataType(dataType);
 
     // Don't consider halfFloat and convert back to Float when the range of data does not generate an accurate halfFloat
     // AND it is not preferable to have a smaller texture than an exact texture.
-    // Even when preferring size, never use halfFloat if values would overflow to infinity.
     const isExactHalfFloat =
-      hasExactHalfFloat(offset, scale) ||
-      (preferSizeOverAccuracy && hasFiniteHalfFloat(offset, scale));
+      hasExactHalfFloat(offset, scale) || preferSizeOverAccuracy;
 
     // If OES_texture_float_linear is not available, and using a half float would still be exact, force half floats.
     const forceHalfFloat =
