@@ -2,8 +2,10 @@ import macro from 'vtk.js/Sources/macros';
 import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
 import vtkWebGPUTexture from 'vtk.js/Sources/Rendering/WebGPU/Texture';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
+import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
 const { VtkDataTypes } = vtkDataArray;
+const { vtkErrorMacro, vtkWarningMacro } = macro;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -214,21 +216,9 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       const numComp = req.dataArray.getNumberOfComponents();
       req.format = _formatPrefix(numComp);
 
-      if (numComp === 3) {
-        const source = req.nativeArray;
-        const padded = macro.newTypedArray(
-          source.constructor.name,
-          (source.length / 3) * 4
-        );
-        const alpha = source.BYTES_PER_ELEMENT === 1 ? 255 : 1;
-        for (let i = 0, j = 0; i < source.length; i += 3, j += 4) {
-          padded[j] = source[i];
-          padded[j + 1] = source[i + 1];
-          padded[j + 2] = source[i + 2];
-          padded[j + 3] = alpha;
-        }
-        req.nativeArray = padded;
-      }
+      // The RGB to RGBA padding occurs only when the data is uploaded. A
+      // request that gets a cached texture does not need it.
+      req.padRGBToRGBA = numComp === 3;
 
       if (req.existingFormat) {
         req.format = req.existingFormat;
@@ -315,6 +305,112 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       /* eslint-enable no-undef */
       /* eslint-enable no-bitwise */
     }
+
+    _fitImageSizeToDeviceLimits(req);
+  }
+
+  // WebGPU has no 3 component formats, thus RGB data uploads as RGBA. Pad
+  // req.nativeArray one time, before the first upload that reads it.
+  function _prepareNativeArray(req) {
+    if (!req.padRGBToRGBA) {
+      return;
+    }
+    const source = req.nativeArray;
+    const padded = macro.newTypedArray(
+      source.constructor.name,
+      (source.length / 3) * 4
+    );
+    let alpha = 1;
+    if (source.BYTES_PER_ELEMENT === 1) {
+      alpha = 255;
+    }
+    for (let i = 0, j = 0; i < source.length; i += 3, j += 4) {
+      padded[j] = source[i];
+      padded[j + 1] = source[i + 1];
+      padded[j + 2] = source[i + 2];
+      padded[j + 3] = alpha;
+    }
+    req.nativeArray = padded;
+    req.padRGBToRGBA = false;
+  }
+
+  // The image source of a request
+  function _getImageSource(req) {
+    return (
+      req.image || req.imageBitmap || req.canvas || req.jsImageData || null
+    );
+  }
+
+  // An image source larger than maxTextureDimension2D gets a smaller size,
+  // with the same aspect ratio. The request keeps the source, and
+  // _scaleImageSource draws it at the smaller size only when the texture is
+  // made. Thus a request that gets a cached texture does not draw the image.
+  function _fitImageSizeToDeviceLimits(req) {
+    const source = _getImageSource(req);
+    const maxSize = model.device?.getHandle?.()?.limits?.maxTextureDimension2D;
+    if (!source || !maxSize) {
+      return;
+    }
+    const scale = maxSize / Math.max(source.width, source.height);
+    if (scale >= 1) {
+      return;
+    }
+    req.width = Math.max(1, Math.floor(source.width * scale));
+    req.height = Math.max(1, Math.floor(source.height * scale));
+    req.scaleImageSource = true;
+  }
+
+  // Draw the image source of the request into a canvas with the size that
+  // _fitImageSizeToDeviceLimits gave. The request then uses the canvas in
+  // place of the source.
+  function _scaleImageSource(req) {
+    const source = _getImageSource(req);
+    const width = req.width;
+    const height = req.height;
+    const canvas = new OffscreenCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+    if (req.jsImageData) {
+      const fullCanvas = new OffscreenCanvas(source.width, source.height);
+      fullCanvas.getContext('2d').putImageData(req.jsImageData, 0, 0);
+      ctx.drawImage(fullCanvas, 0, 0, width, height);
+    } else {
+      ctx.drawImage(source, 0, 0, width, height);
+    }
+    vtkWarningMacro(
+      `Image size (${source.width}, ${source.height}) is larger than the ` +
+        `device limit. The texture is scaled to (${width}, ${height}).`
+    );
+    req.image = null;
+    req.imageBitmap = null;
+    req.jsImageData = null;
+    req.nativeArray = null;
+    req.canvas = canvas;
+    req.scaleImageSource = false;
+  }
+
+  // Add a mip chain to a 2D request when generateMipmaps supports its
+  // format. A 2D request has a depth of 1, or is an array of 2D layers
+  // (req.layered2D), such as the six faces of a cube map. Each layer gets
+  // its own mip chain. A mipLevel larger than 0 sets the last level, else
+  // the chain goes down to 1x1. The mipmap render pass needs
+  // RENDER_ATTACHMENT.
+  function _requestMipmaps(req, mipLevel = 0) {
+    const is2D = req.depth === 1 || req.layered2D;
+    if (!is2D || !vtkTexture.canGenerateMipmaps(req.format)) {
+      return;
+    }
+    const maxLevel = Math.floor(Math.log2(Math.max(req.width, req.height, 1)));
+    if (mipLevel > 0) {
+      req.mipLevel = Math.min(mipLevel, maxLevel);
+    } else {
+      req.mipLevel = maxLevel;
+    }
+    /* eslint-disable no-undef */
+    /* eslint-disable no-bitwise */
+    req.usage |=
+      GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING;
+    /* eslint-enable no-undef */
+    /* eslint-enable no-bitwise */
   }
 
   // create a texture (used by getTexture)
@@ -329,6 +425,11 @@ function vtkWebGPUTextureManager(publicAPI, model) {
       usage: req.usage,
       mipLevel: req.mipLevel,
     });
+
+    if (req.scaleImageSource) {
+      _scaleImageSource(req);
+    }
+    _prepareNativeArray(req);
 
     // fill the texture if we have data
     if (req.nativeArray || req.image || req.canvas || req.imageBitmap) {
@@ -352,6 +453,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
   }
 
   function _writeExtents(texture, req, extents) {
+    _prepareNativeArray(req);
     const dims = [req.width, req.height, req.depth];
     for (let i = 0; i < extents.length; i++) {
       const extent = extents[i];
@@ -445,6 +547,7 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     if (!texture || !_canPatchTexture(texture, req)) {
       return null;
     }
+    _prepareNativeArray(req);
     texture.writeImageData(req);
     model.device.getCachedObject(req.hash, () => texture);
     return texture;
@@ -530,23 +633,8 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     // on the newest of the imageData and scalar array mtimes.
     treq.time = Math.max(treq.time, imgData.getMTime());
 
-    // The mipmap compute pipeline accepts only 2D rgba8unorm storage textures.
-    if (
-      options.generateMipmaps &&
-      treq.depth === 1 &&
-      treq.format === 'rgba8unorm'
-    ) {
-      treq.mipLevel = Math.floor(
-        Math.log2(Math.max(treq.width, treq.height, 1))
-      );
-      /* eslint-disable no-undef */
-      /* eslint-disable no-bitwise */
-      treq.usage =
-        GPUTextureUsage.STORAGE_BINDING |
-        GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.TEXTURE_BINDING;
-      /* eslint-enable no-undef */
-      /* eslint-enable no-bitwise */
+    if (options.generateMipmaps) {
+      _requestMipmaps(treq);
     }
 
     treq.hash = `${treq.time}:${treq.format}:${treq.mipLevel ?? 0}:${treq.usage}`;
@@ -634,7 +722,161 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     return texture;
   };
 
-  publicAPI.getTextureForVTKTexture = (srcTexture, label = undefined) => {
+  // A cube map face uses the first row as the top of the face, but vtkImageData
+  // keeps the bottom row first. Reverse the rows to get the same orientation
+  // as the OpenGL backend.
+  function _flipRows(source, height) {
+    const flipped = macro.newTypedArray(source.constructor.name, source.length);
+    const rowSize = source.length / height;
+    for (let y = 0; y < height; y++) {
+      const srcOffset = (height - y - 1) * rowSize;
+      flipped.set(source.subarray(srcOffset, srcOffset + rowSize), y * rowSize);
+    }
+    return flipped;
+  }
+
+  // Log a cube map error one time for each state of the texture. The render
+  // loop asks for the texture on each frame, and the error stays the same
+  // until the texture or one of its faces changes.
+  function _logCubeMapError(srcTexture, time, message) {
+    const key = `${time}:${message}`;
+    if (model.cubeMapErrors.get(srcTexture) !== key) {
+      model.cubeMapErrors.set(srcTexture, key);
+      vtkErrorMacro(message);
+    }
+  }
+
+  /**
+   * Upload the six input ports of srcTexture as the six layers of one 2D
+   * texture. A view with the 'cube' dimension samples it as a cube map.
+   * Return null when a face is missing, the faces are not square, or the
+   * faces do not have the same size and format.
+   */
+  publicAPI.getCubeTextureForVTKTexture = (srcTexture, label = undefined) => {
+    const faces = [];
+    let time = srcTexture.getMTime();
+    for (let i = 0; i < 6; i++) {
+      const imageData = srcTexture.getInputData(i);
+      if (!imageData?.getPointData().getScalars()) {
+        _logCubeMapError(
+          srcTexture,
+          time,
+          `Cube map face ${i} has no image data with scalars.`
+        );
+        return null;
+      }
+      // _fillRequest does not copy the data. The RGB padding and the row
+      // flip occur only when the texture is made.
+      const face = {
+        imageData,
+        existingFormat: _getCachedScalarFormat(
+          imageData.getPointData().getScalars(),
+          false
+        ),
+      };
+      _fillRequest(face);
+      _cacheScalarFormat(face.dataArray, face.format, false);
+      time = Math.max(time, face.time, imageData.getMTime());
+      faces.push(face);
+    }
+
+    const first = faces[0];
+    for (let i = 1; i < 6; i++) {
+      if (
+        faces[i].width !== first.width ||
+        faces[i].height !== first.height ||
+        faces[i].depth !== 1 ||
+        faces[i].format !== first.format
+      ) {
+        _logCubeMapError(
+          srcTexture,
+          time,
+          'Cube map faces must have the same 2D size and scalar format.'
+        );
+        return null;
+      }
+    }
+    if (first.depth !== 1) {
+      _logCubeMapError(srcTexture, time, 'Cube map faces must be 2D images.');
+      return null;
+    }
+    // WebGPU rejects a 'cube' view of a texture with non square layers
+    if (first.width !== first.height) {
+      _logCubeMapError(srcTexture, time, 'Cube map faces must be square.');
+      return null;
+    }
+
+    const treq = {
+      label,
+      time,
+      width: first.width,
+      height: first.height,
+      depth: 6,
+      layered2D: true,
+      format: first.format,
+      usage: first.usage,
+      mipLevel: 0,
+    };
+    // As in the OpenGL backend, an interpolated cube map gets a mip chain
+    // for each face
+    if (srcTexture.getMipLevel() > 0 || srcTexture.getInterpolate()) {
+      _requestMipmaps(treq, srcTexture.getMipLevel());
+    }
+    treq.hash = `${treq.time}:${treq.format}:${treq.mipLevel}:${treq.usage}:cube`;
+    const texture = model.device.getCachedObject(treq.hash, () => {
+      const newTex = vtkWebGPUTexture.newInstance({ label });
+      newTex.create(model.device, {
+        width: treq.width,
+        height: treq.height,
+        depth: 6,
+        dimension: '2d',
+        viewDimension: 'cube',
+        format: treq.format,
+        usage: treq.usage,
+        mipLevel: treq.mipLevel,
+      });
+      for (let i = 0; i < 6; i++) {
+        _prepareNativeArray(faces[i]);
+        newTex.writeImageData({
+          nativeArray: _flipRows(faces[i].nativeArray, treq.height),
+          width: treq.width,
+          height: treq.height,
+          depth: 1,
+          originZ: i,
+          deferMipmaps: true,
+        });
+      }
+      newTex.generateMipmaps();
+      return newTex;
+    });
+    if (texture && typeof texture === 'object') {
+      model.unownedTextures.add(texture);
+    }
+    return texture;
+  };
+
+  /**
+   * Return the WebGPU texture for a vtkTexture. When the vtkTexture is a cube
+   * map (see vtkTexture.useCubeMap) and `options.allowCubeMap` is true, return
+   * a cube map texture. Its createView() gives a view with the 'cube'
+   * dimension. Callers that sample only 2D textures leave `allowCubeMap`
+   * false and get the 2D texture of input port 0.
+   */
+  publicAPI.getTextureForVTKTexture = (
+    srcTexture,
+    label = undefined,
+    options = {}
+  ) => {
+    if (options.allowCubeMap && vtkTexture.useCubeMap(srcTexture)) {
+      const cubeTexture = publicAPI.getCubeTextureForVTKTexture(
+        srcTexture,
+        label
+      );
+      if (cubeTexture) {
+        return cubeTexture;
+      }
+    }
+
     const treq = { time: srcTexture.getMTime(), label };
     if (srcTexture.getInputData()) {
       treq.imageData = srcTexture.getInputData();
@@ -664,7 +906,11 @@ function vtkWebGPUTextureManager(publicAPI, model) {
     if (treq.imageData) {
       treq.time = Math.max(treq.time, treq.imageData.getMTime());
     }
-    treq.mipLevel = srcTexture.getMipLevel();
+    // As in the OpenGL backend, an interpolated 2D texture gets a full mip
+    // chain. A mipLevel set on the vtkTexture also asks for mipmaps.
+    if (srcTexture.getMipLevel() > 0 || srcTexture.getInterpolate()) {
+      _requestMipmaps(treq, srcTexture.getMipLevel());
+    }
     treq.hash = `${treq.time}:${treq.format}:${treq.mipLevel ?? 0}:${treq.usage}`;
     const texture = model.device.getTextureManager().getTexture(treq);
     if (texture && typeof texture === 'object') {
@@ -685,6 +931,7 @@ const DEFAULT_VALUES = {
   textureOwners: null,
   textureUseCounts: null,
   unownedTextures: null,
+  cubeMapErrors: null,
 };
 
 // ----------------------------------------------------------------------------
@@ -695,6 +942,7 @@ export function extend(publicAPI, model, initialValues = {}) {
   model.textureOwners = new WeakMap();
   model.textureUseCounts = new Map();
   model.unownedTextures = new WeakSet();
+  model.cubeMapErrors = new WeakMap();
 
   // Object methods
   macro.obj(publicAPI, model);
