@@ -1,3 +1,4 @@
+import { vec3 } from 'gl-matrix';
 import macro from 'vtk.js/Sources/macros';
 
 import {
@@ -30,11 +31,12 @@ const writeHeader = (
     format = fileType ? 'binary_little_endian' : 'binary_big_endian';
   } else format = 'ascii';
 
-  headerComments.unshift('VTK.js generated PLY File');
+  // Make a new list for each write, so the headerComments option stays the same.
+  const comments = ['VTK.js generated PLY File', ...(headerComments || [])];
   if (textureFileName) {
-    headerComments.push(`TextureFile ${textureFileName}`);
+    comments.push(`TextureFile ${textureFileName}`);
   }
-  const commentElements = headerComments
+  const commentElements = comments
     .map((comment) => `comment ${comment}`)
     .join('\n');
 
@@ -106,11 +108,15 @@ const binaryWriter = () => {
     ) => {
       const vertexCount = polyData.getPoints().getNumberOfPoints();
       ft = fileType;
-      // 1 byte shape descriptor
-      // 3 vertex indices at ${indexByteCount} bytes
-      const faceListLength = withIndices
-        ? numPolys * (indexByteCount * 3 + 1)
-        : 0;
+      // Each face has 1 byte for the point count and indexByteCount bytes
+      // for each point index. The cell array has the count and the indices
+      // of each face.
+      let faceListLength = 0;
+      if (withIndices) {
+        const cellArrayLength = polyData.getPolys().getData().length;
+        faceListLength =
+          numPolys + (cellArrayLength - numPolys) * indexByteCount;
+      }
 
       // 3 position values at 4 bytes
       // 3 normal values at 4 bytes
@@ -179,15 +185,13 @@ const binaryWriter = () => {
         vOffset += 1;
       }
     },
-    writeFace: (n, x, y, z) => {
+    writeFace: (cellArray, offset, n) => {
       output.setUint8(fOffset, n);
       fOffset += 1;
-      output.setUint32(fOffset, x, ft);
-      fOffset += indexByteCount;
-      output.setUint32(fOffset, y, ft);
-      fOffset += indexByteCount;
-      output.setUint32(fOffset, z, ft);
-      fOffset += indexByteCount;
+      for (let j = 1; j <= n; j++) {
+        output.setUint32(fOffset, cellArray[offset + j], ft);
+        fOffset += indexByteCount;
+      }
     },
     writeFooter: (polyData) => {},
     getOutputData: () => output,
@@ -240,8 +244,9 @@ const asciiWriter = () => {
       }
       fileContent += '\n';
     },
-    writeFace: (n, x, y, z) => {
-      fileContent += `${n} ${x} ${y} ${z}\n`;
+    writeFace: (cellArray, offset, n) => {
+      const ids = cellArray.subarray(offset + 1, offset + 1 + n);
+      fileContent += `${n} ${ids.join(' ')}\n`;
     },
     writeFooter: (polyData) => {},
     getOutputData: () => fileContent,
@@ -290,15 +295,36 @@ function writePLY(
   const numPts = inPts.getNumberOfPoints();
   const numPolys = polys.getNumberOfCells();
 
-  // textureCoords / uvs
-  const textureCoords = polyData.getPointData().getTCoords();
-  // eslint-disable-next-line no-param-reassign
-  withUVs = !(textureCoords === null);
+  // The writer writes an attribute only when the option is true and the data
+  // has the attribute.
+  let textureCoords = null;
+  if (withUVs) {
+    textureCoords = polyData.getPointData().getTCoords();
+  }
+  const writeUVs = !!textureCoords;
 
-  // scalars / colors
-  const scalars = polyData.getPointData().getScalars();
-  // eslint-disable-next-line no-param-reassign
-  withColors = !(scalars === null);
+  // PLY colors are 8 bit RGB values. Other scalars are not colors.
+  let scalars = null;
+  let scalarsComps = 0;
+  if (withColors) {
+    const pointScalars = polyData.getPointData().getScalars();
+    if (pointScalars) {
+      const dataType = pointScalars.getDataType();
+      scalarsComps = pointScalars.getNumberOfComponents();
+      const is8Bit =
+        dataType === 'Uint8Array' || dataType === 'Uint8ClampedArray';
+      if (is8Bit && scalarsComps >= 3) {
+        scalars = pointScalars;
+      }
+    }
+  }
+  const writeColors = !!scalars;
+
+  let normals = null;
+  if (withNormals) {
+    normals = polyData.getPointData().getNormals();
+  }
+  const writeNormals = !!normals;
 
   const fileType = dataByteOrder ? 0 : 1;
 
@@ -311,22 +337,17 @@ function writePLY(
     tCoordsName,
     numPts,
     numPolys,
-    withNormals,
-    withUVs,
-    withColors,
+    writeNormals,
+    writeUVs,
+    writeColors,
     withIndices
   );
 
-  const normals = polyData.getPointData().getNormals();
-
   // points / vertices
   for (let i = 0; i < numPts; i++) {
-    // eslint-disable-next-line prefer-const
-    let p = inPts.getPoint(i);
-
-    // TODO: apply transform matrix
+    const p = inPts.getPoint(i);
     if (transform) {
-      // vec3.transformMat4(p, p, transform);
+      vec3.transformMat4(p, p, transform);
     }
 
     // coords
@@ -355,9 +376,9 @@ function writePLY(
     }
 
     if (scalars) {
-      r = scalars.getData()[i * 3];
-      g = scalars.getData()[i * 3 + 1];
-      b = scalars.getData()[i * 3 + 2];
+      r = scalars.getData()[i * scalarsComps];
+      g = scalars.getData()[i * scalarsComps + 1];
+      b = scalars.getData()[i * scalarsComps + 2];
     }
 
     if (normals) {
@@ -370,9 +391,13 @@ function writePLY(
   }
 
   // polys / indices
+  // Each cell in the cell array is the point count, then the point ids.
   const pd = polys.getData();
-  for (let i = 0, l = pd.length; i < l; i += 4) {
-    writer.writeFace(pd[i + 0], pd[i + 1], pd[i + 2], pd[i + 3]);
+  let offset = 0;
+  while (offset < pd.length) {
+    const n = pd[offset];
+    writer.writeFace(pd, offset, n);
+    offset += n + 1;
   }
 
   writer.writeFooter(polyData);
