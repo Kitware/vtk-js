@@ -40,18 +40,37 @@ function vtkMTLReader(publicAPI, model) {
         return;
       }
       if (!model.materials[model.currentMaterial]) {
-        model.materials[model.currentMaterial] = {};
+        // An object without a prototype accepts all the property names, also
+        // __proto__, as its own properties.
+        model.materials[model.currentMaterial] = Object.create(null);
       }
       model.materials[model.currentMaterial][tokens[0]] = tokens.slice(1);
       if (tokens[0] === 'map_Kd') {
+        // The reader is busy from the start of the first image load to the
+        // end of the last image load. A failed load also ends the load.
+        model.requestCount++;
+        if (model.requestCount === 1) {
+          publicAPI.invokeBusy(true);
+        }
         const image = new Image();
-        image.onload = () => setTimeout(imageReady, 0);
+        // Each image ends its first load one time only. A later setImageSrc()
+        // does not change the request count.
+        const loadEnd = () => {
+          image.onload = null;
+          image.onerror = null;
+          setTimeout(imageReady, 0);
+        };
+        image.onload = loadEnd;
+        image.onerror = loadEnd;
         image.src = [model.baseURL, tokens[1]].join('/');
         model.materials[model.currentMaterial].image = image;
-        model.requestCount++;
       }
     }
   }
+
+  // The material names come from the file. Thus the materials object has no
+  // prototype.
+  model.materials = Object.assign(Object.create(null), model.materials);
 
   // Create default dataAccessHelper if not available
   if (!model.dataAccessHelper) {
@@ -97,7 +116,7 @@ function vtkMTLReader(publicAPI, model) {
 
   publicAPI.parseAsText = (content) => {
     publicAPI.modified();
-    model.materials = {};
+    model.materials = Object.create(null);
     content.split('\n').forEach(parseLine);
   };
 
