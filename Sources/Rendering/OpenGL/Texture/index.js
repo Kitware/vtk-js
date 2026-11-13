@@ -14,6 +14,20 @@ const { Wrap, Filter } = Constants;
 const { VtkDataTypes } = vtkDataArray;
 const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro, requiredParam } = macro;
 const { toHalf } = HalfFloat;
+const MAX_FINITE_HALF_FLOAT = 65504;
+
+// Prevent finite inputs such as Uint16 65535 from becoming infinite texels,
+// which turn linear interpolation with neighboring values into NaN.
+function toHalfForUpload(value) {
+  let uploadValue = value;
+  if (Number.isFinite(value)) {
+    uploadValue = Math.max(
+      -MAX_FINITE_HALF_FLOAT,
+      Math.min(value, MAX_FINITE_HALF_FLOAT)
+    );
+  }
+  return toHalf(uploadValue);
+}
 
 // ----------------------------------------------------------------------------
 // vtkOpenGLTexture methods
@@ -778,7 +792,7 @@ function vtkOpenGLTexture(publicAPI, model) {
           );
           const newArrayLen = newArray.length;
           for (let i = 0; i < newArrayLen; i++) {
-            newArray[i] = toHalf(src[i]);
+            newArray[i] = toHalfForUpload(src[i]);
           }
           pixData.push(newArray);
         } else {
@@ -1377,8 +1391,15 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.openGLDataType === model.context.FLOAT &&
       model.context.getExtension('OES_texture_float_linear') === null &&
       isExactHalfFloat;
+    // SHORT and UNSIGNED_SHORT mean norm16
+    const overrideNorm16 =
+      preferSizeOverAccuracy &&
+      (model.openGLDataType === model.context.SHORT ||
+        model.openGLDataType === model.context.UNSIGNED_SHORT);
     const useHalfFloat =
-      forceHalfFloat || model.openGLDataType === model.context.HALF_FLOAT;
+      forceHalfFloat ||
+      overrideNorm16 ||
+      model.openGLDataType === model.context.HALF_FLOAT;
 
     model.canUseHalfFloat = useHalfFloat && isExactHalfFloat;
   }
@@ -1410,8 +1431,12 @@ function vtkOpenGLTexture(publicAPI, model) {
     );
 
     // since our default is to use half float, in case that we can't use it
-    // we need to use another type
-    if (!publicAPI.useHalfFloat()) {
+    // (or norm16 is overridden) we need to use another type
+    if (
+      !publicAPI.useHalfFloat() ||
+      model.openGLDataType === model.context.SHORT ||
+      model.openGLDataType === model.context.UNSIGNED_SHORT
+    ) {
       publicAPI.getOpenGLDataType(dataType, true);
     }
 
