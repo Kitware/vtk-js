@@ -3085,6 +3085,35 @@ function vtkWebGPUVolumePassFSQ(publicAPI, model) {
     }
   };
 
+  // All volumes use one shader, so the user shader changes of all the volume
+  // mappers go into it. The ShaderReplacements and VertexOutputs lists are
+  // joined in volume order. For a template, the first volume that gives one
+  // is used.
+  publicAPI.getUserShaderProperties = () => {
+    let merged = null;
+    const volumes = model.volumes ?? [];
+    for (let vidx = 0; vidx < volumes.length; vidx++) {
+      const spec = volumes[vidx]
+        .getRenderable()
+        .getMapper()
+        ?.getViewSpecificProperties?.()?.WebGPU;
+      if (spec) {
+        if (!merged) {
+          merged = { ShaderReplacements: [], VertexOutputs: [] };
+        }
+        if (!merged.VertexShaderCode && spec.VertexShaderCode) {
+          merged.VertexShaderCode = spec.VertexShaderCode;
+        }
+        if (!merged.FragmentShaderCode && spec.FragmentShaderCode) {
+          merged.FragmentShaderCode = spec.FragmentShaderCode;
+        }
+        merged.ShaderReplacements.push(...(spec.ShaderReplacements ?? []));
+        merged.VertexOutputs.push(...(spec.VertexOutputs ?? []));
+      }
+    }
+    return merged;
+  };
+
   publicAPI.computePipelineHash = () => {
     model.pipelineHash = 'volfsq';
     for (let vidx = 0; vidx < model.volumes.length; vidx++) {
