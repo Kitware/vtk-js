@@ -22,10 +22,15 @@ export function updateTextures(publicAPI, model) {
 
   const actor = model.WebGPUActor.getRenderable();
   const renderer = model.WebGPURenderer.getRenderable();
+  // One diffuse texture: the texture of the property, else the first
+  // texture of the actor. The scalar color texture is added above, only
+  // when the mapper has a color texture map.
+  let diffuseTexture = actor.getProperty().getDiffuseTexture?.();
+  if (!diffuseTexture) {
+    diffuseTexture = actor.getTextures()[0];
+  }
   const textures = [
-    ['DiffuseTexture', actor.getProperty().getDiffuseTexture?.()],
-    ['DiffuseTexture', actor.getTextures()[0]],
-    ['ColorTexture', model.colorTexture],
+    ['DiffuseTexture', diffuseTexture],
     ['ORMTexture', actor.getProperty().getORMTexture?.()],
     ['RMTexture', actor.getProperty().getRMTexture?.()],
     ['RoughnessTexture', actor.getProperty().getRoughnessTexture?.()],
