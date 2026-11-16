@@ -257,6 +257,10 @@ function vtkTransform(publicAPI, model) {
       outArr[i + 1] = tmp[1];
       outArr[i + 2] = tmp[2];
     }
+    // An identity 3x3 part keeps the normals. The output does not change.
+    if (!vtkMath.isIdentity3x3(matrix3x3, 0)) {
+      outNormals.dataChange();
+    }
   };
 
   /**
@@ -292,6 +296,10 @@ function vtkTransform(publicAPI, model) {
       outArr[i] = tmp[0];
       outArr[i + 1] = tmp[1];
       outArr[i + 2] = tmp[2];
+    }
+    // An identity 3x3 part keeps the vectors. The output does not change.
+    if (!vtkMath.isIdentity3x3(matrix3x3, 0)) {
+      outVectors.dataChange();
     }
   };
 
