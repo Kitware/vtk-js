@@ -137,7 +137,7 @@ function vtkTransform(publicAPI, model) {
     // convert to radians
     const angle = vtkMath.radiansFromDegrees(degrees);
 
-    const q = quat.create();
+    const q = new Float64Array(4);
     quat.setAxisAngle(q, [x, y, z], angle);
 
     const quatMat = new Float64Array(16);
