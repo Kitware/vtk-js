@@ -282,12 +282,13 @@ function vtkTransform(publicAPI, model) {
     const inArr = inVectors.getData();
     const outArr = outVectors.getData();
     const tmp = [0, 0, 0];
+    const matrix3x3 = mat3.fromMat4(mat3.create(), model.matrix);
     for (let i = 0; i < inArr.length; i += 3) {
       tmp[0] = inArr[i];
       tmp[1] = inArr[i + 1];
       tmp[2] = inArr[i + 2];
-      publicAPI.transformVector(tmp, tmp);
-      vtkMath.normalize(tmp);
+      // Vectors keep their magnitude. Only normals are normalized.
+      publicAPI.transformVector(tmp, tmp, matrix3x3);
       outArr[i] = tmp[0];
       outArr[i + 1] = tmp[1];
       outArr[i + 2] = tmp[2];
