@@ -505,3 +505,41 @@ it('Test vtkTransformPolyDataFilter keeps its input when re-executed', () => {
   expect(output.getNumberOfPolys()).toBe(nPolys);
   expect(output.getNumberOfLines()).toBe(nLines);
 });
+
+// Test that cell vectors keep their magnitude, as point vectors do
+it('Test vtkTransformPolyDataFilter does not normalize cell vectors', () => {
+  const inputData = createTestPolyData();
+  inputData.getCellData().setVectors(
+    vtkDataArray.newInstance({
+      name: 'CellVectors',
+      numberOfComponents: 3,
+      values: Float32Array.from([3, 0, 0, 0, 2, 0, 0, 0, 1]),
+    })
+  );
+  inputData.getCellData().setNormals(
+    vtkDataArray.newInstance({
+      name: 'CellNormals',
+      numberOfComponents: 3,
+      values: Float32Array.from([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+    })
+  );
+
+  const transform = vtkTransform.newInstance();
+  transform.scale(2, 3, 4);
+  const filter = vtkTransformPolyDataFilter.newInstance({ transform });
+  filter.setInputData(inputData);
+  filter.update();
+
+  const outputCellData = filter.getOutputData().getCellData();
+  const outputCellVectors = Array.from(outputCellData.getVectors().getData());
+  expect(outputCellVectors).toEqual([6, 0, 0, 0, 6, 0, 0, 0, 4]);
+
+  const outputPointVectors = Array.from(
+    filter.getOutputData().getPointData().getVectors().getData()
+  );
+  expect(outputPointVectors).toEqual([0, 0, 4, 0, 0, 4, 0, 0, 4]);
+
+  // Normals stay unit length
+  const outputCellNormals = Array.from(outputCellData.getNormals().getData());
+  expect(outputCellNormals).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+});
