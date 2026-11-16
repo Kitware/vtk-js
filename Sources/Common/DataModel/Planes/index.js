@@ -24,6 +24,23 @@ function vtkPlanes(publicAPI, model) {
 
   model.plane = vtkPlane.newInstance();
 
+  const superClass = { ...publicAPI };
+
+  /**
+   * The MTime includes the MTime of the points and the normals, so a change
+   * to these arrays also updates the filters that use the planes.
+   */
+  publicAPI.getMTime = () => {
+    let mTime = superClass.getMTime();
+    if (model.points) {
+      mTime = Math.max(mTime, model.points.getMTime());
+    }
+    if (model.normals) {
+      mTime = Math.max(mTime, model.normals.getMTime());
+    }
+    return mTime;
+  };
+
   // Public API methods
   publicAPI.setNormals = (normals) => {
     if (normals && normals.getNumberOfComponents() !== 3) {
