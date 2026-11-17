@@ -66,6 +66,57 @@ it('packs an Int16 RGBA source extent directly into aligned rows', () => {
   }
 });
 
+it('warns once per texture when half-float uploads clamp values', () => {
+  const writes = [];
+  const handle = {
+    createTexture: () => ({}),
+    queue: {
+      writeTexture: (...args) => writes.push(args),
+    },
+  };
+  const device = { getHandle: () => handle };
+  const createTexture = () => {
+    const texture = vtkWebGPUTexture.newInstance();
+    texture.create(device, {
+      width: 2,
+      height: 1,
+      format: 'r16float',
+      usage: 1,
+    });
+    return texture;
+  };
+
+  const warnings = [];
+  macro.setLoggerFunction('warn', (...args) => warnings.push(args.join(' ')));
+  try {
+    const inRange = createTexture();
+    inRange.writeImageData({ nativeArray: new Uint16Array([0, 65504]) });
+    inRange.writeImageData({
+      nativeArray: new Float32Array([Infinity, NaN]),
+    });
+    expect(warnings).toEqual([]);
+
+    const clamped = createTexture();
+    clamped.writeImageData({ nativeArray: new Uint16Array([0, 65535]) });
+    clamped.writeSubImageData({
+      x: 1,
+      width: 1,
+      nativeArray: new Float32Array([-70000]),
+    });
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain('65504');
+
+    const another = createTexture();
+    another.writeImageData({ nativeArray: new Uint16Array([65535, 0]) });
+    expect(warnings).toHaveLength(2);
+  } finally {
+    macro.setLoggerFunction('warn', console.warn);
+  }
+
+  const lastUpload = writes[writes.length - 1][1];
+  expect(HalfFloat.fromHalf(lastUpload[0])).toBe(65504);
+});
+
 it.skipIf(!__VTK_TEST_WEBGPU__)(
   'Test vtkWebGPUTexture.writeSubImageData',
   async () => {
@@ -192,5 +243,43 @@ it.skipIf(!__VTK_TEST_WEBGPU__)(
     } finally {
       macro.setLoggerFunction('error', previousErrorLogger);
     }
+  }
+);
+
+it.skipIf(!__VTK_TEST_WEBGPU__)(
+  'keeps finite values in range on full and partial half-float uploads',
+  async () => {
+    const device = await testUtils.createWebGPUTestDevice();
+    const texture = vtkWebGPUTexture.newInstance();
+    texture.create(device, {
+      width: 2,
+      height: 1,
+      format: 'rg16float',
+      // eslint-disable-next-line no-undef, no-bitwise
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
+    });
+
+    const warnings = [];
+    macro.setLoggerFunction('warn', (...args) => warnings.push(args.join(' ')));
+    try {
+      texture.writeImageData({
+        nativeArray: new Uint16Array([65519, 65535, 0, 0]),
+      });
+      texture.writeSubImageData({
+        x: 1,
+        width: 1,
+        nativeArray: new Float32Array([-70000, 70000]),
+      });
+    } finally {
+      macro.setLoggerFunction('warn', console.warn);
+    }
+    expect(warnings).toHaveLength(1);
+
+    const bytes = await testUtils.readWebGPUTexture2D(device, texture, 2, 1);
+    const values = Array.from(
+      new Uint16Array(bytes.buffer),
+      HalfFloat.fromHalf
+    );
+    expect(values).toEqual([65504, 65504, -65504, 65504]);
   }
 );
