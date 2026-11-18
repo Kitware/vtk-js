@@ -3,7 +3,9 @@ import { mat4, vec3, vec4 } from 'gl-matrix';
 import { areEquals } from 'vtk.js/Sources/Common/Core/Math';
 import vtkCamera from 'vtk.js/Sources/Rendering/Core/Camera';
 import vtkRenderer from 'vtk.js/Sources/Rendering/Core/Renderer';
-import vtkWebGPUCamera from 'vtk.js/Sources/Rendering/WebGPU/Camera';
+import vtkWebGPUCamera, {
+  MAX_3D_DEPTH,
+} from 'vtk.js/Sources/Rendering/WebGPU/Camera';
 
 // Pure JS until a render is requested, so this can be tested directly
 // without a WebGPU adapter (contrast testImageMapperCameraProjection.js).
@@ -92,7 +94,7 @@ describe('WebGPU Camera explicit projection matrix', () => {
       camera.setClippingRange(1, 100);
     });
 
-    it('maps the near clipping plane to reversed Z hardware depth 1, decreasing towards far', () => {
+    it('maps the near clipping plane to reversed Z hardware depth MAX_3D_DEPTH, decreasing towards far', () => {
       const [near, far] = camera.getClippingRangeByReference();
       const nearWorld = [0, 0, 10 - near];
       const farWorld = [0, 0, 10 - far];
@@ -108,10 +110,16 @@ describe('WebGPU Camera explicit projection matrix', () => {
         farWorld
       );
 
-      // Reversed Z: near is always 1. Parallel far is 0; perspective's
-      // 1/depth parametrization only approaches 0 -- at far it's near/far.
-      expect(nearDepth).toBeCloseTo(1, 9);
-      const expectedFarDepth = parallelProjection ? 0 : near / far;
+      // Reversed Z: near is always MAX_3D_DEPTH, below the depth band of the
+      // Actor2D foreground layers. Parallel far is 0. The perspective
+      // 1/depth parametrization only approaches 0, so at far it is
+      // MAX_3D_DEPTH * near/far.
+      expect(MAX_3D_DEPTH).toBeLessThan(1);
+      expect(nearDepth).toBeCloseTo(MAX_3D_DEPTH, 9);
+      let expectedFarDepth = (MAX_3D_DEPTH * near) / far;
+      if (parallelProjection) {
+        expectedFarDepth = 0;
+      }
       expect(farDepth).toBeCloseTo(expectedFarDepth, 9);
       expect(farDepth).toBeLessThan(nearDepth);
 
@@ -168,6 +176,10 @@ describe('WebGPU Camera explicit projection matrix', () => {
     Z_REMAP[10] = -0.5;
     Z_REMAP[14] = 0.5;
     mat4.multiply(expected, Z_REMAP, expected);
+    expected[2] *= MAX_3D_DEPTH;
+    expected[6] *= MAX_3D_DEPTH;
+    expected[10] *= MAX_3D_DEPTH;
+    expected[14] *= MAX_3D_DEPTH;
 
     expect(areEquals(outMat, expected)).toBe(true);
   });

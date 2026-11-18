@@ -23,8 +23,9 @@ function vtkActor2D(publicAPI, model) {
 
     let isOpaque = model.property.getOpacity() >= 1.0;
 
-    // are we using an opaque texture, if any?
-    isOpaque = isOpaque && (!model.texture || !model.texture.isTranslucent());
+    // are we using opaque textures, if any?
+    isOpaque =
+      isOpaque && model.textures.every((texture) => !texture.isTranslucent?.());
 
     return isOpaque;
   };
@@ -97,7 +98,10 @@ function vtkActor2D(publicAPI, model) {
         ? model.positionCoordinate2.getMTime()
         : mt;
 
-    // TBD: Handle array of textures here.
+    model.textures.forEach((texture) => {
+      const time = texture.getMTime();
+      mt = time > mt ? time : mt;
+    });
 
     return mt;
   };

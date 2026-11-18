@@ -11,6 +11,19 @@ const Z_REMAP = mat4.create();
 Z_REMAP[10] = -0.5;
 Z_REMAP[14] = 0.5;
 
+// The projection maps 3D geometry to depth values in [0, MAX_3D_DEPTH].
+// Depth values above MAX_3D_DEPTH are kept for the Actor2D foreground
+// layers, so that 3D geometry at the near plane cannot cover them.
+export const MAX_3D_DEPTH = 0.99;
+
+// Scale the depth row of a projection matrix by MAX_3D_DEPTH
+function scaleDepthRow(outMat) {
+  outMat[2] *= MAX_3D_DEPTH;
+  outMat[6] *= MAX_3D_DEPTH;
+  outMat[10] *= MAX_3D_DEPTH;
+  outMat[14] *= MAX_3D_DEPTH;
+}
+
 // ----------------------------------------------------------------------------
 // vtkWebGPUCamera methods
 // ----------------------------------------------------------------------------
@@ -29,6 +42,7 @@ function vtkWebGPUCamera(publicAPI, model) {
       model.renderable.getProjectionMatrix(aspect, -1, 1, outMat);
       mat4.transpose(outMat, outMat);
       mat4.multiply(outMat, Z_REMAP, outMat);
+      scaleDepthRow(outMat);
       return;
     }
 
@@ -80,9 +94,11 @@ function vtkWebGPUCamera(publicAPI, model) {
       outMat[11] = -1.0;
       outMat[15] = 0.0;
     }
+    scaleDepthRow(outMat);
   };
 
-  publicAPI.convertToOpenGLDepth = (val) => {
+  publicAPI.convertToOpenGLDepth = (scaledVal) => {
+    const val = scaledVal / MAX_3D_DEPTH;
     // The remap above is affine in depth after division, so inverting it gives
     // the same "1 - val" formula parallel projection uses for affine
     // explicit matrices only (matches Core's oblique projection check).

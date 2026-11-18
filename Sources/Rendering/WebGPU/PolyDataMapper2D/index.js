@@ -1,9 +1,12 @@
 import * as macro from 'vtk.js/Sources/macros';
+import vtkPoints from 'vtk.js/Sources/Common/Core/Points';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkWebGPUBufferManager from 'vtk.js/Sources/Rendering/WebGPU/BufferManager';
 import vtkWebGPUCellArrayMapper from 'vtk.js/Sources/Rendering/WebGPU/CellArrayMapper';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
+import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
 
 const { PrimitiveTypes } = vtkWebGPUBufferManager;
 
@@ -18,6 +21,35 @@ function vtkWebGPUPolyDataMapper2D(publicAPI, model) {
   publicAPI.createCellArrayMapper = () =>
     vtkWebGPUCellArrayMapper.newInstance();
 
+  publicAPI.transformInputData = (poly) => {
+    const transformCoordinate = model.renderable.getTransformCoordinate();
+    if (!transformCoordinate) {
+      return poly;
+    }
+
+    const { renderer } = getWebGPUContext(publicAPI);
+    const coreRenderer = renderer.getRenderable();
+    const inputPoints = poly.getPoints();
+    const points = vtkPoints.newInstance({
+      dataType: inputPoints.getDataType(),
+    });
+    points.setNumberOfPoints(inputPoints.getNumberOfPoints());
+
+    const point = [];
+    for (let i = 0; i < inputPoints.getNumberOfPoints(); i++) {
+      inputPoints.getPoint(i, point);
+      transformCoordinate.setValue(point);
+      const viewportPoint =
+        transformCoordinate.getComputedDoubleViewportValue(coreRenderer);
+      points.setPoint(i, viewportPoint[0], viewportPoint[1], 0);
+    }
+
+    const transformedPoly = vtkPolyData.newInstance();
+    transformedPoly.shallowCopy(poly);
+    transformedPoly.setPoints(points);
+    return transformedPoly;
+  };
+
   publicAPI.buildPass = (prepass) => {
     if (prepass) {
       model.WebGPUActor = publicAPI.getFirstAncestorOfType('vtkWebGPUActor2D');
@@ -29,7 +61,7 @@ function vtkWebGPUPolyDataMapper2D(publicAPI, model) {
 
       model.renderable.mapScalars(poly, 1.0);
 
-      publicAPI.updateCellArrayMappers(poly);
+      publicAPI.updateCellArrayMappers(publicAPI.transformInputData(poly));
     }
   };
 

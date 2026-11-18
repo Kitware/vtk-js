@@ -27,6 +27,8 @@ import GUI from 'lil-gui';
 
 const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
   background: [0, 0, 0],
+  viewAPI:
+    new URLSearchParams(window.location.search).get('viewAPI') || 'WebGL',
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
@@ -118,7 +120,6 @@ renderer.addActor2D(actor2);
 actor2D.setLayerNumber(2);
 renderer.resetCamera();
 renderWindow.render();
-fpsMonitor.update();
 
 // -----------------------------------------------------------
 // UI control handling
