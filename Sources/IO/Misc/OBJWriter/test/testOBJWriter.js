@@ -1,4 +1,6 @@
 import { it, expect } from 'vitest';
+import vtkDataArray from 'vtk.js/Sources/Common/Core/DataArray';
+import vtkPolyData from 'vtk.js/Sources/Common/DataModel/PolyData';
 import vtkPLYReader from 'vtk.js/Sources/IO/Geometry/PLYReader';
 import vtkOBJWriter from 'vtk.js/Sources/IO/Misc/OBJWriter';
 
@@ -65,12 +67,12 @@ vt 1 1
 vt 0 1
 vt 0 1
 vt 1 1
-f 1/1//1 2/2//2 3/3//3 4/4//4
-f 5/5//5 6/6//6 7/7//7 8/8//8
-f 1/1//1 5/5//5 8/8//8 2/2//2
-f 2/2//2 8/8//8 7/7//7 3/3//3
-f 3/3//3 7/7//7 6/6//6 4/4//4
-f 5/5//5 1/1//1 4/4//4 6/6//6
+f 1/1/1 2/2/2 3/3/3 4/4/4
+f 5/5/5 6/6/6 7/7/7 8/8/8
+f 1/1/1 5/5/5 8/8/8 2/2/2
+f 2/2/2 8/8/8 7/7/7 3/3/3
+f 3/3/3 7/7/7 6/6/6 4/4/4
+f 5/5/5 1/1/1 4/4/4 6/6/6
 `;
 
 it('OBJWriter: Check conversion from PLY to OBJ', () => {
@@ -90,4 +92,61 @@ it('OBJWriter: Check conversion from PLY to OBJ', () => {
     writer.getMtl(),
     'MTL content should match expected texture declaration'
   ).toBe(expectedMtlContent);
+});
+
+it('OBJWriter: Write v/vt/vn for faces with texture coordinates and normals', () => {
+  const polyData = vtkPolyData.newInstance();
+  polyData
+    .getPoints()
+    .setData(new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), 3);
+  polyData.getPolys().setData(new Uint32Array([3, 0, 1, 2]));
+  polyData.getPointData().setNormals(
+    vtkDataArray.newInstance({
+      numberOfComponents: 3,
+      values: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+    })
+  );
+  polyData.getPointData().setTCoords(
+    vtkDataArray.newInstance({
+      numberOfComponents: 2,
+      values: new Float32Array([0, 0, 1, 0, 0, 1]),
+    })
+  );
+  const text = vtkOBJWriter.writeOBJ(polyData);
+  const face = text.split('\n').find((line) => line.startsWith('f '));
+  expect(face).toBe('f 1/1/1 2/2/2 3/3/3');
+});
+
+it('OBJWriter: Write one texture coordinate for each point', () => {
+  const polyData = vtkPolyData.newInstance();
+  polyData
+    .getPoints()
+    .setData(new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]), 3);
+  polyData.getPolys().setData(new Uint32Array([3, 0, 1, 2]));
+  // The first point has u = -1.
+  polyData.getPointData().setTCoords(
+    vtkDataArray.newInstance({
+      numberOfComponents: 2,
+      values: new Float32Array([-1, 0, 1, 0, 0, 1]),
+    })
+  );
+  const lines = vtkOBJWriter.writeOBJ(polyData).split('\n');
+  expect(
+    lines.filter((l) => l.startsWith('vt ') || l.startsWith('f '))
+  ).toEqual(['vt -1 0', 'vt 1 0', 'vt 0 1', 'f 1/1 2/2 3/3']);
+});
+
+it('OBJWriter: Write triangle strips as triangles', () => {
+  const polyData = vtkPolyData.newInstance();
+  polyData
+    .getPoints()
+    .setData(new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0]), 3);
+  // One triangle strip with two triangles, then one strip with one triangle.
+  polyData.getStrips().setData(new Uint32Array([4, 0, 1, 2, 3, 3, 1, 3, 2]));
+  const lines = vtkOBJWriter.writeOBJ(polyData).split('\n');
+  expect(lines.filter((l) => l.startsWith('f '))).toEqual([
+    'f 1 2 3',
+    'f 3 2 4',
+    'f 2 4 3',
+  ]);
 });
