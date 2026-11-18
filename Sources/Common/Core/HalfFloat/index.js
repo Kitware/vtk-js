@@ -26,7 +26,7 @@ function toHalf(val) {
     bits |= 0x7c00;
     /* If exponent was 0xff and one mantissa bit was set, it means NaN,
      * not Inf, so make sure we set one mantissa bit too. */
-    bits |= (e === 255 ? 0 : 1) && x & 0x007fffff;
+    bits |= e === 255 && x & 0x007fffff ? 1 : 0;
     return bits;
   }
 
@@ -44,6 +44,26 @@ function toHalf(val) {
    * the exponent, which is OK. */
   bits += m & 1;
   return bits;
+}
+
+const MAX_FINITE_HALF_FLOAT = 65504;
+const MAX_FINITE_HALF_BITS = 0x7bff;
+const MIN_FINITE_HALF_BITS = 0xfbff;
+
+/* True for finite values beyond the half float range, which toHalfClamped
+ * clamps. */
+function needsHalfFloatClamp(val) {
+  return Math.abs(val) > MAX_FINITE_HALF_FLOAT && Number.isFinite(val);
+}
+
+/* Like toHalf, but finite values beyond the half float range become the
+ * largest finite half float of the same sign instead of infinity. Infinity
+ * and NaN are converted unchanged. */
+function toHalfClamped(val) {
+  if (needsHalfFloatClamp(val)) {
+    return val > 0 ? MAX_FINITE_HALF_BITS : MIN_FINITE_HALF_BITS;
+  }
+  return toHalf(val);
 }
 
 function fromHalf(h) {
@@ -64,5 +84,8 @@ function fromHalf(h) {
 
 export default {
   fromHalf,
+  MAX_FINITE_HALF_FLOAT,
+  needsHalfFloatClamp,
   toHalf,
+  toHalfClamped,
 };

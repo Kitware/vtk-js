@@ -4,7 +4,8 @@ import vtkWebGPUTextureView from 'vtk.js/Sources/Rendering/WebGPU/TextureView';
 import vtkWebGPUTypes from 'vtk.js/Sources/Rendering/WebGPU/Types';
 import vtkTexture from 'vtk.js/Sources/Rendering/Core/Texture';
 
-const { vtkErrorMacro } = macro;
+const { vtkErrorMacro, vtkWarningMacro } = macro;
+const { MAX_FINITE_HALF_FLOAT, needsHalfFloatClamp, toHalfClamped } = HalfFloat;
 
 // ----------------------------------------------------------------------------
 // Global methods
@@ -199,6 +200,10 @@ function vtkWebGPUTexture(publicAPI, model) {
 
     // Select, convert, and pad each source row in one pass.
     if (halfFloat) {
+      // Clamp finite values such as Uint16 65535 instead of letting them
+      // become infinite texels, which contaminate interpolation with
+      // neighboring values.
+      let clamped = false;
       for (let z = 0; z < depth; z++) {
         const sourceSliceOffset = (sourceZ + z) * sourceSliceElements;
         for (let y = 0; y < height; y++) {
@@ -209,11 +214,19 @@ function vtkWebGPUTexture(publicAPI, model) {
             sourceX * tDetails.numComponents;
           const outOffset = row * alignedRowElements;
           for (let i = 0; i < expectedRowElements; i++) {
-            outArray[outOffset + i] = HalfFloat.toHalf(
-              inputArray[inOffset + i]
-            );
+            const value = inputArray[inOffset + i];
+            if (needsHalfFloatClamp(value)) {
+              clamped = true;
+            }
+            outArray[outOffset + i] = toHalfClamped(value);
           }
         }
+      }
+      if (clamped && !model._warnedHalfFloatClamp) {
+        model._warnedHalfFloatClamp = true;
+        vtkWarningMacro(
+          `Texture upload clamped values beyond the ${model.format} range to +/-${MAX_FINITE_HALF_FLOAT}.`
+        );
       }
     } else if (!sourceLayout && alignedRowElements === expectedRowElements) {
       outArray.set(inputArray);
