@@ -75,7 +75,7 @@ function replaceShaderNormal(publicAPI, model, hash, pipeline, vertexInput) {
     code = fDesc.getCode();
 
     const ppty = actor.getProperty();
-    const hasNormalTexture = ppty.getNormalTexture();
+    const hasNormalTexture = ppty.getNormalTexture?.();
     const hasCoatNormalTexture =
       ppty.getCoatStrength?.() > 0 && ppty.getCoatNormalTexture?.();
     const hasAnisotropy = ppty.getAnisotropy?.() !== 0;

@@ -1,13 +1,10 @@
 import { mat4 } from 'gl-matrix';
 
 import macro from 'vtk.js/Sources/macros';
-import vtkProp from 'vtk.js/Sources/Rendering/Core/Prop';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 
 import { registerOverride } from 'vtk.js/Sources/Rendering/WebGPU/ViewNodeFactory';
 import { getWebGPUContext } from 'vtk.js/Sources/Rendering/WebGPU/Helpers/Context';
-
-const { CoordinateSystem } = vtkProp;
 
 // ----------------------------------------------------------------------------
 // vtkWebGPUActor methods
@@ -87,51 +84,23 @@ function vtkWebGPUActor2D(publicAPI, model) {
     }
   };
 
-  publicAPI.getBufferShift = (wgpuRen) => {
-    publicAPI.getKeyMatrices(wgpuRen);
-    return model.bufferShift;
-  };
+  publicAPI.getBufferShift = () => model.bufferShift;
 
+  // A 2D actor draws its points in viewport pixels, as the OpenGL
+  // backend does. The actor position moves them. The coordinate system of
+  // the prop is not used, and there is no buffer shift.
   publicAPI.getKeyMatrices = (wgpuRen) => {
-    // has the actor or stabilization center changed?
-    if (
-      Math.max(model.renderable.getMTime(), wgpuRen.getStabilizedTime()) >
-      model.keyMatricesTime.getMTime()
-    ) {
-      // compute the net shift, only apply stabilized coords with world coordinates
-      model.bufferShift[0] = 0.0;
-      model.bufferShift[1] = 0.0;
-      model.bufferShift[2] = 0.0;
-      const center = wgpuRen.getStabilizedCenterByReference();
-      if (model.renderable.getCoordinateSystem() === CoordinateSystem.WORLD) {
-        model.bufferShift[0] -= center[0];
-        model.bufferShift[1] -= center[1];
-        model.bufferShift[2] -= center[2];
-      }
-
-      mat4.identity(model.keyMatrices.bcwc);
-      mat4.identity(model.keyMatrices.normalMatrix);
-
-      // only meed the buffer shift to get to world
-      mat4.translate(model.keyMatrices.bcwc, model.keyMatrices.bcwc, [
-        -model.bufferShift[0],
-        -model.bufferShift[1],
-        -model.bufferShift[2],
-      ]);
-
-      // to get to stabilized we also need the center
-      if (model.renderable.getCoordinateSystem() === CoordinateSystem.WORLD) {
-        mat4.translate(model.keyMatrices.bcsc, model.keyMatrices.bcwc, [
-          -center[0],
-          -center[1],
-          -center[2],
-        ]);
-      } else {
-        mat4.copy(model.keyMatrices.bcsc, model.keyMatrices.bcwc);
-      }
-      model.keyMatricesTime.modified();
-    }
-
+    const ren = wgpuRen.getRenderable();
+    const actorPos = model.renderable
+      .getActualPositionCoordinate()
+      .getComputedDoubleViewportValue(ren);
+    mat4.fromTranslation(model.keyMatrices.bcwc, [
+      Math.round(actorPos[0]),
+      Math.round(actorPos[1]),
+      0.0,
+    ]);
+    mat4.copy(model.keyMatrices.bcsc, model.keyMatrices.bcwc);
+    mat4.identity(model.keyMatrices.normalMatrix);
     return model.keyMatrices;
   };
 }
