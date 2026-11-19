@@ -1001,6 +1001,13 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       program.setUniformf('labelOutlineTextureWidth', textureWidth);
       program.setUniformf('numLabelmaps', model.labelOutlineProperties.length);
 
+      // Labels are read back at their value, whatever the texture's storage
+      for (let i = 0; i < model.scalarTextures.length; i++) {
+        const volInfo = model.scalarTextures[i].getVolumeInfo();
+        program.setUniformf(`labelScale${i}`, volInfo.scale[0]);
+        program.setUniformf(`labelOffset${i}`, volInfo.offset[0]);
+      }
+
       // Calculate tangent vectors for the slice plane in each input's texture space
       const slicePlane = model.renderable.getSlicePlane();
 
@@ -1177,7 +1184,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         // Process input ${inputIdx} as labelmap
         {
           float labelValue = tvalue.${rgba[inputIdx]};
-          int segmentIndex = int(labelValue * 255.0);
+          int segmentIndex = int(round(labelValue * labelScale${inputIdx} + labelOffset${inputIdx}));
 
           if (segmentIndex > 0) {
             float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
@@ -1361,7 +1368,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       '  {',
       '    if (dist > halfSlab) { break; }',
       '    if (any(greaterThan(tc, vec3(1.0))) || any(lessThan(tc, vec3(0.0)))) { break; }',
-      '    int label = int(texture(volumeTexture[0], tc).r * 255.0 + 0.5);',
+      '    int label = int(round(texture(volumeTexture[0], tc).r * labelScale0 + labelOffset0));',
       '    if (label > 0 && label < 32) { mask |= (1 << label); }',
       '    tc += stepTC;',
       '    dist += stepLen;',
@@ -1372,7 +1379,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       '  {',
       '    if (dist > halfSlab) { break; }',
       '    if (any(greaterThan(tc, vec3(1.0))) || any(lessThan(tc, vec3(0.0)))) { break; }',
-      '    int label = int(texture(volumeTexture[0], tc).r * 255.0 + 0.5);',
+      '    int label = int(round(texture(volumeTexture[0], tc).r * labelScale0 + labelOffset0));',
       '    if (label > 0 && label < 32) { mask |= (1 << label); }',
       '    tc -= stepTC;',
       '    dist += stepLen;',
@@ -1406,7 +1413,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       '  for (int i = 0; i < 8192; ++i)',
       '  {',
       '    if (i >= totalSteps) { break; }',
-      '    int label = int(texture(volumeTexture[0], tc).r * 255.0 + 0.5);',
+      '    int label = int(round(texture(volumeTexture[0], tc).r * labelScale0 + labelOffset0));',
       '    if (label > 0 && label < 32 && (labelMask & (1 << label)) != 0) { return label; }',
       '    tc -= towardCameraTC;',
       '  }',
@@ -1435,7 +1442,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
       vec4 slabOutlineResult = vec4(0.0, 0.0, 0.0, 0.0);
       // For MAX slabs, a composited value of 0 means no label anywhere
       // along the slab, so the expensive mask marches can be skipped.
-      if (slabType != 1 || tvalue.r >= 0.5 / 255.0) {
+      if (slabType != 1 || tvalue.r * labelScale0 + labelOffset0 >= 0.5) {
         vec3 outlineStepTC = (WCTCMatrix0 * vec4(scaling * slabNormal * vboScaling, 0.0)).xyz;
         float halfSlab = slabThickness * 0.5;
         int centerMask = labelSlabMask(fragTexCoord, outlineStepTC, halfSlab, scaling);
@@ -1481,7 +1488,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
                 if ((edgeLabels & (1 << s)) != 0) { edgeLabel = s; break; }
               }
             }
-            float labelValue = float(edgeLabel) / 255.0;
+            float labelValue = (float(edgeLabel) - labelOffset0) / labelScale0;
             vec3 edgeColor = texture2D(colorTexture1, vec2(labelValue * cscale0 + cshift0, 0.5)).rgb;
             float opacityCoordinate = (float(edgeLabel) - 1.0) / labelOutlineTextureWidth;
             float edgeOpacity = texture2D(labelOutlineOpacityTexture, vec2(opacityCoordinate, labelmapRow)).r;
@@ -1490,7 +1497,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
             // Interior of the projected labels: regular fill through the
             // transfer functions using the label nearest the viewer
             int fillLabel = labelSlabFrontLabel(fragTexCoord, towardCameraTC, halfSlab, scaling, centerMask);
-            float fillValue = fillLabel != 0 ? float(fillLabel) / 255.0 : tvalue.r;
+            float fillValue = fillLabel != 0 ? (float(fillLabel) - labelOffset0) / labelScale0 : tvalue.r;
             vec3 fillColor = texture2D(colorTexture1, vec2(fillValue * cscale0 + cshift0, 0.5)).rgb;
             float fillOpacity = texture2D(pwfTexture1, vec2(fillValue * pwfscale0 + pwfshift0, 0.5)).r;
             slabOutlineResult = vec4(fillColor, fillOpacity * opacity);
@@ -1572,6 +1579,9 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
         tcoordFSDec.push(`uniform vec3 outlineTangent1_${i};`);
         tcoordFSDec.push(`uniform vec3 outlineTangent2_${i};`);
         tcoordFSDec.push(`uniform vec3 texelSize${i};`);
+        // scale and offset from a texture sample back to the label
+        tcoordFSDec.push(`uniform float labelScale${i};`);
+        tcoordFSDec.push(`uniform float labelOffset${i};`);
       }
     }
 
@@ -1738,7 +1748,7 @@ function vtkOpenGLImageResliceMapper(publicAPI, model) {
               ...splitStringOnEnter(`
                 // Label outline mode for single component
                 float centerValue = tvalue.r;
-                int segmentIndex = int(centerValue * 255.0);
+                int segmentIndex = int(round(centerValue * labelScale0 + labelOffset0));
 
                 // Skip background (segment 0)
                 if (segmentIndex == 0) {
