@@ -1343,7 +1343,7 @@ bool valueWithinScalarRange(vec4 val) {
     for (int k = 0; k < vtkMaximumNumberOfSamples / 2; ++k) {
       ivec3 texCoord = ivec3(neighborPosIS * volumeDimensions);
       vec4 texValue = rawFetchTexture(texCoord);
-      if (int(texValue.g) == segmentIndex) {
+      if (int(round(texValue.g)) == segmentIndex) {
         // not on edge
         return false;
       }
@@ -1354,7 +1354,7 @@ bool valueWithinScalarRange(vec4 val) {
     for (int k = 0; k < vtkMaximumNumberOfSamples / 2; ++k) {
       ivec3 texCoord = ivec3(neighborPosIS * volumeDimensions);
       vec4 texValue = rawFetchTexture(texCoord);
-      if (int(texValue.g) == segmentIndex) {
+      if (int(round(texValue.g)) == segmentIndex) {
         // not on edge
         return false;
       }
@@ -1660,7 +1660,7 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
     posIS += jitter * stepIS;
     stepsTraveled += jitter;
     vec3 maxPosIS = posIS; // Store the position of the max value
-    int segmentIndex = int(value.g);
+    int segmentIndex = int(round(value.g));
     bool originalPosHasSeenNonZero = false;
 
     if (segmentIndex != 0) {
@@ -1681,7 +1681,7 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
 
       // compute the scalar
       tValue = getTextureValue(posIS);
-      segmentIndex = int(tValue.g);
+      segmentIndex = int(round(tValue.g));
 
       if (segmentIndex != 0) {
         originalPosHasSeenNonZero = true;
