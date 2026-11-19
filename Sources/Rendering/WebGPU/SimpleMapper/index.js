@@ -2,6 +2,7 @@ import macro from 'vtk.js/Sources/macros';
 import vtkViewNode from 'vtk.js/Sources/Rendering/SceneGraph/ViewNode';
 import vtkWebGPUBindGroup from 'vtk.js/Sources/Rendering/WebGPU/BindGroup';
 import vtkWebGPUPipeline from 'vtk.js/Sources/Rendering/WebGPU/Pipeline';
+import vtkWebGPUReplacementShaderMapper from 'vtk.js/Sources/Rendering/WebGPU/ReplacementShaderMapper';
 import vtkWebGPUShaderCache from 'vtk.js/Sources/Rendering/WebGPU/ShaderCache';
 import vtkWebGPUShaderDescription from 'vtk.js/Sources/Rendering/WebGPU/ShaderDescription';
 import vtkWebGPUVertexInput from 'vtk.js/Sources/Rendering/WebGPU/VertexInput';
@@ -100,12 +101,12 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
     const vDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'vertex',
       hash,
-      code: model.vertexShaderTemplate,
+      code: publicAPI.getReplacedShaderTemplate('vertex'),
     });
     const fDesc = vtkWebGPUShaderDescription.newInstance({
       type: 'fragment',
       hash,
-      code: model.fragmentShaderTemplate,
+      code: publicAPI.getReplacedShaderTemplate('fragment'),
     });
 
     // add them to the pipeline
@@ -113,11 +114,15 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
     sdrs.push(vDesc);
     sdrs.push(fDesc);
 
-    // look for replacements to invoke
-    const scode = model.vertexShaderTemplate + model.fragmentShaderTemplate;
+    publicAPI.applyShaderReplacements(pipeline, true);
+
+    // look for replacements to invoke in the code after the user pre
+    // replacements, so that the markers they add or remove apply
+    const scode = `${vDesc.getCode()}${fDesc.getCode()}`;
     // eslint-disable-next-line prefer-regex-literals
     const re = new RegExp('//VTK::[^:]*::', 'g');
-    const unique = scode.match(re).filter((v, i, a) => a.indexOf(v) === i);
+    const markers = scode.match(re) ?? [];
+    const unique = markers.filter((v, i, a) => a.indexOf(v) === i);
     const fnames = unique.map(
       (v) => `replaceShader${v.substring(7, v.length - 2)}`
     );
@@ -132,6 +137,9 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
         model.shaderReplacements.get(fname)(hash, pipeline, vertexInput);
       }
     }
+
+    publicAPI.applyShaderReplacements(pipeline, false);
+    publicAPI.addUserVertexOutputs(pipeline);
 
     // always replace the IOStructs last as other replacement funcs may
     // add inputs or outputs
@@ -338,6 +346,7 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
 
   publicAPI.updatePipeline = () => {
     publicAPI.computePipelineHash();
+    const shaderHash = `${model.pipelineHash ?? ''}${publicAPI.getUserShaderHash()}`;
 
     // A pipeline bakes in the attachment state of the encoder it was built
     // for -- including the sample count -- so it can only be reused with an
@@ -345,7 +354,7 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
     // changing the sample count hands back an incompatible cached pipeline.
     // The shader cache stays keyed on the mapper hash alone; shaders do not
     // depend on the encoder.
-    const cacheHash = `${model.pipelineHash}${
+    const cacheHash = `${shaderHash}${
       model.renderEncoder?.getPipelineHash() ?? ''
     }`;
     model.pipeline = model.device.getPipeline(cacheHash);
@@ -362,7 +371,7 @@ function vtkWebGPUSimpleMapper(publicAPI, model) {
       model.pipeline.addBindGroupLayout(model.bindGroup);
 
       publicAPI.generateShaderDescriptions(
-        model.pipelineHash,
+        shaderHash,
         model.pipeline,
         model.vertexInput
       );
@@ -451,6 +460,11 @@ export function extend(publicAPI, model, initialValues = {}) {
 
   // Object methods
   vtkWebGPUSimpleMapper(publicAPI, model);
+  vtkWebGPUReplacementShaderMapper.implementBuildShadersWithReplacements(
+    publicAPI,
+    model,
+    initialValues
+  );
 }
 
 // ----------------------------------------------------------------------------

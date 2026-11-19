@@ -385,6 +385,8 @@ fn main(
 
   //VTK::Position::Impl
 
+  //VTK::CoincidentOffset::Impl
+
   //VTK::RenderEncoder::Impl
 
   return output;
