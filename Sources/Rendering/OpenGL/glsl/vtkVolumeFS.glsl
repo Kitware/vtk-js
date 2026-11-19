@@ -69,6 +69,7 @@ uniform sampler2D colorTexture;
 uniform sampler2D opacityTexture;
 uniform sampler2D jtexture;
 uniform sampler2D labelOutlineThicknessTexture;
+uniform float labelOutlineTextureWidth;
 
 struct Volume {
   // ---- Volume geometry settings ----
@@ -92,6 +93,12 @@ struct Volume {
   vec4 colorTextureShift;
   vec4 opacityTextureScale;
   vec4 opacityTextureShift;
+
+  // Scale and offset from a texture sample back to the input's scalar value:
+  // 255 for 8-bit data, 65535 or 32767 for unsigned or signed norm16, 1 for
+  // float and half float
+  vec4 textureScale;
+  vec4 textureOffset;
 
   // The heights defined below are the locations for the up to four components
   // of the transfer functions. The transfer functions have a height of (2 *
@@ -957,10 +964,12 @@ vec4 getColorForLabelOutline() {
   vec4 tColor = vec4(getColorFromTexture(centerValue.r, 0, 0.5),
                      getOpacityFromTexture(centerValue.r, 0, 0.5));
 
-  int segmentIndex = int(centerValue.r * 255.0);
+  int segmentIndex = int(
+      round(centerValue.r * volume.textureScale[0] + volume.textureOffset[0]));
 
   // Use texture sampling for outlineThickness
-  float textureCoordinate = float(segmentIndex - 1) / 1024.0;
+  float textureCoordinate =
+      float(segmentIndex - 1) / labelOutlineTextureWidth;
   float textureValue =
       texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
   int actualThickness = int(textureValue * 255.0);
@@ -1749,7 +1758,7 @@ void applyBlend(vec3 rayOriginVC, vec3 rayDirVC, float minDistance,
 
       // Use texture sampling for outlineThickness so that we can have
       // per segment thickness
-      float textureCoordinate = float(s - 1) / 1024.0;
+      float textureCoordinate = float(s - 1) / labelOutlineTextureWidth;
       float textureValue =
           texture2D(labelOutlineThicknessTexture, vec2(textureCoordinate, 0.5)).r;
 

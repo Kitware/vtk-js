@@ -207,6 +207,10 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         'uniform sampler2D labelOutlineTexture1;',
         // outline opacity
         'uniform sampler2D labelOutlineOpacityTexture1;',
+        // width of the outline thickness and opacity textures
+        'uniform float labelOutlineTextureWidth;',
+        // scale from a texture sample back to the label it stores
+        'uniform float labelScale;',
       ]);
     }
     if (iComps) {
@@ -384,8 +388,8 @@ function vtkOpenGLImageMapper(publicAPI, model) {
                   vec3 tColor = texture2D(colorTexture1, vec2(centerValue * cscale0 + cshift0, 0.5)).rgb;
                   float scalarOpacity = texture2D(pwfTexture1, vec2(centerValue * pwfscale0 + pwfshift0, 0.5)).r;
                   float opacityToUse = scalarOpacity * opacity;
-                  int segmentIndex = int(centerValue * 255.0);
-                  float textureCoordinate = float(segmentIndex - 1) / 1024.0;
+                  int segmentIndex = int(round(centerValue * labelScale));
+                  float textureCoordinate = float(segmentIndex - 1) / labelOutlineTextureWidth;
                   float textureValue = texture2D(labelOutlineTexture1, vec2(textureCoordinate, 0.5)).r;
                   float outlineOpacity = texture2D(labelOutlineOpacityTexture1, vec2(textureCoordinate, 0.5)).r;
                   int actualThickness = int(textureValue * 255.0);
@@ -753,6 +757,14 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       cellBO
         .getProgram()
         .setUniformi('labelOutlineOpacityTexture1', texOutlineOpacityUnit);
+
+      cellBO
+        .getProgram()
+        .setUniformf(
+          'labelOutlineTextureWidth',
+          model.labelOutlineThicknessTexture.getWidth()
+        );
+      cellBO.getProgram().setUniformf('labelScale', getLabelScale());
     }
 
     if (model.renderable.getNumberOfClippingPlanes()) {
@@ -1457,6 +1469,33 @@ function vtkOpenGLImageMapper(publicAPI, model) {
     model.VBOBuildTime.modified();
   };
 
+  // The width of the label outline thickness and opacity textures
+  function getLabelOutlineTextureWidth() {
+    const width = model.renderable.getLabelOutlineTextureWidth();
+    return width > 0
+      ? width
+      : model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
+  }
+
+  // What a sample of the image texture is multiplied by to give back the label
+  // it stores: the texture's normalization, and 1 for float and half float.
+  // getShiftAndScale() maps signed samples half a unit off for the color
+  // lookup, which would put a label right on a rounding boundary.
+  function getLabelScale() {
+    switch (model.openGLTexture.getOpenGLDataType()) {
+      case model.context.UNSIGNED_BYTE:
+        return 255.0;
+      case model.context.BYTE:
+        return 127.0;
+      case model.context.UNSIGNED_SHORT:
+        return 65535.0;
+      case model.context.SHORT:
+        return 32767.0;
+      default:
+        return 1.0;
+    }
+  }
+
   publicAPI.updateLabelOutlineOpacityTexture = (image) => {
     let labelOutlineOpacity = image.getProperty().getLabelOutlineOpacity();
 
@@ -1476,14 +1515,12 @@ function vtkOpenGLImageMapper(publicAPI, model) {
         labelOutlineOpacity
       );
 
-    const toString = `${labelOutlineOpacity.join('-')}`;
+    // the width too, so that a new width rebuilds the texture
+    const lWidth = getLabelOutlineTextureWidth();
+    const toString = `${labelOutlineOpacity.join('-')}:${lWidth}`;
     const reBuildL = !lTex?.oglObject?.getHandle() || lTex?.hash !== toString;
 
     if (reBuildL) {
-      let lWidth = model.renderable.getLabelOutlineTextureWidth();
-      if (lWidth <= 0) {
-        lWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
-      }
       const lHeight = 1;
       const lSize = lWidth * lHeight;
       const lTable = new Float32Array(lSize);
@@ -1545,18 +1582,15 @@ function vtkOpenGLImageMapper(publicAPI, model) {
       labelOutlineThicknessArray
     );
 
-    // compute the join of the labelOutlineThicknessArray so that
-    // we can use it to decide whether to rebuild the labelOutlineThicknessTexture
-    // or not
-    const toString = `${labelOutlineThicknessArray.join('-')}`;
+    // compute the join of the labelOutlineThicknessArray, and the width, so
+    // that we can use it to decide whether to rebuild the
+    // labelOutlineThicknessTexture or not
+    const lWidth = getLabelOutlineTextureWidth();
+    const toString = `${labelOutlineThicknessArray.join('-')}:${lWidth}`;
 
     const reBuildL = !lTex?.oglObject?.getHandle() || lTex?.hash !== toString;
 
     if (reBuildL) {
-      let lWidth = model.renderable.getLabelOutlineTextureWidth();
-      if (lWidth <= 0) {
-        lWidth = model.context.getParameter(model.context.MAX_TEXTURE_SIZE);
-      }
       const lHeight = 1;
       const lSize = lWidth * lHeight;
       const lTable = new Uint8Array(lSize);

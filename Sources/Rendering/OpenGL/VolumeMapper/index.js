@@ -958,6 +958,10 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       `labelOutlineThicknessTexture`,
       model.labelOutlineThicknessTexture.getTextureUnit()
     );
+    program.setUniformf(
+      'labelOutlineTextureWidth',
+      model.labelOutlineThicknessTexture.getWidth()
+    );
     program.setUniformi(
       'opacityTexture',
       model.opacityTexture.getTextureUnit()
@@ -1011,6 +1015,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
     const colorTextureShift = new Float32Array(4);
     const opacityTextureScale = new Float32Array(4);
     const opacityTextureShift = new Float32Array(4);
+    const textureScale = new Float32Array(4);
+    const textureOffset = new Float32Array(4);
     for (let component = 0; component < numberOfComponents; component++) {
       const useMultiTexture = model.previousState.multiTexturePerVolumeEnabled;
       const textureIndex = useMultiTexture ? component : 0;
@@ -1019,6 +1025,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       const volInfo = scalarTexture.getVolumeInfo();
       const target = useIndependentComponents ? component : 0;
       const sscale = volInfo.scale[volInfoIndex];
+      textureScale[component] = sscale;
+      textureOffset[component] = volInfo.offset[volInfoIndex];
 
       // Color
       const colorFunction = firstVolumeProperty.getRGBTransferFunction(target);
@@ -1053,6 +1061,8 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
       `${uniformPrefix}.opacityTextureShift`,
       opacityTextureShift
     );
+    program.setUniform4fv(`${uniformPrefix}.textureScale`, textureScale);
+    program.setUniform4fv(`${uniformPrefix}.textureOffset`, textureOffset);
 
     if (model.previousState.gradientOpacityEnabled) {
       const gradientOpacityScale = new Array(4);
