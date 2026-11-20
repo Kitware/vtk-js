@@ -8,6 +8,7 @@ import { VtkDataTypes } from 'vtk.js/Sources/Common/Core/DataArray/Constants';
 import vtkHelper from 'vtk.js/Sources/Rendering/OpenGL/Helper';
 import vtkOpenGLFramebuffer from 'vtk.js/Sources/Rendering/OpenGL/Framebuffer';
 import vtkOpenGLTexture from 'vtk.js/Sources/Rendering/OpenGL/Texture';
+import supportsNorm16Linear from 'vtk.js/Sources/Rendering/OpenGL/Texture/supportsNorm16Linear';
 import vtkReplacementShaderMapper from 'vtk.js/Sources/Rendering/OpenGL/ReplacementShaderMapper';
 import vtkShaderProgram from 'vtk.js/Sources/Rendering/OpenGL/ShaderProgram';
 import vtkVertexArrayObject from 'vtk.js/Sources/Rendering/OpenGL/VertexArrayObject';
@@ -1764,8 +1765,11 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
         // Build the textures
         const dims = imageData.getDimensions();
         // Use norm16 for scalar texture if the extension is available
+        // and linear filtering works (filter is set at render time)
         newScalarTexture.setOglNorm16Ext(
-          model.context.getExtension('EXT_texture_norm16')
+          supportsNorm16Linear()
+            ? model.context.getExtension('EXT_texture_norm16')
+            : null
         );
         newScalarTexture.resetFormatAndType();
         newScalarTexture.create3DFilterableFromDataArray({
@@ -1796,6 +1800,7 @@ function vtkOpenGLVolumeMapper(publicAPI, model) {
           height: dims[1],
           depth: dims[2],
           dataArray: scalars,
+          preferSizeOverAccuracy: volumeProperty.getPreferSizeOverAccuracy(),
           updatedExtents,
         });
       }
