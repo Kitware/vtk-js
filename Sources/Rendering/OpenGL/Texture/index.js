@@ -16,19 +16,6 @@ const { vtkDebugMacro, vtkErrorMacro, vtkWarningMacro, requiredParam } = macro;
 const { toHalf } = HalfFloat;
 const MAX_FINITE_HALF_FLOAT = 65504;
 
-// Prevent finite inputs such as Uint16 65535 from becoming infinite texels,
-// which turn linear interpolation with neighboring values into NaN.
-function toHalfForUpload(value) {
-  let uploadValue = value;
-  if (Number.isFinite(value)) {
-    uploadValue = Math.max(
-      -MAX_FINITE_HALF_FLOAT,
-      Math.min(value, MAX_FINITE_HALF_FLOAT)
-    );
-  }
-  return toHalf(uploadValue);
-}
-
 // ----------------------------------------------------------------------------
 // vtkOpenGLTexture methods
 // ----------------------------------------------------------------------------
@@ -782,6 +769,9 @@ function vtkOpenGLTexture(publicAPI, model) {
     const halfFloat = model.openGLDataType === model.context.HALF_FLOAT;
 
     if (halfFloat) {
+      // Uint16 can exceed the max half float: clamp to avoid infinite texels
+      // (NaN when linearly filtered)
+      const clampToFiniteHalf = dataType === VtkDataTypes.UNSIGNED_SHORT;
       for (let idx = 0; idx < data.length; idx++) {
         if (data[idx]) {
           const src = onlyUpdateExtents
@@ -791,8 +781,14 @@ function vtkOpenGLTexture(publicAPI, model) {
             onlyUpdateExtents ? src.length : pixCount
           );
           const newArrayLen = newArray.length;
-          for (let i = 0; i < newArrayLen; i++) {
-            newArray[i] = toHalfForUpload(src[i]);
+          if (clampToFiniteHalf) {
+            for (let i = 0; i < newArrayLen; i++) {
+              newArray[i] = toHalf(Math.min(src[i], MAX_FINITE_HALF_FLOAT));
+            }
+          } else {
+            for (let i = 0; i < newArrayLen; i++) {
+              newArray[i] = toHalf(src[i]);
+            }
           }
           pixData.push(newArray);
         } else {
@@ -1391,20 +1387,25 @@ function vtkOpenGLTexture(publicAPI, model) {
       model.openGLDataType === model.context.FLOAT &&
       model.context.getExtension('OES_texture_float_linear') === null &&
       isExactHalfFloat;
-    // SHORT and UNSIGNED_SHORT mean norm16
-    const overrideNorm16 =
+    // Half float over float for 16 bit data, norm16 kept when usable (exact)
+    const preferHalfFloat =
       preferSizeOverAccuracy &&
-      (model.openGLDataType === model.context.SHORT ||
-        model.openGLDataType === model.context.UNSIGNED_SHORT);
+      !getNorm16Ext() &&
+      (dataType === VtkDataTypes.SHORT ||
+        dataType === VtkDataTypes.UNSIGNED_SHORT);
     const useHalfFloat =
       forceHalfFloat ||
-      overrideNorm16 ||
+      preferHalfFloat ||
       model.openGLDataType === model.context.HALF_FLOAT;
 
     model.canUseHalfFloat = useHalfFloat && isExactHalfFloat;
   }
 
-  function processDataArray(dataArray, preferSizeOverAccuracy) {
+  function processDataArray(
+    dataArray,
+    preferSizeOverAccuracy,
+    keepDataType = false
+  ) {
     const numComps = dataArray.getNumberOfComponents();
     const dataType = dataArray.getDataType();
     const data = dataArray.getData();
@@ -1421,22 +1422,16 @@ function vtkOpenGLTexture(publicAPI, model) {
 
     const scaleOffsets = computeScaleOffsets(minArray, maxArray, numComps);
 
-    // preferSizeOverAccuracy will override norm16 due to bug with norm16 implementation
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=1408247
-    setCanUseHalfFloat(
-      dataType,
-      scaleOffsets.offset,
-      scaleOffsets.scale,
-      preferSizeOverAccuracy
-    );
+    if (!keepDataType) {
+      setCanUseHalfFloat(
+        dataType,
+        scaleOffsets.offset,
+        scaleOffsets.scale,
+        preferSizeOverAccuracy
+      );
 
-    // since our default is to use half float, in case that we can't use it
-    // (or norm16 is overridden) we need to use another type
-    if (
-      !publicAPI.useHalfFloat() ||
-      model.openGLDataType === model.context.SHORT ||
-      model.openGLDataType === model.context.UNSIGNED_SHORT
-    ) {
+      // since our default is to use half float, in case that we can't use it
+      // we need to use another type
       publicAPI.getOpenGLDataType(dataType, true);
     }
 
@@ -1751,9 +1746,12 @@ function vtkOpenGLTexture(publicAPI, model) {
     preferSizeOverAccuracy = false,
     updatedExtents = [],
   } = {}) => {
+    // Partial updates keep the allocated type (immutable texStorage3D)
+    const keepDataType = updatedExtents.length > 0 && !!model._prevTexParams;
     const { numComps, dataType, data, scaleOffsets } = processDataArray(
       dataArray,
-      preferSizeOverAccuracy
+      preferSizeOverAccuracy,
+      keepDataType
     );
 
     const offset = [];

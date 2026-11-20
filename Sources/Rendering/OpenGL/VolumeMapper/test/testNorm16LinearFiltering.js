@@ -1,4 +1,4 @@
-import { it, expect, vi } from 'vitest';
+import { afterEach, it, expect, vi } from 'vitest';
 import testUtils from 'vtk.js/Sources/Testing/testUtils';
 import { createTrackedRenderView } from 'vtk.js/Sources/Testing/renderTestUtils';
 
@@ -14,6 +14,15 @@ import vtkVolumeMapper from 'vtk.js/Sources/Rendering/Core/VolumeMapper';
 import supportsNorm16Linear from 'vtk.js/Sources/Rendering/OpenGL/Texture/supportsNorm16Linear';
 
 const skip = __VTK_TEST_NO_WEBGL__ || supportsNorm16Linear();
+
+let gc = null;
+
+// Runs even if the test fails, so the spy can't leak
+afterEach(() => {
+  vi.restoreAllMocks();
+  gc?.releaseResources();
+  gc = null;
+});
 
 function createImageData() {
   const sideLen = 8;
@@ -87,7 +96,7 @@ function getScalarTextureDataType(view, imageData) {
 it.skipIf(skip)(
   'does not use norm16 for volume textures that cannot be linearly filtered',
   () => {
-    const gc = testUtils.createGarbageCollector();
+    gc = testUtils.createGarbageCollector();
     const { renderer, renderWindow, view } = createTrackedRenderView(gc);
     const gl = view.getContext();
     advertiseNorm16(gl);
@@ -104,16 +113,13 @@ it.skipIf(skip)(
     volume.getProperty().setInterpolationTypeToLinear();
     renderWindow.render();
     expect(getScalarTextureDataType(view, imageData)).not.toBe(gl.SHORT);
-
-    vi.restoreAllMocks();
-    gc.releaseResources();
   }
 );
 
 it.skipIf(skip)(
   'does not use norm16 for reslice textures that cannot be linearly filtered',
   () => {
-    const gc = testUtils.createGarbageCollector();
+    gc = testUtils.createGarbageCollector();
     const { renderer, renderWindow, view } = createTrackedRenderView(gc);
     const gl = view.getContext();
     advertiseNorm16(gl);
@@ -125,8 +131,5 @@ it.skipIf(skip)(
     renderer.resetCamera();
     renderWindow.render();
     expect(getScalarTextureDataType(view, imageData)).not.toBe(gl.SHORT);
-
-    vi.restoreAllMocks();
-    gc.releaseResources();
   }
 );
