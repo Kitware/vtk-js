@@ -7,7 +7,7 @@ import type vtkDataArray from '../../Core/DataArray';
  */
 export interface IFieldDataInitialValues {
   arrays?: vtkDataArray[];
-  copyFieldFlags?: Array<any>;
+  copyFieldFlags?: Record<string, boolean>;
   doCopyAllOn?: boolean;
   doCopyAllOff?: boolean;
 }
@@ -119,13 +119,13 @@ export interface vtkFieldData extends vtkObject {
   /**
    *
    */
-  getCopyFieldFlags(): object;
+  getCopyFieldFlags(): Record<string, boolean>;
 
   /**
    * Get the flag of the array that has the given name.
    * @param {String} arrayName The name of the array.
    */
-  getFlag(arrayName: string): boolean;
+  getFlag(arrayName: string): boolean | undefined;
 
   /**
    * Pass data from one fieldData to another at the given index.

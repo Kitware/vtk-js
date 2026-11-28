@@ -31,7 +31,7 @@ function vtkFieldData(publicAPI, model) {
 
   publicAPI.copyStructure = (other) => {
     publicAPI.initializeFields();
-    model.copyFieldFlags = other.getCopyFieldFlags().map((x) => x); // Deep-copy
+    publicAPI.copyFlags(other);
     model.arrays = other.getArrays().map((x) => ({ data: x })); // Deep-copy
     // TODO: Copy array information objects (once we support information objects)
   };
@@ -236,7 +236,9 @@ function vtkFieldData(publicAPI, model) {
       return { data: arrNew };
     });
   };
-  publicAPI.copyFlags = (other) => other.getCopyFieldFlags().map((x) => x);
+  publicAPI.copyFlags = (other) => {
+    model.copyFieldFlags = { ...other.getCopyFieldFlags() };
+  };
   // TODO: publicAPI.squeeze = () => model.arrays.forEach(entry => entry.data.squeeze());
   publicAPI.reset = () => model.arrays.forEach((entry) => entry.data.reset());
   // TODO: getActualMemorySize
@@ -258,20 +260,33 @@ function vtkFieldData(publicAPI, model) {
       result.arrays = model.arrays.map((item) => ({
         data: item.data.getState(options),
       }));
+      result.copyFieldFlags = { ...model.copyFieldFlags };
     }
     return result;
   };
 }
 
-const DEFAULT_VALUES = {
-  arrays: [],
-  copyFieldFlags: [], // fields not to copy
-  doCopyAllOn: true,
-  doCopyAllOff: false,
-};
+function defaultValues(publicAPI, model, initialValues) {
+  let copyFieldFlags = {};
+  if (Array.isArray(initialValues?.copyFieldFlags)) {
+    vtkWarningMacro(
+      'copyFieldFlags should be a plain object mapping array names to booleans; ignoring array value.'
+    );
+  } else {
+    copyFieldFlags = { ...initialValues?.copyFieldFlags };
+  }
+  return {
+    arrays: [],
+    doCopyAllOn: true,
+    doCopyAllOff: false,
+    ...initialValues,
+    // map of arrayName -> boolean
+    copyFieldFlags,
+  };
+}
 
 export function extend(publicAPI, model, initialValues = {}) {
-  Object.assign(model, DEFAULT_VALUES, initialValues);
+  Object.assign(model, defaultValues(publicAPI, model, initialValues));
 
   macro.obj(publicAPI, model);
 
